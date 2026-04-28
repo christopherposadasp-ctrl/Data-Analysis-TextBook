@@ -1,0 +1,1022 @@
+% Chapter 10 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, and booktabs.
+\chapter{Truth + Error, Estimator Behavior, and Residual Geometry}
+\label{chap:truth-error-estimator-behavior-residual-geometry}
+
+\section{The Big Picture}
+
+The previous chapter treated multiple linear regression as a practical modeling tool.  We used the design matrix, the coefficient vector, and the least squares fit to answer applied questions about predictors, model fit, and prediction.  This chapter steps back into theory for one reason:
+\begin{quote}
+  We want to understand what the least squares estimates and residuals are doing, so that later diagnostics and hypothesis tests are more than button-clicking.
+\end{quote}
+
+The model is still
+\begin{equation}
+  \mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}.
+\end{equation}
+The difference is that we now treat this equation as a \emph{truth plus error} representation.  The term \(\mathbf{X}\boldsymbol{\beta}\) is the systematic part of the response, and \(\boldsymbol{\epsilon}\) is the random part that the model does not explain.
+
+\paragraph{Notation bridge.}
+Chapters 7, 9, 11, and 12 use \(\mathbf{y}\) for the observed response vector from a realized data set.  This chapter temporarily switches to \(\mathbf{Y}\) because the full response vector is being treated as random once the design matrix \(\mathbf{X}\) is fixed.
+
+The central questions are:
+\begin{enumerate}
+  \item If \(\boldsymbol{\beta}\) is the true coefficient vector, how does \(\widehat{\boldsymbol{\beta}}\) behave?
+  \item Is \(\widehat{\boldsymbol{\beta}}\) centered on the true value \(\boldsymbol{\beta}\)?
+  \item How variable is \(\widehat{\boldsymbol{\beta}}\)?
+  \item How do the residuals \(\mathbf{e}=\mathbf{Y}-\widehat{\mathbf{Y}}\) relate to the true errors \(\boldsymbol{\epsilon}\)?
+  \item Why do residual plots tell us whether our modeling assumptions are plausible?
+\end{enumerate}
+
+This chapter is the bridge from regression geometry to regression diagnostics.  It explains why residuals are useful, but also why they are not the same thing as the true errors.
+
+\paragraph{Math Foundations Connection.}
+This chapter uses vector notation, transposes, matrix-vector multiplication, identity matrices, orthogonality, rank, column-space/residual-space geometry, least-squares normal equations, and the \(\mathbf{A}^T\mathbf{A}\) Hessian.  These connections are covered in the Math Foundations textbook, Chapters~2, 5, 7, 10, 11, 12, and~13.
+
+\section{The Regression Model with Fixed Design Matrix}
+
+We start with the multiple linear regression model
+\begin{equation}
+  \mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+  \label{eq:ch10-mlr-model}
+\end{equation}
+where
+\begin{equation}
+  \mathbf{Y}\in\mathbb{R}^{n},\qquad
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)},\qquad
+  \boldsymbol{\beta}\in\mathbb{R}^{p+1},\qquad
+  \boldsymbol{\epsilon}\in\mathbb{R}^{n}.
+\end{equation}
+The design matrix \(\mathbf{X}\) includes an intercept column of ones and \(p\) predictor columns.
+
+In this chapter, we use a fixed-design view:
+\begin{quote}
+  Treat \(\mathbf{X}\) as fixed, and let \(\mathbf{Y}\) vary randomly because \(\boldsymbol{\epsilon}\) varies randomly.
+\end{quote}
+
+That is the answer to the question, ``Where does the randomness come from?''  It comes from the noise vector \(\boldsymbol{\epsilon}\).  Once \(\mathbf{X}\) is fixed, the only random object on the right side of \eqref{eq:ch10-mlr-model} is \(\boldsymbol{\epsilon}\), so the only random object on the left side is \(\mathbf{Y}\).
+
+\paragraph{Conditional view.}
+If the predictors are themselves random in the data-generating process, the results in this chapter are usually read conditionally on the observed \(\mathbf{X}\).  In words: after we observe the predictor values, we analyze the randomness in the response around the regression surface.
+
+\CoreCompress{
+\section{The Big Three Regression Assumptions}
+
+Chapter 5 introduced a three-step regression assumption ladder.  We now restate that same ladder in matrix form.  The stronger assumptions support stronger inferential claims.
+
+\subsection*{Assumption 1: Mean-zero errors}
+
+The first assumption is
+\begin{equation}
+  \mathbb{E}[\boldsymbol{\epsilon}\mid \mathbf{X}]=\mathbf{0}.
+  \label{eq:ch10-mean-zero-errors}
+\end{equation}
+Equivalently, for each observation,
+\begin{equation}
+  \mathbb{E}[\epsilon_i\mid \mathbf{X}]=0.
+\end{equation}
+This says the model is centered correctly.  After accounting for the predictors in \(\mathbf{X}\), the remaining error should not systematically lean positive or negative.
+
+Under this assumption,
+\begin{equation}
+  \mathbb{E}[\mathbf{Y}\mid \mathbf{X}]
+  =\mathbf{X}\boldsymbol{\beta}.
+\end{equation}
+Thus \(\mathbf{X}\boldsymbol{\beta}\) is the conditional mean of the response.
+
+\subsection*{Assumption 2: Constant variance and uncorrelated errors}
+
+The second assumption is
+\begin{equation}
+  \operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}_n.
+  \label{eq:ch10-homoskedastic-errors}
+\end{equation}
+This compact matrix statement contains two ideas:
+\begin{enumerate}
+  \item Each error has the same variance: \(\operatorname{Var}(\epsilon_i\mid\mathbf{X})=\sigma^2\).
+  \item Different errors are uncorrelated: \(\operatorname{Cov}(\epsilon_i,\epsilon_j\mid\mathbf{X})=0\) for \(i\ne j\).
+\end{enumerate}
+
+The first part is called homoskedasticity.  The second part rules out error correlation.  Violations of this assumption are why residual plots, time-order plots, and variance checks matter.
+
+\subsection*{Assumption 3: Gaussian errors}
+
+The third assumption is
+\begin{equation}
+  \boldsymbol{\epsilon}\mid\mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n).
+  \label{eq:ch10-gaussian-errors}
+\end{equation}
+This says the full error vector is multivariate normal with mean zero and covariance \(\sigma^2\mathbf{I}_n\).  This is stronger than the first two assumptions.  It supports exact finite-sample \(t\)- and \(F\)-based inference for the usual linear model quantities.
+
+\paragraph{Practical interpretation.}
+The first assumption gives correct centering.  The second assumption gives the usual variance formulas.  The third assumption gives exact distributional statements.  In practice, diagnostics help us decide how believable these assumptions are.
+}{
+\section{The Big Three Regression Assumptions}
+
+Chapter 5 already introduced the shared assumption ladder.  Here we restate it in matrix form.
+\begin{enumerate}
+  \item \textbf{Assumption 1: Mean-zero errors}
+  \begin{equation}
+    \mathbb{E}[\boldsymbol{\epsilon}\mid \mathbf{X}]=\mathbf{0}.
+    \label{eq:ch10-mean-zero-errors}
+  \end{equation}
+  Then \(\mathbb{E}[\mathbf{Y}\mid\mathbf{X}]=\mathbf{X}\boldsymbol{\beta}\).
+  \item \textbf{Assumption 2: Constant variance and uncorrelated errors}
+  \begin{equation}
+    \operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}_n.
+    \label{eq:ch10-homoskedastic-errors}
+  \end{equation}
+  This is the matrix form of homoskedastic, uncorrelated errors.
+  \item \textbf{Assumption 3: Gaussian errors}
+  \begin{equation}
+    \boldsymbol{\epsilon}\mid\mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n).
+    \label{eq:ch10-gaussian-errors}
+  \end{equation}
+  This supports exact classical \(t\)- and \(F\)-based inference.
+\end{enumerate}
+
+The Core Reader uses this section as a recall, not a full re-teaching of the ladder.
+}
+
+\CoreCompress{
+\section{Recall: Least Squares Estimator}
+
+This section restates the Chapter~\ref{chap:linear-regression-projection-design-matrix-hat-matrix} least-squares formula in the fixed-design notation of this chapter.  The formula is not new; the new question is how it behaves when \(\mathbf{Y}\) is random.
+
+The least squares estimator minimizes the squared residual length:
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =\arg\min_{\mathbf{b}\in\mathbb{R}^{p+1}}
+  \left\|\mathbf{Y}-\mathbf{X}\mathbf{b}\right\|^2.
+\end{equation}
+Assuming \(\mathbf{X}\) has full column rank, the normal equations give
+\begin{equation}
+  \mathbf{X}^T\mathbf{X}\widehat{\boldsymbol{\beta}}
+  =\mathbf{X}^T\mathbf{Y},
+\end{equation}
+and therefore
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{Y}.
+  }
+  \label{eq:ch10-beta-hat}
+\end{equation}
+
+The fitted response vector is
+\begin{equation}
+  \widehat{\mathbf{Y}}
+  =\mathbf{X}\widehat{\boldsymbol{\beta}}.
+\end{equation}
+The residual vector is
+\begin{equation}
+  \mathbf{e}=\mathbf{Y}-\widehat{\mathbf{Y}}.
+\end{equation}
+}{
+\section{Recall: Least Squares Estimator}
+
+The estimator itself is not new.  From Chapter~\ref{chap:linear-regression-projection-design-matrix-hat-matrix},
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{Y},
+  \label{eq:ch10-beta-hat}
+\end{equation}
+assuming \(\mathbf{X}\) has full column rank.  The fitted response vector is
+\begin{equation}
+  \widehat{\mathbf{Y}}=\mathbf{X}\widehat{\boldsymbol{\beta}},
+\end{equation}
+and the residual vector is
+\begin{equation}
+  \mathbf{e}=\mathbf{Y}-\widehat{\mathbf{Y}}.
+\end{equation}
+
+The new point in this chapter is not the formula itself.  It is the sampling behavior of that formula when \(\mathbf{Y}\) is random under a fixed design matrix.
+}
+
+\section{Dimension Check}
+
+The formulas in this chapter are much easier to trust if the dimensions work.  Let \(q=p+1\), the number of columns in \(\mathbf{X}\).  Then:
+\begin{center}
+\begin{tabular}{llc}
+\toprule
+Object & Meaning & Dimension \\
+\midrule
+\(\mathbf{Y}\) & response vector & \(n\times 1\) \\
+\(\mathbf{X}\) & design matrix & \(n\times q\) \\
+\(\boldsymbol{\beta}\) & true coefficient vector & \(q\times 1\) \\
+\(\widehat{\boldsymbol{\beta}}\) & estimated coefficient vector & \(q\times 1\) \\
+\(\boldsymbol{\epsilon}\) & true error vector & \(n\times 1\) \\
+\(\widehat{\mathbf{Y}}\) & fitted response vector & \(n\times 1\) \\
+\(\mathbf{e}\) & residual vector & \(n\times 1\) \\
+\(\mathbf{H}\) & hat matrix & \(n\times n\) \\
+\(\mathbf{I}_n-\mathbf{H}\) & residual-maker matrix & \(n\times n\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The matrix
+\begin{equation}
+  \mathbf{A}=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+\end{equation}
+has dimension \(q\times n\).  It maps the response vector \(\mathbf{Y}\in\mathbb{R}^n\) into the coefficient estimate \(\widehat{\boldsymbol{\beta}}\in\mathbb{R}^q\):
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}=\mathbf{A}\mathbf{Y}.
+\end{equation}
+
+\section{Truth + Error Representation for \texorpdfstring{\(\widehat{\boldsymbol{\beta}}\)}{beta-hat}}
+
+Start with the least squares estimator:
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{Y}.
+\end{equation}
+Substitute the regression model \(\mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}\):
+\begin{align}
+  \widehat{\boldsymbol{\beta}}
+  &=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+  (\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}) \\
+  &=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{X}\boldsymbol{\beta}
+  +(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon} \\
+  &=\boldsymbol{\beta}
+  +(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon}.
+\end{align}
+Therefore,
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\beta}}
+  =\boldsymbol{\beta}
+  +(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon}.
+  }
+  \label{eq:ch10-truth-error-beta}
+\end{equation}
+
+This is the truth plus error representation for the coefficient estimator.  It says:
+\begin{quote}
+  The estimated coefficient vector equals the true coefficient vector plus a transformed version of the random noise vector.
+\end{quote}
+
+Each coefficient estimate has its own associated error term.  That error is not a new source of randomness; it is produced by the same \(\boldsymbol{\epsilon}\) that created the random response values.
+
+\section{Unbiasedness of \texorpdfstring{\(\widehat{\boldsymbol{\beta}}\)}{beta-hat}}
+
+Using \eqref{eq:ch10-truth-error-beta}, take conditional expectations given \(\mathbf{X}\):
+\begin{align}
+  \mathbb{E}[\widehat{\boldsymbol{\beta}}\mid\mathbf{X}]
+  &=\mathbb{E}\left[
+  \boldsymbol{\beta}
+  +(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon}
+  \mid\mathbf{X}\right] \\
+  &=\boldsymbol{\beta}
+  +(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+  \mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{X}].
+\end{align}
+If \(\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{X}]=\mathbf{0}\), then
+\begin{equation}
+  \boxed{
+  \mathbb{E}[\widehat{\boldsymbol{\beta}}\mid\mathbf{X}]
+  =\boldsymbol{\beta}.
+  }
+\end{equation}
+
+So \(\widehat{\boldsymbol{\beta}}\) is unbiased under the mean-zero error assumption.
+
+\paragraph{What unbiased means here.}
+Unbiased does not mean that \(\widehat{\boldsymbol{\beta}}\) equals \(\boldsymbol{\beta}\) in a particular dataset.  It means that if we repeatedly observed new response vectors from the same design matrix and same true model, the average of the coefficient estimates would center on the true coefficient vector.
+
+\section{Variance of \texorpdfstring{\(\widehat{\boldsymbol{\beta}}\)}{beta-hat}}
+
+The truth plus error representation also makes the variance calculation direct.  Define
+\begin{equation}
+  \mathbf{A}=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+\end{equation}
+Then
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}=\boldsymbol{\beta}+\mathbf{A}\boldsymbol{\epsilon}.
+\end{equation}
+Since \(\boldsymbol{\beta}\) is fixed, it has no variance.  Therefore,
+\begin{equation}
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+  =\operatorname{Var}(\mathbf{A}\boldsymbol{\epsilon}\mid\mathbf{X}).
+\end{equation}
+
+The matrix variance rule is
+\begin{equation}
+  \operatorname{Var}(\mathbf{A}\mathbf{Z})
+  =\mathbf{A}\operatorname{Var}(\mathbf{Z})\mathbf{A}^T.
+\end{equation}
+Using \(\operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}_n\),
+\begin{align}
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+  &=\mathbf{A}\operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})\mathbf{A}^T \\
+  &=\mathbf{A}(\sigma^2\mathbf{I}_n)\mathbf{A}^T \\
+  &=\sigma^2\mathbf{A}\mathbf{A}^T.
+\end{align}
+Now substitute \(\mathbf{A}=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\):
+\begin{align}
+  \mathbf{A}\mathbf{A}^T
+  &=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+  \left[(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\right]^T \\
+  &=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+  \mathbf{X}\left[(\mathbf{X}^T\mathbf{X})^{-1}\right]^T.
+\end{align}
+Because \(\mathbf{X}^T\mathbf{X}\) is symmetric, its inverse is also symmetric.  Therefore,
+\begin{equation}
+  \mathbf{A}\mathbf{A}^T=(\mathbf{X}^T\mathbf{X})^{-1}.
+\end{equation}
+So
+\begin{equation}
+  \boxed{
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+  =\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}.
+  }
+  \label{eq:ch10-var-beta-hat}
+\end{equation}
+
+\paragraph{What this means.}
+The coefficient uncertainty depends on two things:
+\begin{enumerate}
+  \item the error variance \(\sigma^2\), and
+  \item the geometry of the design matrix through \((\mathbf{X}^T\mathbf{X})^{-1}\).
+\end{enumerate}
+If the errors are noisy, coefficient estimates are noisy.  If the predictor columns are poorly arranged, nearly dependent, or badly scaled, then \((\mathbf{X}^T\mathbf{X})^{-1}\) can contain large entries, making coefficient estimates unstable.
+
+\section{Standard Errors of the Coefficients}
+
+The diagonal entries of \(\operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})\) give the variances of the individual coefficient estimates.  Let
+\begin{equation}
+  \mathbf{C}=(\mathbf{X}^T\mathbf{X})^{-1}.
+\end{equation}
+Then
+\begin{equation}
+  \operatorname{Var}(\widehat{\beta}_j\mid\mathbf{X})=\sigma^2 C_{jj}.
+\end{equation}
+The standard error of \(\widehat{\beta}_j\) is
+\begin{equation}
+  \operatorname{SE}(\widehat{\beta}_j)=\sigma\sqrt{C_{jj}}.
+\end{equation}
+Because \(\sigma\) is unknown, we estimate it using the residuals:
+\begin{equation}
+  \widehat{\sigma}^2
+  =\frac{\mathbf{e}^T\mathbf{e}}{n-p-1}
+  =\frac{\operatorname{RSS}}{n-p-1}.
+\end{equation}
+Thus the estimated standard error is
+\begin{equation}
+  \boxed{
+  \widehat{\operatorname{SE}}(\widehat{\beta}_j)
+  =\widehat{\sigma}\sqrt{C_{jj}}.
+  }
+\end{equation}
+
+This is the quantity reported in regression output tables.  It is the denominator of the usual \(t\)-statistic.
+
+\CoreCompress{
+\section{Distribution of \texorpdfstring{\(\widehat{\boldsymbol{\beta}}\)}{beta-hat}}
+
+If we also assume Gaussian errors,
+\begin{equation}
+  \boldsymbol{\epsilon}\mid\mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n),
+\end{equation}
+then \(\widehat{\boldsymbol{\beta}}\) is a linear transformation of a multivariate normal random vector.  Linear transformations of multivariate normal vectors are multivariate normal.  Therefore,
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\beta}}\mid\mathbf{X}
+  \sim N\left(\boldsymbol{\beta},\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}\right).
+  }
+  \label{eq:ch10-beta-hat-distribution}
+\end{equation}
+
+For an individual coefficient,
+\begin{equation}
+  \widehat{\beta}_j\mid\mathbf{X}
+  \sim N\left(\beta_j,\sigma^2 C_{jj}\right).
+\end{equation}
+After estimating \(\sigma\), the usual test statistic is
+\begin{equation}
+  t_j=\frac{\widehat{\beta}_j-\beta_{j,0}}{\widehat{\operatorname{SE}}(\widehat{\beta}_j)},
+\end{equation}
+where \(\beta_{j,0}\) is the hypothesized value, usually 0.  Under the Gaussian model and the null hypothesis,
+\begin{equation}
+  t_j\sim t_{n-p-1}.
+\end{equation}
+
+\paragraph{Connection to inference.}
+This is why regression output can include coefficient tests and confidence intervals.  The theory starts with the truth plus error representation, then uses the error assumptions to describe the sampling behavior of \(\widehat{\boldsymbol{\beta}}\).
+}{
+\section{Distribution of \texorpdfstring{\(\widehat{\boldsymbol{\beta}}\)}{beta-hat}}
+
+If Gaussian errors are added to the first two assumptions, then \(\widehat{\boldsymbol{\beta}}\) is a linear transformation of a multivariate normal vector, so
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}\mid\mathbf{X}
+  \sim N\left(\boldsymbol{\beta},\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}\right).
+  \label{eq:ch10-beta-hat-distribution}
+\end{equation}
+This is the distributional step that justifies the usual coefficient tests and confidence intervals.
+}
+
+\section{Takeaways for Coefficients}
+
+The coefficient estimator has three central properties under the standard linear model assumptions:
+\begin{enumerate}
+  \item \textbf{Truth plus error:}
+  \begin{equation}
+    \widehat{\boldsymbol{\beta}}
+    =\boldsymbol{\beta}
+    +(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon}.
+  \end{equation}
+  \item \textbf{Unbiasedness under mean-zero errors:}
+  \begin{equation}
+    \mathbb{E}[\widehat{\boldsymbol{\beta}}\mid\mathbf{X}]=\boldsymbol{\beta}.
+  \end{equation}
+  \item \textbf{Variance under homoskedastic uncorrelated errors:}
+  \begin{equation}
+    \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+    =\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}.
+  \end{equation}
+\end{enumerate}
+If the Gaussian assumption is added, then \(\widehat{\boldsymbol{\beta}}\) has a multivariate normal distribution.
+
+\CoreCompress{
+\section{The Hat Matrix Revisited}
+
+The fitted values are
+\begin{align}
+  \widehat{\mathbf{Y}}
+  &=\mathbf{X}\widehat{\boldsymbol{\beta}} \\
+  &=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{Y}.
+\end{align}
+Define the hat matrix
+\begin{equation}
+  \boxed{
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+  }
+\end{equation}
+Then
+\begin{equation}
+  \widehat{\mathbf{Y}}=\mathbf{H}\mathbf{Y}.
+\end{equation}
+The matrix \(\mathbf{H}\) puts the hat on \(\mathbf{Y}\), which is why it is called the hat matrix.
+
+The hat matrix is an orthogonal projection matrix onto \(\operatorname{Col}(\mathbf{X})\).  It has two key properties:
+\begin{enumerate}
+  \item Symmetry:
+  \begin{equation}
+    \mathbf{H}^T=\mathbf{H}.
+  \end{equation}
+  \item Idempotence:
+  \begin{equation}
+    \mathbf{H}^2=\mathbf{H}.
+  \end{equation}
+\end{enumerate}
+
+Symmetry and idempotence are the algebraic signatures of an orthogonal projection.
+}{
+\section{The Hat Matrix Revisited}
+
+This chapter reuses the same projection matrix from Chapter~\ref{chap:linear-regression-projection-design-matrix-hat-matrix}:
+\begin{equation}
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T,
+\end{equation}
+so
+\begin{equation}
+  \widehat{\mathbf{Y}}=\mathbf{H}\mathbf{Y}.
+\end{equation}
+The main recall facts are unchanged: \(\mathbf{H}\) is symmetric, idempotent, and projects onto \(\operatorname{Col}(\mathbf{X})\).
+}
+
+\section{The Residual Vector}
+
+The residual vector is
+\begin{equation}
+  \mathbf{e}=\mathbf{Y}-\widehat{\mathbf{Y}}.
+\end{equation}
+Using \(\widehat{\mathbf{Y}}=\mathbf{H}\mathbf{Y}\),
+\begin{equation}
+  \mathbf{e}=\mathbf{Y}-\mathbf{H}\mathbf{Y}=(\mathbf{I}_n-\mathbf{H})\mathbf{Y}.
+\end{equation}
+The matrix
+\begin{equation}
+  \mathbf{M}=\mathbf{I}_n-\mathbf{H}
+\end{equation}
+is often called the residual-maker matrix because
+\begin{equation}
+  \mathbf{e}=\mathbf{M}\mathbf{Y}.
+\end{equation}
+
+Now substitute \(\mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}\):
+\begin{align}
+  \mathbf{e}
+  &=(\mathbf{I}_n-\mathbf{H})(\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}) \\
+  &=(\mathbf{I}_n-\mathbf{H})\mathbf{X}\boldsymbol{\beta}
+  +(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{align}
+Because \(\mathbf{H}\) projects onto \(\operatorname{Col}(\mathbf{X})\), it leaves every vector in \(\operatorname{Col}(\mathbf{X})\) unchanged.  Since \(\mathbf{X}\boldsymbol{\beta}\in\operatorname{Col}(\mathbf{X})\),
+\begin{equation}
+  \mathbf{H}\mathbf{X}\boldsymbol{\beta}=\mathbf{X}\boldsymbol{\beta}.
+\end{equation}
+Therefore,
+\begin{equation}
+  (\mathbf{I}_n-\mathbf{H})\mathbf{X}\boldsymbol{\beta}=\mathbf{0},
+\end{equation}
+and
+\begin{equation}
+  \boxed{
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+  }
+  \label{eq:ch10-residual-truth-error}
+\end{equation}
+
+This is the truth plus error representation for residuals.
+
+\paragraph{Important interpretation.}
+Residuals are not the true errors.  The true errors are \(\boldsymbol{\epsilon}\).  The residuals are projected errors:
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{equation}
+Least squares removes from \(\boldsymbol{\epsilon}\) the component that lies in \(\operatorname{Col}(\mathbf{X})\).  What remains is the component orthogonal to the fitted-value space.
+
+\CoreCompress{
+\section{Why \texorpdfstring{\(\mathbf{I}_n-\mathbf{H}\)}{I-H} Is Also an Orthogonal Projection}
+
+If \(\mathbf{H}\) is an orthogonal projection, then it is symmetric and idempotent.  Let
+\begin{equation}
+  \mathbf{M}=\mathbf{I}_n-\mathbf{H}.
+\end{equation}
+We show that \(\mathbf{M}\) is also an orthogonal projection.
+
+First, symmetry:
+\begin{align}
+  \mathbf{M}^T
+  &=(\mathbf{I}_n-\mathbf{H})^T \\
+  &=\mathbf{I}_n^T-\mathbf{H}^T \\
+  &=\mathbf{I}_n-\mathbf{H} \\
+  &=\mathbf{M}.
+\end{align}
+Second, idempotence:
+\begin{align}
+  \mathbf{M}^2
+  &=(\mathbf{I}_n-\mathbf{H})(\mathbf{I}_n-\mathbf{H}) \\
+  &=\mathbf{I}_n-2\mathbf{H}+\mathbf{H}^2 \\
+  &=\mathbf{I}_n-2\mathbf{H}+\mathbf{H} \\
+  &=\mathbf{I}_n-\mathbf{H} \\
+  &=\mathbf{M}.
+\end{align}
+Therefore \(\mathbf{I}_n-\mathbf{H}\) is also an orthogonal projection matrix.
+
+Geometrically, \(\mathbf{H}\) projects \(\mathbf{Y}\) onto \(\operatorname{Col}(\mathbf{X})\), while \(\mathbf{I}_n-\mathbf{H}\) projects \(\mathbf{Y}\) onto the orthogonal complement of \(\operatorname{Col}(\mathbf{X})\).  That orthogonal complement is where residuals live.
+}{
+\section{Why \texorpdfstring{\(\mathbf{I}_n-\mathbf{H}\)}{I-H} Is Also an Orthogonal Projection}
+
+Since \(\mathbf{H}\) projects onto the fitted-value space, the complementary matrix
+\begin{equation}
+  \mathbf{I}_n-\mathbf{H}
+\end{equation}
+projects onto the residual space.  It is also symmetric and idempotent, so it is an orthogonal projection matrix as well.  That is why residuals live in the orthogonal complement of \(\operatorname{Col}(\mathbf{X})\).
+}
+
+\section{Expectation of the Residual Vector}
+
+Using \eqref{eq:ch10-residual-truth-error},
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{equation}
+Take conditional expectations:
+\begin{align}
+  \mathbb{E}[\mathbf{e}\mid\mathbf{X}]
+  &=(\mathbf{I}_n-\mathbf{H})\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{X}].
+\end{align}
+If \(\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{X}]=\mathbf{0}\), then
+\begin{equation}
+  \boxed{
+  \mathbb{E}[\mathbf{e}\mid\mathbf{X}]=\mathbf{0}.
+  }
+\end{equation}
+
+This is why we expect residual plots to be centered around zero when the mean structure is correctly specified.
+
+\section{Variance of the Residual Vector}
+
+Again use
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{equation}
+By the matrix variance rule,
+\begin{align}
+  \operatorname{Var}(\mathbf{e}\mid\mathbf{X})
+  &=(\mathbf{I}_n-\mathbf{H})
+  \operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})
+  (\mathbf{I}_n-\mathbf{H})^T.
+\end{align}
+If \(\operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}_n\), then
+\begin{align}
+  \operatorname{Var}(\mathbf{e}\mid\mathbf{X})
+  &=\sigma^2(\mathbf{I}_n-\mathbf{H})(\mathbf{I}_n-\mathbf{H})^T \\
+  &=\sigma^2(\mathbf{I}_n-\mathbf{H})^2 \\
+  &=\sigma^2(\mathbf{I}_n-\mathbf{H}).
+\end{align}
+Thus
+\begin{equation}
+  \boxed{
+  \operatorname{Var}(\mathbf{e}\mid\mathbf{X})
+  =\sigma^2(\mathbf{I}_n-\mathbf{H}).
+  }
+  \label{eq:ch10-var-residual}
+\end{equation}
+
+This formula has an important consequence.  The \(i\)th residual has variance
+\begin{equation}
+  \operatorname{Var}(e_i\mid\mathbf{X})=\sigma^2(1-h_{ii}),
+\end{equation}
+where \(h_{ii}\) is the \(i\)th diagonal entry of the hat matrix.  The off-diagonal entries give residual covariances:
+\begin{equation}
+  \operatorname{Cov}(e_i,e_j\mid\mathbf{X})=-\sigma^2 h_{ij},\qquad i\ne j.
+\end{equation}
+
+\paragraph{Key diagnostic warning.}
+Even if the true errors are uncorrelated and have equal variance, the raw residuals generally do not have equal variance and are generally correlated.  This is why leverage-adjusted residuals and studentized residuals are useful in diagnostics.
+
+\CoreCompress{
+\section{Distribution of the Residual Vector}
+
+If the Gaussian assumption holds,
+\begin{equation}
+  \boldsymbol{\epsilon}\mid\mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n),
+\end{equation}
+then \(\mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}\) is a linear transformation of a multivariate normal vector.  Therefore,
+\begin{equation}
+  \boxed{
+  \mathbf{e}\mid\mathbf{X}
+  \sim N\left(\mathbf{0},\sigma^2(\mathbf{I}_n-\mathbf{H})\right).
+  }
+\end{equation}
+
+The covariance matrix is singular because \(\mathbf{e}\) is constrained to lie in the residual subspace, which has dimension \(n-p-1\), not dimension \(n\).  The residual vector cannot point anywhere it wants in \(\mathbb{R}^n\); it must be orthogonal to every column of \(\mathbf{X}\).
+}{
+\section{Distribution of the Residual Vector}
+
+If the Gaussian assumption holds, then the residual vector is also multivariate normal:
+\begin{equation}
+  \mathbf{e}\mid\mathbf{X}
+  \sim N\left(\mathbf{0},\sigma^2(\mathbf{I}_n-\mathbf{H})\right).
+\end{equation}
+Its covariance matrix is singular because residuals are constrained to the residual subspace rather than all of \(\mathbb{R}^n\).
+}
+
+\section{Residual Degrees of Freedom}
+
+The residual degrees of freedom are the dimensions left over after fitting the model.  Algebraically,
+\begin{equation}
+  \operatorname{df}_{\mathrm{res}}=\operatorname{tr}(\mathbf{I}_n-\mathbf{H}).
+\end{equation}
+Because \(\operatorname{tr}(\mathbf{I}_n)=n\) and \(\operatorname{tr}(\mathbf{H})=p+1\) when \(\mathbf{X}\) has full column rank,
+\begin{equation}
+  \boxed{
+  \operatorname{df}_{\mathrm{res}}=n-p-1.
+  }
+\end{equation}
+
+This also explains the denominator in the residual variance estimate:
+\begin{equation}
+  \widehat{\sigma}^2=\frac{\mathbf{e}^T\mathbf{e}}{n-p-1}.
+\end{equation}
+The numerator \(\mathbf{e}^T\mathbf{e}\) is the residual sum of squares.  The denominator is the number of leftover residual dimensions.
+
+\FullOnly{
+\section{Worked Mini Example: A Three-Point Simple Regression}
+
+Consider three observations with one predictor and an intercept:
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}
+    1 & 0\\
+    1 & 1\\
+    1 & 2
+  \end{bmatrix},
+  \qquad
+  \mathbf{Y}=\begin{bmatrix}
+    Y_1\\Y_2\\Y_3
+  \end{bmatrix}.
+\end{equation}
+Here \(n=3\), \(p=1\), and \(p+1=2\).  The fitted values live in a two-dimensional plane inside \(\mathbb{R}^3\), and the residuals live in the one-dimensional orthogonal complement.
+
+Compute
+\begin{equation}
+  \mathbf{X}^T\mathbf{X}
+  =\begin{bmatrix}
+    3 & 3\\
+    3 & 5
+  \end{bmatrix},
+\end{equation}
+and
+\begin{equation}
+  (\mathbf{X}^T\mathbf{X})^{-1}
+  =\frac{1}{6}
+  \begin{bmatrix}
+    5 & -3\\
+    -3 & 3
+  \end{bmatrix}.
+\end{equation}
+Thus the coefficient variance matrix is
+\begin{equation}
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+  =\frac{\sigma^2}{6}
+  \begin{bmatrix}
+    5 & -3\\
+    -3 & 3
+  \end{bmatrix}.
+\end{equation}
+So
+\begin{equation}
+  \operatorname{Var}(\widehat{\beta}_0)=\frac{5}{6}\sigma^2,
+  \qquad
+  \operatorname{Var}(\widehat{\beta}_1)=\frac{1}{2}\sigma^2.
+\end{equation}
+
+The hat matrix is
+\begin{equation}
+  \mathbf{H}
+  =\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+  =\begin{bmatrix}
+    \frac{5}{6} & \frac{1}{3} & -\frac{1}{6}\\
+    \frac{1}{3} & \frac{1}{3} & \frac{1}{3}\\
+    -\frac{1}{6} & \frac{1}{3} & \frac{5}{6}
+  \end{bmatrix}.
+\end{equation}
+The residual-maker matrix is
+\begin{equation}
+  \mathbf{I}_3-\mathbf{H}
+  =\begin{bmatrix}
+    \frac{1}{6} & -\frac{1}{3} & \frac{1}{6}\\
+    -\frac{1}{3} & \frac{2}{3} & -\frac{1}{3}\\
+    \frac{1}{6} & -\frac{1}{3} & \frac{1}{6}
+  \end{bmatrix}.
+\end{equation}
+
+Notice that
+\begin{equation}
+  \operatorname{tr}(\mathbf{H})=2,
+  \qquad
+  \operatorname{tr}(\mathbf{I}_3-\mathbf{H})=1.
+\end{equation}
+This matches the geometry: two fitted-value degrees of freedom and one residual degree of freedom.
+}
+
+\section{What Residual Plots Are Really Checking}
+
+The residual representation
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}
+\end{equation}
+explains why residual analysis works.  If the true errors have mean zero, constant variance, and approximate normality, then the residuals should show compatible behavior.
+
+Common diagnostic checks include:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Diagnostic plot & What we hope to see & Possible problem if violated \\
+\midrule
+Residuals vs fitted values & random cloud around zero & nonlinearity or missing structure \\
+Residuals vs predictor & random cloud around zero & predictor transformation needed \\
+Scale-location plot & similar vertical spread & heteroskedasticity \\
+Q-Q plot & points close to a line & non-normal error behavior \\
+Residuals vs time/order & no runs or waves & correlated errors \\
+Residuals vs leverage & no extreme influential points & high leverage or outliers \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A good residual plot does not prove that the model is true.  It only suggests that the most visible violations are not obvious.  A bad residual plot is more informative: it gives evidence that something in the modeling assumptions or model form may need attention.
+
+\section{Good Residual Behavior}
+
+A residual plot with no visible pattern is usually a good sign.  A healthy residual-vs-fitted plot should look like a random scatter of points around the horizontal line at zero.  The points do not need to be perfectly symmetric, but they should not show a systematic curve, trend, funnel, or clustering pattern.
+
+A random-looking residual cloud suggests:
+\begin{enumerate}
+  \item the conditional mean may be reasonably specified,
+  \item the variance may be roughly stable over the fitted range, and
+  \item there may not be an obvious missing nonlinear term.
+\end{enumerate}
+
+This is why residuals are the natural next object after coefficients.  Coefficients tell us what the fitted model says.  Residuals tell us what the fitted model failed to explain.
+
+\section{Bad Residual Behavior}
+
+Bad residual behavior usually points to one of a few issues:
+\begin{enumerate}
+  \item \textbf{Curvature:} residuals form a U-shape or other smooth pattern.  This suggests the mean function is not linear in the current predictors.
+  \item \textbf{Funnel shape:} residual spread increases or decreases with fitted values.  This suggests nonconstant variance.
+  \item \textbf{Runs over time:} residuals stay positive or negative for long stretches in time order.  This suggests correlated errors.
+  \item \textbf{Extreme residuals:} a few residuals are much larger than the rest.  This suggests outliers or observations not explained by the model.
+  \item \textbf{High leverage:} some rows of \(\mathbf{X}\) are far from the rest.  These observations may strongly influence the fitted model.
+\end{enumerate}
+
+Residual analysis is not just a plot-making exercise.  It is a theory-backed health check of the assumptions that allowed us to interpret \(\widehat{\boldsymbol{\beta}}\), standard errors, \(t\)-statistics, and prediction intervals.
+
+\section{Residuals, Leverage, and Studentization}
+
+The diagonal hat values
+\begin{equation}
+  h_{ii}
+\end{equation}
+measure leverage.  An observation has high leverage when its predictor pattern is unusual relative to the rest of the design matrix.
+
+Because
+\begin{equation}
+  \operatorname{Var}(e_i\mid\mathbf{X})=\sigma^2(1-h_{ii}),
+\end{equation}
+raw residuals do not all have the same variance.  A leverage-adjusted residual divides by its estimated standard deviation:
+\begin{equation}
+  r_i=\frac{e_i}{\widehat{\sigma}\sqrt{1-h_{ii}}}.
+\end{equation}
+This is often called an internally studentized residual.  It gives a more comparable scale for judging which residuals are unusually large.
+
+\paragraph{Why leverage matters.}
+A point with a large residual but low leverage may be an outlier in the response direction.  A point with high leverage may control the fitted hyperplane even if its residual is not large.  A point with both high leverage and a large residual is especially important to inspect.
+
+\section{A Clean Interpretation of Diagnostics}
+
+The following table connects each theoretical assumption to the residual behavior we expect to see.
+
+\begin{center}
+\begin{tabular}{p{0.34\textwidth}p{0.30\textwidth}p{0.24\textwidth}}
+\toprule
+Assumption about \(\boldsymbol{\epsilon}\) & Residual implication & Diagnostic clue \\
+\midrule
+\(\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{X}]=0\) & residuals centered near zero & no systematic trend \\
+\(\operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}\) & stable spread, no strong correlation & no funnel or tracking \\
+Gaussian errors & residuals roughly normal after adjustment & Q-Q plot roughly linear \\
+Correct linear mean structure & no missing pattern in residuals & no curve or clusters \\
+Full column rank & unique coefficients & no exact multicollinearity \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Why This Matters for Modeling Decisions}
+
+The coefficient theory and residual theory combine into a modeling workflow:
+\begin{enumerate}
+  \item Fit a model.
+  \item Interpret \(\widehat{\boldsymbol{\beta}}\), standard errors, and model fit.
+  \item Check residual behavior.
+  \item If residuals behave badly, consider model repair.
+\end{enumerate}
+
+Model repair might include transforming predictors, transforming the response, adding interactions, adding nonlinear terms, using weighted least squares, using robust standard errors, or moving to a different model class.  The next chapters build toward these tools.
+
+The key point is that residual diagnostics are not separate from the math.  They come directly from
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =\boldsymbol{\beta}+(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon}
+\end{equation}
+and
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{equation}
+
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for extracting fitted values, residuals, leverage, studentized residuals, diagnostic plots, and coefficient covariance matrices have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the theoretical residual and estimator behavior.
+
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Treating residuals as the true errors}
+
+The residuals are not \(\boldsymbol{\epsilon}\).  They are
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{equation}
+They are the part of the error vector left after projecting away the fitted-value component.
+
+\subsection*{Mistake 2: Forgetting the fixed-design condition}
+
+The cleanest formulas are conditional on \(\mathbf{X}\).  If the predictors are random, we usually interpret the results after conditioning on the observed design matrix.
+
+\subsection*{Mistake 3: Thinking unbiased means correct in this dataset}
+
+Unbiased means centered correctly over repeated samples.  It does not mean the estimate is close in one observed dataset.
+
+\subsection*{Mistake 4: Ignoring multicollinearity in the variance formula}
+
+The variance formula
+\begin{equation}
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+  =\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}
+\end{equation}
+shows why nearly dependent predictor columns can cause large standard errors.
+
+\subsection*{Mistake 5: Using residual plots as proof}
+
+A clean residual plot is not proof that assumptions hold.  It is evidence that obvious violations are not visible.  A bad residual plot is stronger evidence because it points to a concrete failure mode.
+
+\CoreCompress{
+\section{Operational Briefing Checklist}
+
+When briefing a regression model, be ready to answer the following questions:
+\begin{enumerate}
+  \item What is the response variable, and what are the predictors?
+  \item What is the design matrix dimension \(n\times(p+1)\)?
+  \item Is \(\mathbf{X}\) full column rank, or is there an identifiability concern?
+  \item What assumptions are needed for the coefficient standard errors?
+  \item What assumptions are needed for exact \(t\)-tests and confidence intervals?
+  \item What do the residual plots show?
+  \item Are residuals centered near zero?
+  \item Is residual spread roughly stable?
+  \item Are there patterns suggesting nonlinearity, correlated errors, or missing variables?
+  \item Are there high leverage points or unusually large studentized residuals?
+\end{enumerate}
+}{
+\section{Operational Briefing Checklist}
+
+For the Core Reader, condense the briefing to the essential questions:
+\begin{enumerate}
+  \item What is the design matrix dimension and is \(\mathbf{X}\) full column rank?
+  \item Which assumption level is needed for the claim being made?
+  \item What do the residual plots say about centering, spread, and pattern?
+  \item Are leverage or unusually large adjusted residuals driving the fit?
+  \item What repair move would follow if a diagnostic problem appears?
+\end{enumerate}
+}
+
+\section{Chapter Summary}
+
+The core equations of this chapter are:
+\begin{align}
+  \widehat{\boldsymbol{\beta}}
+  &=\boldsymbol{\beta}
+  +(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon}, \\
+  \mathbb{E}[\widehat{\boldsymbol{\beta}}\mid\mathbf{X}]
+  &=\boldsymbol{\beta}, \\
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+  &=\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}, \\
+  \mathbf{e}
+  &=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}, \\
+  \operatorname{Var}(\mathbf{e}\mid\mathbf{X})
+  &=\sigma^2(\mathbf{I}_n-\mathbf{H}).
+\end{align}
+
+The coefficient estimator is the truth plus a transformed error.  Under mean-zero errors, it is unbiased.  Under constant-variance uncorrelated errors, its variance is governed by \(\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}\).  Under Gaussian errors, it has a multivariate normal distribution.
+
+The residual vector is the true error vector after projection onto the residual subspace.  This explains why residuals can be used to diagnose model assumptions.  Residuals should be centered around zero, have roughly stable spread, and show no systematic patterns if the model assumptions are reasonable.  Chapter~\ref{chap:residual-analysis-model-repair} turns these facts into a practical diagnostic and repair workflow.
+
+\CoreCompress{
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 10 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Observation-space vectors & Vector notation in \(\mathbb{R}^n\), coordinates, and subvectors & Ch02 Secs. 2.1, 2.2, 2.6; Ch06 Sec. 6.5 \\
+\hline
+Regression matrix expressions & Matrix sizes, transposes, identity matrices, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.3, 7.4, 7.6.1, 7.6.2 \\
+\hline
+Residual orthogonality & Dot products, Euclidean norms, and the condition \(\mathbf{a}^T\mathbf{b}=0\) for orthogonality & Ch02 Sec. 2.6; Ch05 Secs. 5.1, 5.3, 5.5, 5.8; Ch12 Sec. 12.12 \\
+\hline
+Least-squares normal-equation bridge & Stationary points, least-squares minimization, the normal equations, and the positive-semidefinite \(\mathbf{A}^T\mathbf{A}\) argument & Ch05 Sec. 5.5; Ch10 Sec. 10.6; Ch12 Secs. 12.8, 12.9, 12.11, 12.12; Ch13 Sec. 13.4 \\
+\hline
+Full-rank requirement for unique coefficients & Left inverses, linearly independent columns, rank, and full column rank & Ch06 Sec. 6.3; Ch10 Secs. 10.1, 10.3, 10.5; Ch11 Sec. 11.4 \\
+\hline
+Computational matrix operations & Python/NumPy arrays, shapes, transposes, and matrix multiplication & Ch07 Secs. 7.1, 7.4, 7.7 \\
+\hline
+\end{tabular}
+\end{center}
+}{
+\section{Math Foundations Source Map}
+
+The Core Reader keeps the theory links to Math Foundations but omits the full Math Foundations textbook-location map.  The main supporting ideas here are vectors, orthogonality, matrix multiplication, full column rank, and least-squares normal-equation structure.
+}
+
+\CoreCompress{
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after studying the truth-plus-error representation.
+
+\begin{enumerate}
+  \item Can you write \(\mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}\) and explain why \(\mathbf{Y}\) is random under fixed design?
+  \item Can you state the coefficient decomposition
+  \[
+    \widehat{\boldsymbol{\beta}}
+    =
+    \boldsymbol{\beta}+(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\epsilon}?
+  \]
+  \item Can you identify which assumption gives unbiasedness and which assumptions support the usual variance and distribution results?
+  \item Can you write the residual relation \(\mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}\)?
+  \item Can you explain why residuals are useful diagnostics but not the same as the true errors?
+  \item Can you connect a residual pattern to a likely assumption failure?
+\end{enumerate}
+}{
+\section{Practice and Workflow}
+\subsection*{Can You Do This?}
+
+For Core Reader study, be sure you can do the following.
+
+\begin{enumerate}
+  \item Write the model \(\mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}\) and identify which object is random.
+  \item State the truth-plus-error forms for \(\widehat{\boldsymbol{\beta}}\) and \(\mathbf{e}\).
+  \item Give the variance formulas for \(\widehat{\boldsymbol{\beta}}\) and \(\mathbf{e}\).
+  \item Explain why residuals diagnose assumption failures instead of proving assumptions true.
+  \item Link a bad residual pattern to a likely repair move.
+\end{enumerate}
+}

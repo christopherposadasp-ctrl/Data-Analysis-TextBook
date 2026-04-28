@@ -1,0 +1,329 @@
+\chapter{Hessians, Quadratic Forms, and Second-Order Conditions}
+\label{mf:ch13-hessians-quadratic-forms-second-order}
+
+Chapter~12 used gradients to locate stationary points. In particular, for the least-squares objective
+\[
+    f(\mathbf{x})=\|A\mathbf{x}-\mathbf{b}\|^2,
+\]
+we found the stationary equation
+\[
+    A^TA\mathbf{x}=A^T\mathbf{b}.
+\]
+A stationary point is a candidate solution, but a candidate is not automatically a minimizer. This chapter answers the next question:
+
+\begin{quote}
+    How can second-derivative information tell us whether a stationary point is a local minimum, a local maximum, a saddle point, or an inconclusive case?
+\end{quote}
+
+For one-variable calculus, the second derivative measures curvature. For multivariable functions, curvature is encoded by a matrix of second partial derivatives called the Hessian. The sign of the Hessian, interpreted through quadratic forms, gives the multivariable version of the second-derivative test.
+
+\section{The Hessian Matrix}
+\label{mf:hessian}
+
+Let
+\[
+    f:\mathbb{R}^n\to\mathbb{R}
+\]
+be a scalar-valued function. The Hessian matrix of \(f\) at \(\mathbf{x}\in\mathbb{R}^n\) is the matrix of second partial derivatives:
+\[
+    \nabla^2 f(\mathbf{x})
+    =
+    \begin{bmatrix}
+        \dfrac{\partial^2 f}{\partial x_1^2}(\mathbf{x})
+        & \dfrac{\partial^2 f}{\partial x_1\partial x_2}(\mathbf{x})
+        & \cdots
+        & \dfrac{\partial^2 f}{\partial x_1\partial x_n}(\mathbf{x})\\[1.2em]
+        \dfrac{\partial^2 f}{\partial x_2\partial x_1}(\mathbf{x})
+        & \dfrac{\partial^2 f}{\partial x_2^2}(\mathbf{x})
+        & \cdots
+        & \dfrac{\partial^2 f}{\partial x_2\partial x_n}(\mathbf{x})\\
+        \vdots & \vdots & \ddots & \vdots\\[0.4em]
+        \dfrac{\partial^2 f}{\partial x_n\partial x_1}(\mathbf{x})
+        & \dfrac{\partial^2 f}{\partial x_n\partial x_2}(\mathbf{x})
+        & \cdots
+        & \dfrac{\partial^2 f}{\partial x_n^2}(\mathbf{x})
+    \end{bmatrix}.
+\]
+If the mixed partial derivatives are continuous, then the mixed partials commute:
+\[
+    \frac{\partial^2 f}{\partial x_i\partial x_j}
+    =
+    \frac{\partial^2 f}{\partial x_j\partial x_i}.
+\]
+Thus, under the usual smoothness assumptions used in this course, the Hessian matrix is symmetric.
+
+The Hessian is the multivariable analogue of the second derivative. For \(f:\mathbb{R}\to\mathbb{R}\), the Hessian is just the \(1\times 1\) matrix containing \(f''(x)\). For \(f:\mathbb{R}^n\to\mathbb{R}\), the Hessian records how the slope changes in all coordinate directions and mixed coordinate directions.
+
+\section{Second-Order Taylor Approximation}
+\label{mf:taylor-second-order}
+
+The Hessian appears naturally in the second-order Taylor approximation. Suppose \(f:\mathbb{R}^n\to\mathbb{R}\) is twice continuously differentiable near a point \(\mathbf{x}_0\). Then for \(\mathbf{x}\) near \(\mathbf{x}_0\),
+\[
+    f(\mathbf{x})
+    =
+    f(\mathbf{x}_0)
+    + \nabla f(\mathbf{x}_0)^T(\mathbf{x}-\mathbf{x}_0)
+    + \frac{1}{2}(\mathbf{x}-\mathbf{x}_0)^T
+        \nabla^2 f(\mathbf{x}_0)
+        (\mathbf{x}-\mathbf{x}_0)
+    + \varepsilon(\mathbf{x}-\mathbf{x}_0),
+\]
+where the remainder term \(\varepsilon(\mathbf{h})\) is small compared with \(\|\mathbf{h}\|^2\) as \(\mathbf{h}\to \mathbf{0}\):
+\[
+    \lim_{\mathbf{h}\to \mathbf{0}}
+    \frac{\varepsilon(\mathbf{h})}{\|\mathbf{h}\|^2}=0.
+\]
+
+The first-order term,
+\[
+    \nabla f(\mathbf{x}_0)^T(\mathbf{x}-\mathbf{x}_0),
+\]
+describes the local slope. The second-order term,
+\[
+    \frac{1}{2}(\mathbf{x}-\mathbf{x}_0)^T
+        \nabla^2 f(\mathbf{x}_0)
+        (\mathbf{x}-\mathbf{x}_0),
+\]
+describes the local curvature. At a stationary point, the gradient term disappears, so the second-order term becomes the main local guide to the shape of the function.
+
+\section{Quadratic Forms}
+\label{mf:quadratic-forms}
+
+A quadratic form is an expression of the form
+\[
+    q_A(\mathbf{x})=\mathbf{x}^T A\mathbf{x},
+\]
+where \(A\in\mathbb{R}^{n\times n}\). When \(A\) is symmetric, the sign of this quadratic form tells us whether \(A\) curves upward, curves downward, or curves in different directions depending on \(\mathbf{x}\).
+
+This is exactly the form that appears in Taylor's theorem. If we set
+\[
+    \mathbf{h}=\mathbf{x}-\mathbf{x}_0,
+\]
+then the curvature term is
+\[
+    \frac{1}{2}\mathbf{h}^T\nabla^2 f(\mathbf{x}_0)\mathbf{h}.
+\]
+Therefore, to classify a stationary point, we need to understand the sign of \(\mathbf{h}^T\nabla^2 f(\mathbf{x}_0)\mathbf{h}\) for possible nonzero directions \(\mathbf{h}\).
+
+\section{Positive and Negative Definiteness}
+\label{mf:positive-definite}
+\label{mf:positive-semidefinite}
+
+Let \(A\in\mathbb{R}^{n\times n}\) be symmetric. We classify the sign behavior of \(A\) using the quadratic form \(\mathbf{x}^T A\mathbf{x}\):
+\[
+\begin{array}{ll}
+\text{positive definite} & \mathbf{x}^T A\mathbf{x}>0 \text{ for every } \mathbf{x}\ne\mathbf{0},\\[0.4em]
+\text{positive semidefinite} & \mathbf{x}^T A\mathbf{x}\ge 0 \text{ for every } \mathbf{x},\\[0.4em]
+\text{negative definite} & \mathbf{x}^T A\mathbf{x}<0 \text{ for every } \mathbf{x}\ne\mathbf{0},\\[0.4em]
+\text{negative semidefinite} & \mathbf{x}^T A\mathbf{x}\le 0 \text{ for every } \mathbf{x},\\[0.4em]
+\text{indefinite} & \text{there are directions giving both positive and negative values.}
+\end{array}
+\]
+
+The definition is about all directions \(\mathbf{x}\), not just about the visible entries of the matrix. Diagonal matrices are especially easy because
+\[
+    \mathbf{x}^T
+    \begin{bmatrix}
+        d_1 & 0 & \cdots & 0\\
+        0 & d_2 & \cdots & 0\\
+        \vdots & \vdots & \ddots & \vdots\\
+        0 & 0 & \cdots & d_n
+    \end{bmatrix}
+    \mathbf{x}
+    =d_1x_1^2+d_2x_2^2+\cdots+d_nx_n^2.
+\]
+If every \(d_i>0\), then the matrix is positive definite. If every \(d_i\ge 0\) but at least one \(d_i=0\), then it is positive semidefinite but not positive definite. If some diagonal entries are positive and some are negative, then it is indefinite.
+
+\subsection*{Examples}
+
+The scalar function
+\[
+    f(x)=2x^2+4x+1
+\]
+has second derivative \(f''(x)=4\). In the quadratic-form language,
+\[
+    h^T\nabla^2 f(x_0)h=4h^2>0
+\]
+for all \(h\ne 0\), so the Hessian is positive definite. By contrast, for
+\[
+    f(x)=-2x^2+4x+1,
+\]
+the second derivative is \(-4\), so
+\[
+    h^T\nabla^2 f(x_0)h=-4h^2<0
+\]
+for all \(h\ne 0\). The Hessian is negative definite.
+
+Now consider
+\[
+    A=\begin{bmatrix}
+        1&0&0\\
+        0&2&0\\
+        0&0&2
+    \end{bmatrix}.
+\]
+Then
+\[
+    \mathbf{x}^TA\mathbf{x}=x_1^2+2x_2^2+2x_3^2>0
+\]
+for every nonzero \(\mathbf{x}\), so \(A\) is positive definite. If instead
+\[
+    A=\begin{bmatrix}
+        1&0&0\\
+        0&0&0\\
+        0&0&2
+    \end{bmatrix},
+\]
+then
+\[
+    \mathbf{x}^TA\mathbf{x}=x_1^2+2x_3^2\ge 0,
+\]
+but \(\mathbf{x}=(0,1,0)^T\) gives \(\mathbf{x}^TA\mathbf{x}=0\). Therefore this matrix is positive semidefinite but not positive definite.
+
+Finally, if
+\[
+    A=\begin{bmatrix}
+        1&0&0\\
+        0&0&0\\
+        0&0&-2
+    \end{bmatrix},
+\]
+then \((1,0,0)^TA(1,0,0)=1>0\), while \((0,0,1)^TA(0,0,1)=-2<0\). Thus \(A\) is indefinite.
+
+\section{The Second Derivative Test}
+\label{mf:second-order-conditions}
+
+Let
+\[
+    f:\mathbb{R}^n\to\mathbb{R}
+\]
+be twice continuously differentiable near \(\mathbf{x}_0\), and suppose \(\mathbf{x}_0\) is a stationary point:
+\[
+    \nabla f(\mathbf{x}_0)=\mathbf{0}.
+\]
+Then the Hessian at \(\mathbf{x}_0\) gives the following classification rule:
+\[
+\begin{array}{ll}
+\nabla^2 f(\mathbf{x}_0) \text{ positive definite} & \Longrightarrow \mathbf{x}_0 \text{ is a strict local minimizer},\\[0.4em]
+\nabla^2 f(\mathbf{x}_0) \text{ negative definite} & \Longrightarrow \mathbf{x}_0 \text{ is a strict local maximizer},\\[0.4em]
+\nabla^2 f(\mathbf{x}_0) \text{ indefinite} & \Longrightarrow \mathbf{x}_0 \text{ is a saddle point},\\[0.4em]
+\nabla^2 f(\mathbf{x}_0) \text{ semidefinite but not definite} & \Longrightarrow \text{the test is inconclusive.}
+\end{array}
+\]
+
+Inconclusive does not mean that the point is not a minimum or maximum. It means that this second-order test alone does not decide the question; higher-order terms or additional analysis may be needed.
+
+The reason is Taylor's theorem. At a stationary point, the linear term vanishes, leaving
+\[
+    f(\mathbf{x}_0+\mathbf{h})
+    \approx
+    f(\mathbf{x}_0)
+    +\frac{1}{2}\mathbf{h}^T\nabla^2 f(\mathbf{x}_0)\mathbf{h}.
+\]
+If the quadratic term is positive in every nonzero direction, then nearby function values are larger than \(f(\mathbf{x}_0)\). If it is negative in every nonzero direction, nearby values are smaller. If it is positive in some directions and negative in others, then the stationary point is a saddle point.
+
+The scalar-output condition matters. The second derivative test is designed for functions \(f:\mathbb{R}^n\to\mathbb{R}\), because minimization and maximization compare scalar output values. For vector-valued functions \(f:\mathbb{R}^n\to\mathbb{R}^m\), one must first define a scalar objective, such as a loss function, before applying second-order minimization logic.
+
+\section{Least Squares Revisited}
+\label{mf:least-squares-minimum}
+
+Return to the least-squares objective
+\[
+    f(\mathbf{x})=\|A\mathbf{x}-\mathbf{b}\|^2.
+\]
+Expanding the squared norm gives
+\[
+\begin{aligned}
+    f(\mathbf{x})
+    &=(A\mathbf{x}-\mathbf{b})^T(A\mathbf{x}-\mathbf{b})\\
+    &=\mathbf{x}^TA^TA\mathbf{x}-2\mathbf{b}^TA\mathbf{x}+\mathbf{b}^T\mathbf{b}.
+\end{aligned}
+\]
+The gradient is
+\[
+    \nabla f(\mathbf{x})=2A^TA\mathbf{x}-2A^T\mathbf{b},
+\]
+and therefore the Hessian is
+\[
+    \nabla^2 f(\mathbf{x})=2A^TA.
+\]
+This Hessian does not depend on \(\mathbf{x}\), because least squares is a quadratic optimization problem.
+
+For any vector \(\mathbf{z}\),
+\[
+    \mathbf{z}^T(2A^TA)\mathbf{z}
+    =2(A\mathbf{z})^T(A\mathbf{z})
+    =2\|A\mathbf{z}\|^2
+    \ge 0.
+\]
+Thus \(2A^TA\) is always positive semidefinite. It is positive definite exactly when
+\[
+    \mathbf{z}\ne\mathbf{0}
+    \quad\Longrightarrow\quad
+    A\mathbf{z}\ne\mathbf{0},
+\]
+which means the columns of \(A\) are linearly independent.
+
+This explains why the least-squares stationary point from Chapter~12 is a minimizer. If \(A\) has full column rank, then \(A^TA\) is invertible, the Hessian is positive definite, and the minimizer is unique:
+\[
+    \widehat{\mathbf{x}}
+    =(A^TA)^{-1}A^T\mathbf{b}.
+\]
+If \(A\) does not have full column rank, then the Hessian is only positive semidefinite. The objective is still convex in the directions captured by \(A\), but uniqueness can fail because nonzero vectors in the null space of \(A\) do not change \(A\mathbf{x}\).
+
+\section{Using Factorizations to Check Matrix Sign}
+\label{mf:ldlt-factorization}
+
+For a symmetric matrix \(A\), a useful computational tool is an \(LDL^T\) factorization. In its simplest form,
+\[
+    A=LDL^T,
+\]
+where \(L\) is lower triangular with ones on the diagonal and \(D\) is diagonal. With pivoting, one may instead write
+\[
+    P A P^T=LDL^T,
+\]
+where \(P\) is a permutation matrix.
+
+The purpose of this factorization is to reduce the matrix-sign question to a simpler diagonal or block-diagonal object. In the diagonal case, the signs of the entries of \(D\) determine whether the quadratic form is positive definite, positive semidefinite, negative definite, negative semidefinite, or indefinite. When pivoting produces \(2\times2\) blocks, inspect the signs or eigenvalues of those blocks rather than reading individual diagonal entries alone. This is the same idea as the diagonal examples above: diagonal quadratic forms are easy to read.
+
+For this course, the main lesson is practical:
+
+\begin{quote}
+    When the matrix is symmetric, use methods that exploit symmetry. When it is also positive definite, even more specialized methods are available.
+\end{quote}
+
+A common computational decision rule is:
+\[
+\begin{array}{ll}
+\text{not square} & \text{use a least-squares/QR-based method},\\
+\text{square but nonsymmetric} & \text{use an LU-based method},\\
+\text{symmetric} & \text{use an } LDL^T \text{ or symmetric-solver method},\\
+\text{symmetric positive definite} & \text{use Cholesky/}LL^T\text{ methods}.
+\end{array}
+\]
+The exact numerical method depends on the software and on stability requirements, but the principle is the same: matrix structure should guide the solver.
+
+\section{Data Analysis Bridge}
+\label{mf:ch13-data-analysis-bridge}
+
+Least squares is the mathematical center of the regression chapters in Data Analysis. The Hessian calculation in this chapter explains why the least-squares objective is minimized by the normal-equation solution and why full column rank matters.
+
+If the design matrix \(X\) has full column rank, then
+\[
+    \nabla^2\|X\boldsymbol{\beta}-\mathbf{y}\|^2
+    =2X^TX
+\]
+is positive definite. That is the optimization reason the ordinary least squares solution is unique. If \(X\) is rank deficient, then \(X^TX\) is only positive semidefinite, and coefficient uniqueness can fail. This is the Math Foundations version of the Data Analysis warning that non-identifiability and multicollinearity are not just software annoyances; they are mathematical consequences of the design matrix.
+
+\section{Chapter Summary}
+\label{mf:hessians-summary}
+
+Carry forward these second-order ideas:
+\begin{itemize}
+    \item The Hessian \(\nabla^2 f(\mathbf{x})\) records second partial derivatives and controls the quadratic term in Taylor's theorem.
+    \item A quadratic form \(\mathbf{x}^TA\mathbf{x}\) describes the sign behavior of a symmetric matrix.
+    \item Positive definite Hessians imply local minima; negative definite Hessians imply local maxima; indefinite Hessians imply saddle points.
+    \item Semidefinite-but-not-definite cases are inconclusive under the basic second-derivative test.
+    \item For least squares, the Hessian is \(2A^TA\), always positive semidefinite and positive definite exactly when the columns of \(A\) are linearly independent.
+    \item QR, LU, \(LDL^T\), and Cholesky methods exploit matrix structure in different computational settings.
+\end{itemize}

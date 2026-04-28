@@ -1,0 +1,532 @@
+% Chapter 4 draft for textbook inclusion. Assumes a textbook preamble with amsmath and amssymb.
+\chapter{Exploratory Data Analysis: Summaries and Visual Structure}
+\label{chap:eda-summaries-visual-structure}
+
+\CoreCompress{
+\section{Why Summaries and Visual Structure Matter}
+
+The previous chapter focused on whether variables are trustworthy enough to analyze.  Once we have checked definitions, missingness, units, data types, impossible values, and outliers, we can begin describing what the data appear to say.
+
+Exploratory data analysis, or EDA, is the habit of listening to data before forcing it into a model.  This chapter develops two complementary tools:
+\begin{enumerate}
+  \item \textbf{single-number summary statistics}, which compress one feature of a distribution into one number; and
+  \item \textbf{visual EDA}, which uses plots to reveal distributional shape, relationships, subgroups, and unusual structure.
+\end{enumerate}
+
+Good EDA combines both.  Numbers make comparisons precise; plots make structure visible.  The practical question for this chapter is:
+\begin{quote}
+  How do we summarize and visualize variables in a way that is accurate, interpretable, and defensible?
+\end{quote}
+
+\section{A Numeric Variable as a Vector}
+
+Let $x_1,x_2,\ldots,x_n$ be the observed values of a numeric variable $X$ for $n$ observations.  We can collect these values in a vector
+\begin{equation}
+  \mathbf{x}=\begin{bmatrix}x_1\\x_2\\ \vdots \\ x_n\end{bmatrix}\in\mathbb{R}^n.
+  \label{eq:ch4-variable-vector}
+\end{equation}
+This notation is useful because most numerical summaries are functions of the entries of $\mathbf{x}$.
+
+For example, the sample mean can be written as
+\begin{equation}
+  \bar{x}=\frac{1}{n}\sum_{i=1}^n x_i.
+  \label{eq:ch4-sample-mean}
+\end{equation}
+Using the ones vector $\mathbf{1}\in\mathbb{R}^n$, the same quantity is
+\begin{equation}
+  \bar{x}=\frac{1}{n}\mathbf{1}^T\mathbf{x}.
+  \label{eq:ch4-sample-mean-vector}
+\end{equation}
+This linear algebra view is not required for basic EDA, but it helps us see that summaries are not magic.  They are operations applied to the observed data vector.
+
+\paragraph{Math Foundations Connection.}
+A vector is an ordered collection of quantities that pertain to the same object or concept.  In EDA, a variable column is a vector of observed values.  Dot products, sums, centered vectors, and norms give compact ways to express means, variances, covariances, and correlations.  See the Math Foundations textbook, Chapters 2, 3, and 5.
+
+\section{Single-Number Summary Statistics}
+
+A single-number summary statistic characterizes one aspect of a variable's distribution.  It does not describe everything about the variable.  It answers a specific question.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\hline
+Summary family & Guiding question & Examples \\
+\hline
+Center & Where is a typical value? & mean, median, mode \\
+Spread & How variable are the values? & range, IQR, variance, standard deviation \\
+Shape & How is the distribution arranged? & skewness, kurtosis \\
+Extremes & What are the edge cases? & minimum, maximum, outlier flags \\
+\hline
+\end{tabular}
+\caption{Single-number summaries answer different questions about a variable.}
+\label{tab:ch4-summary-families}
+\end{table}
+
+The most common EDA mistake is to compute a statistic without saying what question it answers.  The same data set may require several summaries: a center for a typical value, a spread for variability, a shape summary for asymmetry or tails, and an extreme-value check for unusual observations.
+
+\section{Center and Spread}
+
+\subsection{Measures of Center}
+
+Measures of center summarize where a distribution is located.  The three most common are the mean, median, and mode.
+
+The \textbf{mean} is the balance point:
+\begin{equation}
+  \bar{x}=\frac{1}{n}\sum_{i=1}^n x_i.
+\end{equation}
+It uses every value, which makes it natural for many numerical variables, but also sensitive to outliers.
+
+The \textbf{median} is the middle value after sorting the data.  If
+\[
+  x_{(1)}\leq x_{(2)}\leq \cdots \leq x_{(n)}
+\]
+denotes the ordered data, then the median is the middle ordered value for odd $n$ and the average of the two middle ordered values for even $n$.  The median is robust to outliers because changing an extreme value usually does not move the middle of the ordered list.
+
+The \textbf{mode} is the most common value.  It is especially useful for categorical variables.  For continuous numerical variables, exact ties may be rare, so analysts often discuss peaks of a histogram or density estimate rather than an exact modal value.
+
+\begin{center}
+\begin{tabular}{@{}p{0.30\textwidth}p{0.22\textwidth}p{0.32\textwidth}@{}}
+\hline
+Situation & Useful center summary & Reason \\
+\hline
+Symmetric numeric variable & Mean or median & Often similar \\
+Skewed or outlier-prone numerical variable & Median & More robust to tail values \\
+Categorical variable & Mode & Categories do not have arithmetic averages \\
+Ordinal variable & Median or mode & Respects ordering without assuming equal spacing \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Measures of Spread}
+
+Measures of spread summarize variability.  Two variables can have the same center but very different spread.
+
+The \textbf{range} is
+\begin{equation}
+  \operatorname{Range}(\mathbf{x})=\max_i x_i-\min_i x_i.
+\end{equation}
+It is easy to interpret but depends only on the two most extreme observations.
+
+The \textbf{interquartile range} is
+\begin{equation}
+  \operatorname{IQR}=Q_3-Q_1,
+\end{equation}
+where $Q_1$ is the first quartile and $Q_3$ is the third quartile.  Because it measures the spread of the middle half of the data, the IQR is more robust to outliers than the range.
+
+The \textbf{sample variance} and \textbf{sample standard deviation} are
+\begin{align}
+  s_x^2 &= \frac{1}{n-1}\sum_{i=1}^n (x_i-\bar{x})^2,
+  \label{eq:ch4-sample-variance}\\
+  s_x &= \sqrt{s_x^2}.
+  \label{eq:ch4-sample-sd}
+\end{align}
+Variance is mathematically powerful but is measured in squared units.  Standard deviation is often easier to interpret because it is measured in the original units of the variable.
+
+Define the centered data vector
+\begin{equation}
+  \widetilde{\mathbf{x}}=\mathbf{x}-\bar{x}\mathbf{1}.
+\end{equation}
+Then
+\begin{equation}
+  s_x^2=\frac{1}{n-1}\widetilde{\mathbf{x}}^T\widetilde{\mathbf{x}}.
+  \label{eq:ch4-variance-vector-form}
+\end{equation}
+Thus spread can be interpreted geometrically: large spread means the centered data vector has large squared length.
+
+\section{Shape and Extremes}
+
+Measures of shape describe how a distribution is arranged beyond its center and spread.  The two shape ideas emphasized here are \textbf{skewness} and \textbf{kurtosis}.
+
+For a random variable $X$ with mean $\mu$ and standard deviation $\sigma$, the population skewness is
+\begin{equation}
+  \gamma_1=\frac{\mathbb{E}[(X-\mu)^3]}{\sigma^3}.
+  \label{eq:ch4-skewness}
+\end{equation}
+Positive skewness indicates a long or heavy right tail; negative skewness indicates a long or heavy left tail.  In a right-skewed distribution, the mean is often larger than the median because the right tail pulls the mean upward.
+
+The population kurtosis is
+\begin{equation}
+  \gamma_2=\frac{\mathbb{E}[(X-\mu)^4]}{\sigma^4}.
+  \label{eq:ch4-kurtosis}
+\end{equation}
+For EDA, it is safest to interpret kurtosis as tail weight rather than simply as ``peakedness.''  The normal distribution has kurtosis $3$, so excess kurtosis is $\gamma_2-3$.
+
+\paragraph{Robust analogs.}
+Mean, variance, skewness, and kurtosis are moment-based summaries; they use arithmetic powers of deviations from the mean.  Median, IQR, Bowley skewness, and Moors kurtosis are quantile-based analogs.  Quantile-based summaries are often more robust when outliers or heavy tails are present.  For this course, the main habit is more important than memorizing every robust formula: when outliers or skewness are visible, compare moment-based summaries with quantile-based summaries.
+
+The simplest measures of extremes are the minimum and maximum.  Extremes are not automatically bad: they may be rare but valid observations, data-entry errors, unit mistakes, duplicated records, or evidence of subgroups.
+
+A common outlier flag uses Tukey fences.  Values are flagged when they fall outside
+\begin{equation}
+  \left[Q_1-1.5\operatorname{IQR},\;Q_3+1.5\operatorname{IQR}\right].
+  \label{eq:ch4-tukey-fences}
+\end{equation}
+This rule is tied to the box plot.  It is a screening tool, not an automatic deletion rule.  A defensible action is: flag the value, inspect the context, and document the decision.
+
+\section{Visual EDA}
+
+Numerical summaries compress.  Plots reveal.  Visual EDA uses graphics to show the behavior of observations directly.  A plot should match the variable types involved.
+
+\subsection{Univariate Visual EDA}
+
+Univariate EDA examines one variable at a time.  For categorical or ordinal variables, a \textbf{bar plot} displays counts or proportions by category.  It helps reveal common levels, rare levels, unexpected labels, and ordering problems.
+
+For numerical variables, a \textbf{histogram} groups observations into bins and displays the number or proportion of observations in each bin.  A histogram helps inspect symmetry, skewness, modality, gaps, clusters, outliers, and approximate bell shape.  Because histograms depend on bin width, it is good practice to inspect more than one bin choice before making a strong claim about shape.
+
+A histogram may be unimodal, bimodal, or multimodal.  Multiple peaks often suggest subgroups, different data sources, or different operating conditions.  The next EDA step is usually to color, facet, or group the data by a relevant categorical variable.
+
+\subsection{Bivariate Visual EDA}
+
+Bivariate EDA examines the relationship between two variables.  The plot depends on the type of each variable.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\hline
+Variable 1 & Variable 2 & Recommended plot \\
+\hline
+Categorical / ordinal & Categorical / ordinal & Grouped bar plot \\
+Categorical / ordinal & Numerical & Grouped box plot \\
+Numerical & Categorical / ordinal & Grouped box plot \\
+Numerical & Numerical & Scatterplot \\
+\hline
+\end{tabular}
+\caption{Recommended bivariate EDA plots by variable-type pairing.}
+\label{tab:ch4-bivariate-plot-choice}
+\end{table}
+
+Grouped bar plots compare category combinations, especially counts or proportions.  Grouped box plots compare numerical distributions across categories, including medians, IQRs, skewness, and outlier flags.  Scatterplots compare two numerical variables and are often the first place we notice whether a linear model is a reasonable first approximation.  A visible curve, fan shape, cluster pattern, or outlier should be noted before modeling.
+
+\subsection{Multivariate Visual EDA}
+
+Multivariate EDA examines more than two variables.  True high-dimensional visualization is difficult, so practical multivariate EDA often uses combinations of pairwise views.
+
+A \textbf{scatterplot matrix} displays many pairwise relationships at once.  If there are $p$ numerical variables, there are
+\begin{equation}
+  \frac{p(p-1)}{2}
+\end{equation}
+unique pairwise scatterplots.  The diagonal entries are often histograms or density plots for the individual variables.
+
+A \textbf{correlation heatmap} displays many pairwise correlations compactly.  It can reveal blocks of related variables, strongly positive or negative relationships, possible multicollinearity before regression, and variables that appear weakly related to all others.  A heatmap is not truly multivariate in the sense of showing all variables simultaneously; it summarizes many pairwise linear relationships.
+
+\section{Applications of Standard Deviation}
+
+Standard deviation becomes especially useful when the distribution is approximately bell-shaped.  If $X$ is approximately normal with mean $\mu$ and standard deviation $\sigma$, then approximately
+\begin{align}
+  \mathbb{P}(\mu-\sigma \le X \le \mu+\sigma) &\approx 0.68,\\
+  \mathbb{P}(\mu-2\sigma \le X \le \mu+2\sigma) &\approx 0.95,\\
+  \mathbb{P}(\mu-3\sigma \le X \le \mu+3\sigma) &\approx 0.997.
+\end{align}
+This is the \textbf{empirical rule}.  It is an approximation, not a universal law.  It should be used only when the histogram is reasonably bell-shaped or when a normal model is otherwise justified.
+
+When the data are not approximately normal, Chebyshev's inequality provides a more general lower bound.  For a random variable $X$ with finite mean $\mu$ and finite nonzero variance $\sigma^2$, for any $k>0$,
+\begin{equation}
+  \mathbb{P}(|X-\mu|\geq k\sigma)\leq \frac{1}{k^2}.
+  \label{eq:ch4-chebyshev-tail}
+\end{equation}
+Equivalently, for $k>1$,
+\begin{equation}
+  \mathbb{P}(|X-\mu|<k\sigma)\geq 1-\frac{1}{k^2}.
+  \label{eq:ch4-chebyshev-window}
+\end{equation}
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+Window & Empirical rule, if bell-shaped & Chebyshev lower bound \\
+\hline
+Within $1\sigma$ & about 68\% & no useful positive bound \\
+Within $2\sigma$ & about 95\% & at least 75\% \\
+Within $3\sigma$ & about 99.7\% & at least 88.9\% \\
+\hline
+\end{tabular}
+\end{center}
+
+The practical takeaway is simple: if the histogram looks bell-shaped, the empirical rule is more informative; if the shape is unknown or non-normal, Chebyshev is safer but more conservative.
+
+\section{Covariance, Correlation, and Heatmaps}
+
+For two numeric variables $X$ and $Y$, covariance measures whether they tend to move together.  The population covariance is
+\begin{equation}
+  \operatorname{Cov}(X,Y)=\mathbb{E}[(X-\mu_X)(Y-\mu_Y)].
+  \label{eq:ch4-pop-covariance}
+\end{equation}
+The sample covariance is
+\begin{equation}
+  s_{xy}=\frac{1}{n-1}\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y}).
+  \label{eq:ch4-sample-covariance}
+\end{equation}
+Covariance depends on units, which makes it hard to compare across variable pairs.  Correlation rescales covariance into the interval $[-1,1]$:
+\begin{align}
+  r_{xy}&=\frac{s_{xy}}{s_xs_y},
+  \label{eq:ch4-sample-correlation}\\
+  \rho_{XY}&=\frac{\operatorname{Cov}(X,Y)}{\sqrt{\operatorname{Var}(X)\operatorname{Var}(Y)}}.
+  \label{eq:ch4-pop-correlation}
+\end{align}
+
+Let
+\begin{align*}
+  \widetilde{\mathbf{x}} &= \mathbf{x}-\bar{x}\mathbf{1},\\
+  \widetilde{\mathbf{y}} &= \mathbf{y}-\bar{y}\mathbf{1}.
+\end{align*}
+Then the sample correlation can be written as
+\begin{equation}
+  r_{xy}=\frac{\widetilde{\mathbf{x}}^T\widetilde{\mathbf{y}}}{\|\widetilde{\mathbf{x}}\|\,\|\widetilde{\mathbf{y}}\|}.
+  \label{eq:ch4-correlation-vector-form}
+\end{equation}
+This is the cosine of the angle between the centered data vectors.  If they point in nearly the same direction, correlation is positive and close to 1.  If they point in nearly opposite directions, correlation is negative and close to -1.  If they are nearly orthogonal, correlation is near 0.  See the Math Foundations textbook, Ch05 Sec. 5.8.
+
+\paragraph{Important caution.}
+Correlation measures linear association.  A correlation near 0 does not prove that two variables are unrelated.  The relationship may be curved, segmented, or driven by subgroups.  Always pair correlation with a scatterplot when possible.
+
+If $\mathbf{X}\in\mathbb{R}^{n\times p}$ contains $p$ numerical variables, then the sample correlation matrix is
+\begin{equation}
+  \mathbf{R}=\begin{bmatrix}
+    r_{11} & r_{12} & \cdots & r_{1p}\\
+    r_{21} & r_{22} & \cdots & r_{2p}\\
+    \vdots & \vdots & \ddots & \vdots\\
+    r_{p1} & r_{p2} & \cdots & r_{pp}
+  \end{bmatrix},
+  \label{eq:ch4-correlation-matrix}
+\end{equation}
+where $r_{jk}$ is the sample correlation between variables $j$ and $k$.  For nonconstant variables, the diagonal entries satisfy $r_{jj}=1$; constant-variable correlations are undefined.  The matrix is symmetric because $r_{jk}=r_{kj}$.
+
+\section{A Practical EDA Workflow}
+
+A reusable EDA workflow is:
+\begin{enumerate}
+  \item Confirm the variable type and check missingness.
+  \item Compute center, spread, shape, and extreme summaries for key numerical variables.
+  \item Make a univariate plot and compare the plot to the summaries.
+  \item For pairs of variables, choose the plot based on the two variable types.
+  \item For many numerical variables, inspect a scatterplot matrix or correlation heatmap.
+  \item Record unusual patterns, possible explanations, and follow-up questions.
+\end{enumerate}
+
+The goal is not to produce every possible plot.  The goal is to learn enough about the data to make the next modeling or analytic step more defensible.
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for EDA summaries, grouped plots, and heatmaps have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the conceptual EDA workflow and interpretation guidance.
+
+\section{Compact EDA Example}
+
+Suppose \texttt{pft\_score} is a numerical variable.  A first EDA pass might compute the mean, median, standard deviation, IQR, minimum, and maximum, then create a histogram.  If the mean and median are close and the histogram is roughly symmetric, the empirical rule may be a reasonable approximation.  If the histogram is skewed or multimodal, the median and IQR may better represent the typical value and spread.
+
+If \texttt{score} is numerical and \texttt{gender} is categorical, a grouped box plot compares distributions across groups.  Do not stop at comparing medians.  Inspect IQRs, outlier flags, skewness within each group, group sample sizes, and overlap between groups.  A grouped box plot can reveal a pattern, but it does not explain why the pattern exists.
+
+Finally, suppose a medical data set contains variables such as \texttt{triceps}, \texttt{insulin}, and \texttt{bmi}.  If zeros are impossible or implausible for those measurements, then a correlation heatmap before cleaning may be misleading because placeholder zeros create artificial relationships.  Recode impossible zeros as missing, document the decision, and create summaries and plots after cleaning.
+
+\section{Reading EDA Output Defensibly}
+
+EDA should produce observations that are specific, cautious, and tied to evidence.
+
+\begin{center}
+\begin{tabular}{p{0.42\textwidth}p{0.48\textwidth}}
+\hline
+Weak statement & Better EDA statement \\
+\hline
+The data are normal. & The histogram is roughly bell-shaped and symmetric, so the empirical rule may be reasonable. \\
+There are outliers. & Tukey fences flag three high values; check units and entry errors before removal. \\
+These variables are related. & The scatterplot shows a positive, roughly linear association; the sample correlation is positive. \\
+Group A is better than Group B. & Group A has a higher median and smaller IQR in this sample; this plot alone does not establish causation. \\
+The heatmap proves multicollinearity. & The heatmap suggests strong pairwise correlations; formal modeling diagnostics can check multicollinearity later. \\
+\hline
+\end{tabular}
+\end{center}
+
+A defensible EDA statement distinguishes what was observed from what was inferred.
+
+\section{Reusable EDA Checklist}
+
+Use this compact checklist when exploring a cleaned data set:
+\begin{itemize}
+  \item Identify each variable type: continuous, discrete, ordinal, categorical, date, text, or identifier.
+  \item Check missingness, minimum, maximum, impossible values, and suspicious zeros.
+  \item Choose center and spread summaries that match the variable and distribution.
+  \item Inspect shape: symmetry, skewness, modality, tails, gaps, clusters, and outlier flags.
+  \item For pairs of variables, choose the plot by variable types and look for linear, curved, grouped, or outlier-driven patterns.
+  \item For many numerical variables, use scatterplot matrices or heatmaps to decide which relationships deserve closer inspection.
+  \item Document the evidence, the follow-up question, and the limitation of each claim.
+\end{itemize}
+
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 4 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+A numeric variable as a data vector & $\mathbb{R}^n$ vector notation, entries, and vectors as collections of quantities & Ch02 Secs. 2.1, 2.2, 2.6 \\
+\hline
+Mean as a vector operation & Dot product examples, including $\mathbf{1}^T\mathbf{a}=\sum_i a_i$ and $(1/n)\mathbf{1}^T\mathbf{a}$ as a sample mean & Ch02 Sec. 2.4; Ch05 Secs. 5.1, 5.3 \\
+\hline
+Variance and standard deviation as squared length & Dot products, $\mathbf{a}^T\mathbf{a}=\sum_i a_i^2$, and Euclidean norm $\|\mathbf{x}\|=\sqrt{\mathbf{x}^T\mathbf{x}}$ & Ch05 Secs. 5.1, 5.3, 5.5 \\
+\hline
+Centered-vector view of spread & Vector subtraction, scalar multiplication, norm properties, and distance & Ch03 Secs. 3.1, 3.2, 3.4; Ch05 Secs. 5.5, 5.7 \\
+\hline
+Correlation as geometric alignment & Angle formula, dot products, norms, and the orthogonality case $\mathbf{a}^T\mathbf{b}=0$ & Ch05 Secs. 5.1, 5.3, 5.5, 5.8 \\
+\hline
+Scatterplot matrices and heatmaps & Matrix dimensions, submatrix notation, transpose, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.2, 7.4, 7.6.1, 7.6.2 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Chapter Summary}
+
+The main ideas from this chapter are:
+\begin{itemize}
+  \item Single-number summaries describe center, spread, shape, and extremes.
+  \item The mean is a balance point but is sensitive to outliers; the median and IQR are more robust.
+  \item Skewness measures asymmetry; kurtosis emphasizes tail weight.
+  \item Tukey fences flag possible outliers but do not justify automatic deletion.
+  \item Histograms show univariate numerical structure, including skewness, modality, and approximate bell shape.
+  \item The empirical rule is useful for approximately Gaussian distributions; Chebyshev's inequality gives a conservative bound when normality is not justified.
+  \item Bivariate plots should be selected based on the two variable types.
+  \item Scatterplot matrices and correlation heatmaps summarize many pairwise relationships.
+  \item Correlation is a scaled covariance and can be interpreted geometrically as the cosine between centered data vectors.
+  \item EDA claims should be specific, cautious, and tied to the actual summary or plot that supports them.
+\end{itemize}
+
+The next chapter begins simple linear regression.  The EDA habits from this chapter will matter immediately: before fitting a line, we should understand the response distribution, inspect the predictor, check the scatterplot, and decide whether a linear relationship is a reasonable first approximation.
+}
+{
+\section{Why Summaries and Visual Structure Matter}
+
+After checking variable definitions, missingness, units, data types, impossible values, and outliers, we can begin describing what the data appear to say.  Exploratory data analysis, or EDA, combines numerical summaries and plots to reveal distributional shape, relationships, subgroups, and unusual structure.
+
+The practical question is:
+\begin{quote}
+  How do we summarize and visualize variables in a way that is accurate, interpretable, and defensible?
+\end{quote}
+
+\section{A Numeric Variable as a Vector}
+
+Let $x_1,\ldots,x_n$ be observed values of a numeric variable.  Collect them as
+\begin{equation}
+  \mathbf{x}=(x_1,\ldots,x_n)^T\in\mathbb{R}^n.
+  \label{eq:ch4-data-vector}
+\end{equation}
+The sample mean is
+\begin{equation}
+  \bar{x}=\frac{1}{n}\sum_{i=1}^n x_i
+  =\frac{1}{n}\mathbf{1}^T\mathbf{x}.
+  \label{eq:ch4-sample-mean}
+\end{equation}
+
+\paragraph{Math Foundations Connection.}
+A variable column is a vector of observed values.  Dot products, sums, centered vectors, and norms give compact ways to write means, variances, covariances, and correlations.  See the Math Foundations textbook, Chapters 2, 3, and 5.
+
+\section{Single-Number Summary Statistics}
+
+A single-number summary answers one question about a distribution; it does not describe everything.  The main families are:
+\begin{center}
+\begin{tabular}{p{0.18\textwidth}p{0.38\textwidth}p{0.34\textwidth}}
+\toprule
+\textbf{Family} & \textbf{Question} & \textbf{Examples} \\
+\midrule
+Center & Where is a typical value? & mean, median, mode \\
+Spread & How variable are the values? & range, IQR, variance, standard deviation \\
+Shape & How is the distribution arranged? & skewness, kurtosis, modality \\
+Extremes & What are the edge cases? & min, max, outlier flags \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Center, Spread, Shape, and Extremes}
+
+\textbf{Center.} The mean is the balance point and uses every value, so it is sensitive to outliers.  The median is the middle ordered value and is more robust.  The mode is the most common value and is often most natural for categorical variables.
+
+\textbf{Spread.} The range is $\max_i x_i-\min_i x_i$.  The interquartile range is $Q_3-Q_1$.  The sample variance and standard deviation are
+\begin{equation}
+  s_x^2=\frac{1}{n-1}\sum_{i=1}^n (x_i-\bar{x})^2,
+  \qquad
+  s_x=\sqrt{s_x^2}.
+  \label{eq:ch4-sample-variance}
+\end{equation}
+Standard deviation is easier to interpret because it has the same units as the variable.
+
+\textbf{Shape.} Skewness describes asymmetry: right-skewed distributions have a long right tail, and left-skewed distributions have a long left tail.  Kurtosis describes tail weight and the tendency to produce extreme values.  In the Core Reader, the main point is interpretive: shape affects which summaries and models are appropriate.
+
+\textbf{Extremes.} Minimums, maximums, and outlier flags identify edge cases.  Tukey fences are
+\begin{equation}
+  Q_1-1.5\operatorname{IQR}
+  \quad\text{and}\quad
+  Q_3+1.5\operatorname{IQR}.
+  \label{eq:ch4-tukey-fences}
+\end{equation}
+They flag observations for investigation; they do not prove the observations are errors.
+
+\section{Visual EDA}
+
+Visual EDA shows patterns that one-number summaries can hide.
+\begin{center}
+\begin{tabular}{p{0.24\textwidth}p{0.34\textwidth}p{0.32\textwidth}}
+\toprule
+\textbf{Data setting} & \textbf{Useful plots} & \textbf{What to look for} \\
+\midrule
+One categorical variable & bar plot & counts, imbalance, rare categories \\
+One numeric variable & histogram, boxplot & skewness, modality, outliers \\
+Categorical + numeric & grouped box plot & group differences, spread, outliers \\
+Two numeric variables & scatterplot & trend, curvature, clusters, outliers \\
+Many numeric variables & scatterplot matrix, heatmap & pairwise structure and correlation patterns \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A histogram helps check symmetry, skewness, and modality.  A scatterplot helps check whether a relationship is linear, curved, clustered, or affected by unusual points.  Scatterplot matrices are useful for many pairwise relationships, but they can become visually dense.  Correlation heatmaps summarize many pairwise linear relationships more compactly.
+
+\section{Applications of Standard Deviation}
+
+For approximately bell-shaped data, the empirical rule says that about 68\%, 95\%, and 99.7\% of observations lie within one, two, and three standard deviations of the mean.  Chebyshev's inequality is more general: for any distribution with finite variance,
+\begin{equation}
+  \Pr(|X-\mu|\ge k\sigma)\le \frac{1}{k^2},
+  \qquad k>1.
+  \label{eq:ch4-chebyshev}
+\end{equation}
+The empirical rule gives an approximate percentage under a bell-shape assumption.  Chebyshev gives a conservative bound without requiring bell-shaped data.
+
+\section{Covariance, Correlation, and Heatmaps}
+
+Sample covariance measures how two variables vary together:
+\begin{equation}
+  s_{xy}=\frac{1}{n-1}\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y}).
+  \label{eq:ch4-sample-covariance}
+\end{equation}
+Sample correlation rescales covariance:
+\begin{equation}
+  r_{xy}=\frac{s_{xy}}{s_xs_y}.
+  \label{eq:ch4-sample-correlation}
+\end{equation}
+Correlation is unitless and lies between $-1$ and $1$ when both variables have nonzero variance.  For nonconstant variables, the diagonal entries of a correlation heatmap are $1$; constant-variable correlations are undefined.
+
+\paragraph{Math Foundations Connection.}
+If $\tilde{\mathbf{x}}=\mathbf{x}-\bar{x}\mathbf{1}$ and $\tilde{\mathbf{y}}=\mathbf{y}-\bar{y}\mathbf{1}$, then correlation is a normalized dot product:
+\begin{equation}
+  r_{xy}=\frac{\tilde{\mathbf{x}}^T\tilde{\mathbf{y}}}{\|\tilde{\mathbf{x}}\|\,\|\tilde{\mathbf{y}}\|}.
+  \label{eq:ch4-correlation-centered-vectors}
+\end{equation}
+This is why correlation measures linear alignment between centered data vectors.
+
+\section{A Practical EDA Workflow}
+
+A defensible EDA pass should answer:
+\begin{enumerate}
+  \item What type is each variable?
+  \item What are the center, spread, shape, and extremes for key numeric variables?
+  \item Are missing values, impossible values, or suspicious zeros present?
+  \item Which plots reveal structure that summaries hide?
+  \item Which relationships look linear, curved, grouped, or outlier-driven?
+  \item What should be checked before modeling?
+\end{enumerate}
+Do not treat a plot as proof.  Treat it as evidence that guides the next question.
+
+\section{Math Foundations Source Map}
+
+The Core Reader keeps the short Math Foundations connections for vector summaries, centered vectors, norms, and correlation as a normalized dot product.  The full Math Foundations textbook-location map for this chapter appears in the full reference textbook.
+
+\section{Chapter Summary}
+
+EDA combines summaries and visuals.  Measures of center, spread, shape, and extremes answer different questions.  Visual EDA reveals distributional structure, relationships, clusters, and outliers.  The empirical rule and Chebyshev's inequality connect standard deviation to probability statements.  Covariance and correlation summarize pairwise linear association, and heatmaps help inspect many such associations at once.  Good EDA is descriptive, skeptical, and defensible.
+}

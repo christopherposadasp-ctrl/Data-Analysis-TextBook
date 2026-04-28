@@ -1,0 +1,715 @@
+% Chapter 12 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, hyperref, and verbatim.
+\chapter[Residual Analysis and Model Repair]{Residual Analysis and Model Repair}
+\label{chap:residual-analysis-model-repair}
+
+\section{The Big Picture}
+
+A fitted model is not the end of the analysis.  It is the beginning of the model check.
+
+The previous chapters built multiple linear regression from the design-matrix point of view:
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+  \qquad
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+  \qquad
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}.
+\end{equation}
+The residual vector \(\mathbf{e}\) is the part of the observed response vector that the fitted model did not explain.  Residual analysis asks:
+\begin{quote}
+  Does the leftover pattern look like random noise, or does it look like structure the model failed to capture?
+\end{quote}
+
+This chapter is about using residuals as a diagnostic tool and then deciding how to repair a model when the diagnostics look bad.  The three practical repair moves emphasized in the source slides are:
+\begin{enumerate}
+  \item transform the predictors and/or the response,
+  \item add interaction terms,
+  \item admit that the current linear-model frame is not adequate and move to a different modeling strategy.
+\end{enumerate}
+
+The most important habit is to avoid treating a single hypothesis test, a single \(R^2\), or a single residual plot as the whole story.  Residual analysis is evidence.  Test MSE, cross-validation, domain knowledge, and interpretability are also evidence.
+
+As in Chapters~\ref{chap:linear-regression-projection-design-matrix-hat-matrix}, \ref{chap:mlr-in-practice-predictors-hyperplanes-advertising}, and \ref{chap:linear-models-beyond-straight-lines}, we use \(\mathbf{y}\) for the observed response vector from the fitted data set.  Chapter~\ref{chap:truth-error-estimator-behavior-residual-geometry} used \(\mathbf{Y}\) when the response vector was being treated as random.  Here the emphasis is back on the realized fit and its residuals.
+
+\paragraph{Math Foundations Connection.}
+Residual analysis is geometric, but the supporting Math Foundations ideas are more basic: norms, orthogonality, matrix-vector multiplication, rank, column-space/residual-space geometry, and least-squares minimization.  These ideas are covered in the Math Foundations textbook, Chapters~5, 7, 10, 11, and~12.  The projection language used in this chapter is a Data Analysis synthesis built from those underlying ideas.  Model repair changes the design columns and therefore changes which patterns can be represented by the fitted part of the model.
+
+\section{Recall from Chapters 7 and 10: The Residual Vector}
+
+Chapters~\ref{chap:linear-regression-projection-design-matrix-hat-matrix} and~\ref{chap:truth-error-estimator-behavior-residual-geometry} already developed the linear-algebra machinery behind residuals.  We recall only the pieces needed for diagnostics.
+
+For a full-rank design matrix \(\mathbf{X}\in\mathbb{R}^{n\times(p+1)}\), ordinary least squares gives
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y},
+  \qquad
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+  \qquad
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+\end{equation}
+The residual vector is therefore
+\begin{equation}
+  \boxed{\mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}=(\mathbf{I}_n-\mathbf{H})\mathbf{y}.}
+\end{equation}
+
+If the linear truth-plus-error model is appropriate, then
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}.
+\end{equation}
+Since \(\mathbf{H}\mathbf{X}=\mathbf{X}\), the residuals can be written as
+\begin{equation}
+  \boxed{\mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.}
+\end{equation}
+This identity is the key diagnostic reminder: residuals are not the true errors.  They are the parts of the errors left over after projecting onto the fitted model space.
+
+The normal equations also give
+\begin{equation}
+  \mathbf{X}^T\mathbf{e}=\mathbf{0}.
+  \label{eq:ch12-xte-zero}
+\end{equation}
+Thus residuals are orthogonal to every column of the design matrix.  If the model includes an intercept column \(\mathbf{1}\), then
+\begin{equation}
+  \mathbf{1}^T\mathbf{e}=\sum_{i=1}^n e_i=0.
+\end{equation}
+This is an algebraic fact, not a diagnostic victory.  The residuals can sum to zero and still show curvature, changing spread, time dependence, or outliers.  The modeling assumption we care about is closer to
+\begin{equation}
+  \mathbb{E}[\epsilon_i\mid \mathbf{x}_i]=0,
+\end{equation}
+meaning that the unobserved errors are centered correctly at each predictor setting.  Residual plots give practical evidence for or against that claim.
+
+\section{What Residuals Are Trying to Tell Us}
+
+The source slides summarize the residual-checking logic as follows:
+\begin{center}
+\begin{tabular}{p{0.30\textwidth}p{0.36\textwidth}p{0.25\textwidth}}
+\toprule
+Residual behavior & Suggests about the errors & Common diagnostic view \\
+\midrule
+Mean-zero pattern for each \(x\) & \(\mathbb{E}[\epsilon\mid X=x]=0\) may be plausible & residuals versus fitted values or predictors \\
+Approximately constant spread & \(\operatorname{Var}(\epsilon\mid X=x)=\sigma^2\) may be plausible & residuals versus fitted values; scale-location plot \\
+Approximately normal shape & \(\epsilon\sim N(0,\sigma^2)\) may be plausible & histogram or normal Q-Q plot \\
+No sequential pattern & uncorrelated errors may be plausible & residuals versus time/order \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The phrase ``suggests'' is important.  Residual plots do not prove assumptions.  They help us identify visible violations.
+
+\section{Residuals Under the Big Three Regression Assumptions}
+
+Residual diagnostics connect directly to the three-step assumption ladder from earlier regression chapters.  This section gives the diagnostic consequences, rather than re-deriving the full residual theory.
+
+\subsection{Assumption 1: Mean-zero errors}
+
+If \(\mathbb{E}[\boldsymbol{\epsilon}\mid \mathbf{X}]=\mathbf{0}\), then the model is centered correctly and residuals should not show systematic mean structure.  A residual plot with no visible pattern around zero supports this assumption.  A curved residual pattern suggests that the mean model is missing structure, such as a transformed predictor, a polynomial term, or an interaction.
+
+\subsection{Assumption 2: Constant variance and uncorrelated errors}
+
+If \(\operatorname{Var}(\boldsymbol{\epsilon}\mid \mathbf{X})=\sigma^2\mathbf{I}_n\), then the usual least-squares standard-error formulas are supported.  Chapter~\ref{chap:truth-error-estimator-behavior-residual-geometry} showed that residuals then satisfy
+\begin{equation}
+  \operatorname{Var}(\mathbf{e}\mid \mathbf{X})=\sigma^2(\mathbf{I}_n-\mathbf{H}),
+  \qquad
+  \operatorname{Var}(e_i\mid \mathbf{X})=\sigma^2(1-h_{ii}).
+\end{equation}
+The important practical point is that raw residuals are affected by leverage.  Changing spread in residual plots suggests heteroskedasticity, while waves or runs over time/order suggest correlated errors.
+
+\subsection{Assumption 3: Gaussian errors}
+
+If \(\boldsymbol{\epsilon}\mid \mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n)\), then the usual finite-sample \(t\)- and \(F\)-based inference is exact under the model.  Normal Q--Q plots and residual histograms are used to look for strong skewness, heavy tails, or outliers.  For prediction, mild nonnormality may be less damaging than nonlinearity, heteroskedasticity, or dependence.
+
+\CoreCompress{
+\section{Residual Scaling: Raw, Standardized, and Studentized}
+
+The raw residual is
+\begin{equation}
+  e_i=y_i-\widehat{y}_i.
+\end{equation}
+Raw residuals are measured in the units of the response, which makes them easy to interpret operationally.
+
+The residual standard error is
+\begin{equation}
+  RSE=\widehat{\sigma}
+  =\sqrt{\frac{RSS}{n-p-1}},
+  \qquad
+  RSS=\sum_{i=1}^n e_i^2.
+\end{equation}
+A common standardized residual is
+\begin{equation}
+  r_i=\frac{e_i}{\widehat{\sigma}\sqrt{1-h_{ii}}}.
+\end{equation}
+This accounts for the fact that residual variance depends on leverage.  This leverage-adjusted version is often called an internally studentized residual.  Externally studentized residuals use a leave-one-out estimate of \(\sigma\), which we do not need here.  Large standardized or studentized residuals are potential outliers.  A rough screening rule is that values beyond \(\pm 2\) deserve attention and values beyond \(\pm 3\) deserve a closer look.
+
+\paragraph{Do not automate judgment.}
+A large residual is a flag, not an automatic deletion order.  Ask whether the observation is a data-entry error, an unusual but valid case, evidence of missing predictors, or evidence that the model class is too limited.
+}{
+\section{Residual Scaling: Raw, Standardized, and Studentized}
+
+Raw residuals are useful for seeing patterns, but they do not all have the same variance because leverage changes residual variability.  Standardized and internally studentized residuals rescale residuals so unusually large residuals are easier to spot; externally studentized residuals use a leave-one-out estimate of \(\sigma\).  The full reference text gives the detailed formulas.
+}
+\section{Core Diagnostic Plots}
+
+\subsection{Residuals versus fitted values}
+
+This is the primary diagnostic plot for linear regression.  The horizontal axis is \(\widehat{y}_i\), and the vertical axis is \(e_i\).  A good residual-versus-fitted plot looks like an unstructured cloud centered around zero.
+
+Common patterns include:
+\begin{center}
+\begin{tabular}{p{0.28\textwidth}p{0.38\textwidth}p{0.25\textwidth}}
+\toprule
+Pattern & Likely issue & Candidate repair \\
+\midrule
+Curved shape & missing nonlinear mean structure & polynomial term, log term, spline, or other transformed predictor \\
+Fan shape & nonconstant variance & transform response, weighted least squares, robust standard errors \\
+Separate bands by group & missing categorical effect or interaction & add group indicator or interaction \\
+Large isolated points & outliers or data errors & inspect data, sensitivity analysis, robust method \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Residuals versus predictors}
+
+A residual-versus-fitted plot may hide which predictor is causing the problem.  Plotting residuals against individual predictors can reveal a missed nonlinear effect in one variable.
+
+For example, if residuals plotted against \(x_1\) show a curve, then a candidate repair is
+\begin{equation}
+  Y=\beta_0+\beta_1x_1+\beta_2x_1^2+\cdots+\epsilon.
+\end{equation}
+If residuals plotted against \(x_2\) show increasing spread, then a transformation or weighting strategy may be needed.
+
+\subsection{Normal Q-Q plot}
+
+A normal Q-Q plot compares standardized residual quantiles to normal quantiles.  If the residuals are approximately normal, the points should lie roughly along a straight line.
+
+Common departures include:
+\begin{enumerate}
+  \item heavy tails: ends bend away from the line,
+  \item skewness: one tail departs more than the other,
+  \item isolated outliers: one or a few points far from the line.
+\end{enumerate}
+
+\subsection{Scale-location plot}
+
+A scale-location plot often uses
+\begin{equation}
+  \sqrt{|r_i|}
+\end{equation}
+against fitted values.  It is designed to make changing variance easier to see.  A rising trend suggests that the residual spread increases with the fitted value.
+
+\subsection{Residuals versus time or collection order}
+
+If the observations have a natural order, plot residuals against time, mission phase, batch number, route order, or collection order.  A visible wave, trend, or clustering pattern can indicate correlated errors or missing time-varying predictors.
+
+\section{Problem 1: Nonlinearity}
+
+A linear model assumes that the conditional mean is linear in the columns of the design matrix:
+\begin{equation}
+  \mathbb{E}[Y\mid \mathbf{x}]=\mathbf{x}^T\boldsymbol{\beta}.
+\end{equation}
+If the true mean function is curved and the design matrix has only straight-line columns, residuals will show structure.
+
+\subsection*{Diagnostic sign}
+
+A residual plot with a curve is the classic sign.  For example, a straight-line fit to a parabola will often leave residuals that are negative-positive-negative across the predictor range.
+
+\subsection*{Repairs}
+
+Candidate repairs include:
+\begin{enumerate}
+  \item adding polynomial terms such as \(x^2\) or \(x^3\),
+  \item using transformations such as \(\log x\), \(\sqrt{x}\), or \(1/x\),
+  \item using sine/cosine terms for cyclic predictors,
+  \item using splines or generalized additive models when a simple transformation is not enough,
+  \item moving to a different model class if the response type requires it.
+\end{enumerate}
+
+\subsection*{Model repair as new columns}
+
+If the original model is
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+\end{equation}
+then adding a quadratic predictor changes the design matrix to
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+    1 & x_1 & x_1^2 \\
+    1 & x_2 & x_2^2 \\
+    \vdots & \vdots & \vdots \\
+    1 & x_n & x_n^2
+  \end{bmatrix}.
+\end{equation}
+The repaired model is
+\begin{equation}
+  \mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}.
+\end{equation}
+So model repair is still a projection problem; we changed the subspace.
+
+\section{Problem 2: Nonconstant Variance}
+
+The homoskedastic model assumes
+\begin{equation}
+  \operatorname{Var}(\epsilon_i\mid \mathbf{x}_i)=\sigma^2
+\end{equation}
+for every observation.  If residual spread changes with fitted values or predictor values, then the constant-variance assumption is questionable.
+
+\subsection*{Diagnostic sign}
+
+A common pattern is a funnel shape: residuals are tightly clustered for small fitted values and widely spread for large fitted values, or vice versa.
+
+\subsection*{Why it matters}
+
+Nonconstant variance can make standard errors, confidence intervals, and hypothesis tests unreliable.  It may not destroy point predictions, but it can damage uncertainty quantification.
+
+\subsection*{Repairs}
+
+Candidate repairs include:
+\begin{enumerate}
+  \item transform the response, especially \(\log Y\) or \(\sqrt{Y}\),
+  \item use weighted least squares when the variance pattern is understood,
+  \item use heteroskedasticity-robust standard errors for inference,
+  \item use a model family designed for the response type, such as logistic or Poisson regression.
+\end{enumerate}
+
+A log response model has the form
+\begin{equation}
+  \log(Y_i)=\beta_0+\beta_1x_i+\epsilon_i,
+\end{equation}
+which often helps when variability grows multiplicatively with the mean.
+
+A square-root response model has the form
+\begin{equation}
+  \sqrt{Y_i}=\beta_0+\beta_1x_i+\epsilon_i,
+\end{equation}
+which can help for nonnegative count-like responses.
+
+\section{Problem 3: Nonnormal Residuals}
+
+The Gaussian noise model assumes
+\begin{equation}
+  \epsilon_i\sim N(0,\sigma^2).
+\end{equation}
+A histogram or Q-Q plot of residuals can reveal skewness, heavy tails, or outliers.
+
+\subsection*{Why it matters}
+
+Normality is most important for exact small-sample inference.  If the sample is large, coefficient estimates may still behave well under weaker conditions, but heavy tails and outliers can still destabilize the fit.
+
+\subsection*{Repairs}
+
+Candidate repairs include:
+\begin{enumerate}
+  \item transform the response,
+  \item inspect and correct data-entry issues,
+  \item use robust regression or bootstrap uncertainty intervals,
+  \item use a model family more appropriate to the response distribution.
+\end{enumerate}
+
+\section{Problem 4: Outliers and Influence}
+
+An outlier is an observation with a response value far from what the model predicts.  A high-leverage point is an observation with an unusual predictor vector.  A point can be one, both, or neither.
+
+The leverage of observation \(i\) is
+\begin{equation}
+  h_{ii}=\mathbf{x}_i^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_i.
+\end{equation}
+Here \(\mathbf{x}_i^T\) is the full design row for observation \(i\), including the intercept and any transformed or interaction columns.  High leverage is not automatically bad.  It means the observation is far out in predictor space and can have a strong effect on the fitted model.
+
+A common influence measure is Cook's distance:
+\begin{equation}
+  D_i
+  =\frac{e_i^2}{(p+1)\widehat{\sigma}^2}
+  \frac{h_{ii}}{(1-h_{ii})^2}.
+\end{equation}
+Large Cook's distance suggests that deleting observation \(i\) would noticeably change the fitted model.
+
+\paragraph{Repair logic.}
+Do not delete a point merely because it is inconvenient.  First ask:
+\begin{enumerate}
+  \item Was the observation recorded correctly?
+  \item Is it inside the intended population of analysis?
+  \item Does it represent an operationally important rare case?
+  \item Does the conclusion change if the point is included versus excluded?
+\end{enumerate}
+A defensible analysis often reports a sensitivity check.
+
+\section{Problem 5: Correlated Errors}
+
+Least squares formulas for standard errors often assume uncorrelated errors:
+\begin{equation}
+  \operatorname{Cov}(\epsilon_i,\epsilon_j\mid\mathbf{X})=0
+  \qquad\text{for }i\ne j.
+\end{equation}
+This assumption is especially vulnerable when observations are collected over time, across space, within units, or by repeated measurements on the same platform or person.
+
+\subsection*{Diagnostic sign}
+
+Residuals plotted over time or collection order may show runs, waves, or clusters.  Adjacent residuals may have similar signs or magnitudes.
+
+\subsection*{Repairs}
+
+Candidate repairs include:
+\begin{enumerate}
+  \item include time, batch, route, or group predictors,
+  \item include lagged predictors or lagged responses when appropriate,
+  \item use generalized least squares or time-series models,
+  \item use clustered or block-robust standard errors,
+  \item redesign the data collection plan when possible.
+\end{enumerate}
+
+\section{Problem 6: Missing Interactions}
+
+An additive model assumes that the effect of one predictor does not depend on another predictor.  Interactions repair that limitation.
+
+The additive two-predictor model is
+\begin{equation}
+  Y=\beta_0+\beta_1x_1+\beta_2x_2+\epsilon.
+\end{equation}
+The interaction model is
+\begin{equation}
+  Y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_1x_2+\epsilon.
+\end{equation}
+Equivalently,
+\begin{equation}
+  Y=\beta_0+(\beta_1+\beta_3x_2)x_1+\beta_2x_2+\epsilon.
+\end{equation}
+The slope in \(x_1\) is now allowed to depend on \(x_2\).
+
+\subsection*{Diagnostic signs}
+
+Possible signs of a missing interaction include:
+\begin{enumerate}
+  \item residuals have different patterns in different groups,
+  \item one predictor appears helpful only at certain levels of another predictor,
+  \item residuals plotted by color or symbol for a second variable reveal structure,
+  \item domain knowledge says the variables should combine synergistically.
+\end{enumerate}
+
+\section{A Model Repair Menu}
+
+When residuals look bad, the repair should be tied to the defect.
+
+\begin{center}
+\begin{tabular}{p{0.29\textwidth}p{0.34\textwidth}p{0.27\textwidth}}
+\toprule
+Residual symptom & Likely interpretation & First repair candidates \\
+\midrule
+Curved residual trend & wrong mean shape & transform predictor, polynomial, spline \\
+Fan-shaped spread & heteroskedasticity & transform response, WLS, robust SEs \\
+Heavy tails in Q-Q plot & outliers or nonnormal errors & inspect data, robust method, transformation \\
+Runs over time/order & correlated errors & time terms, lags, GLS, clustered SEs \\
+Different patterns by group & missing categorical effect or interaction & add indicators or interactions \\
+Large influential point & unusual observation dominates fit & audit, sensitivity analysis, robust method \\
+No repair makes sense & model class mismatch & change model family or data strategy \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\CoreCompress{
+\section{Transformation Repairs}
+
+The source slides compare several model-repair candidates: a linear fit, a third-degree polynomial transformation, a square-root transformation, and a logarithmic-linear transformation.  The general lesson is that there is rarely a purely mechanical answer to ``which one wins.''
+
+\subsection{Linear fit}
+
+The simplest model is
+\begin{equation}
+  Y=\beta_0+\beta_1x+\epsilon.
+\end{equation}
+Use this as the baseline.  It is interpretable and low-variance, but it may leave curved residual patterns.
+
+\subsection{Polynomial predictor transformation}
+
+A third-degree polynomial model is
+\begin{equation}
+  Y=\beta_0+\beta_1x+\beta_2x^2+\beta_3x^3+\epsilon.
+\end{equation}
+This can capture curvature while remaining linear in the coefficients.  The design matrix is
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+    1 & x_1 & x_1^2 & x_1^3 \\
+    1 & x_2 & x_2^2 & x_2^3 \\
+    \vdots & \vdots & \vdots & \vdots \\
+    1 & x_n & x_n^2 & x_n^3
+  \end{bmatrix}.
+\end{equation}
+The risk is overfitting and unstable behavior near the edges.
+
+\subsection{Square-root transformation}
+
+A square-root predictor model might be
+\begin{equation}
+  Y=\beta_0+\beta_1\sqrt{x}+\epsilon,
+\end{equation}
+with \(x\ge 0\).  A square-root response model might be
+\begin{equation}
+  \sqrt{Y}=\beta_0+\beta_1x+\epsilon,
+\end{equation}
+with \(Y\ge 0\).  These are different models and must be interpreted differently.
+
+\subsection{Logarithmic-linear transformation}
+
+A logarithmic predictor model is
+\begin{equation}
+  Y=\beta_0+\beta_1\log(x)+\epsilon,
+\end{equation}
+with \(x>0\).  This is useful for diminishing returns.
+
+A log-response model is
+\begin{equation}
+  \log(Y)=\beta_0+\beta_1x+\epsilon,
+\end{equation}
+with \(Y>0\).  This is useful for multiplicative behavior and variance that grows with the mean.
+
+\paragraph{Scale warning.}
+Do not compare RMSE from a model fitted on \(Y\) to RMSE from a model fitted on \(\log(Y)\) without putting predictions on the same scale.  Model comparison must be done on a common operational scale.
+}{
+\section{Transformation Repairs}
+
+The source slides compare several repair candidates: a linear fit, a polynomial predictor transformation, a square-root transformation, and a logarithmic-linear transformation.  The point is not that one transformation is always best.  The point is to use residual behavior, EDA intuition, domain knowledge, and test MSE together.  A transformation is a modeling decision, not a cosmetic fix.
+}
+\section{Which One Wins?}
+
+The source slides emphasize that model repair includes some qualitative judgment.  A defensible answer combines several checks:
+\begin{enumerate}
+  \item Do residual plots look less patterned?
+  \item Does test MSE or cross-validated error improve on the operational prediction scale?
+  \item Is the transformation plausible for the domain?
+  \item Does the repair preserve interpretability?
+  \item Did the repair create new problems, such as extrapolation risk or rank deficiency?
+  \item Are nested-model tests, adjusted \(R^2\), AIC, or BIC consistent with the conclusion?
+\end{enumerate}
+
+\subsection*{Nested-model comparison}
+
+If a reduced model is nested inside a full model, use the familiar comparison statistic:
+\begin{equation}
+  F=\frac{(RSS_R-RSS_F)/(df_R-df_F)}{RSS_F/df_F}.
+\end{equation}
+For example, the linear model
+\begin{equation}
+  Y=\beta_0+\beta_1x+\epsilon
+\end{equation}
+is nested inside the cubic model
+\begin{equation}
+  Y=\beta_0+\beta_1x+\beta_2x^2+\beta_3x^3+\epsilon.
+\end{equation}
+The test asks whether the added polynomial columns explain enough additional variation to justify the added degrees of freedom.
+
+\subsection*{Prediction-focused comparison}
+
+For prediction, validation should dominate training fit.  The model with the smallest training RSS is often the most flexible model, not necessarily the best generalizing model.  Use a train/test split or cross-validation to estimate test error.
+
+\subsection*{Inference-focused comparison}
+
+For inference, residual repair should support assumptions needed for standard errors, intervals, and tests.  A model with slightly worse prediction but clearer interpretation and better-behaved residuals may be the better briefing model.
+
+\section{Admit Defeat: When Repair Means Changing the Model Class}
+
+Sometimes bad residuals are not a minor defect.  They are evidence that ordinary least squares is the wrong tool.
+
+Examples:
+\begin{center}
+\begin{tabular}{p{0.30\textwidth}p{0.33\textwidth}p{0.27\textwidth}}
+\toprule
+Situation & Why OLS may struggle & Better direction \\
+\midrule
+Binary response & predictions can fall outside \([0,1]\) & logistic regression \\
+Count response & variance often grows with mean & Poisson or negative binomial model \\
+Positive skewed response & additive normal errors may be implausible & log transform or Gamma GLM \\
+Repeated measures & errors are correlated within unit & mixed model or clustered SEs \\
+Time series & residuals may be autocorrelated & time-series regression or GLS \\
+Strong nonlinear boundary & linear mean is structurally wrong & nonlinear model, tree, GAM, or ML method \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Admitting defeat is not failure.  It is a modeling conclusion: the residuals are telling us the current model family is missing something important.
+
+\CoreCompress{
+\section{Worked Example: Residual Pattern to Repair Decision}
+
+Suppose a linear fit gives the residual pattern
+\begin{equation}
+  e_i \approx \text{curved function of }x_i.
+\end{equation}
+A reasonable repair sequence is:
+\begin{enumerate}
+  \item Fit the baseline model:
+  \begin{equation}
+    Y_i=\beta_0+\beta_1x_i+\epsilon_i.
+  \end{equation}
+  \item Plot residuals versus \(x\) and fitted values.
+  \item Add a transformation motivated by the pattern:
+  \begin{equation}
+    Y_i=\beta_0+\beta_1x_i+\beta_2x_i^2+\epsilon_i.
+  \end{equation}
+  \item Refit the model and replot residuals.
+  \item Compare the two models using residual behavior, test MSE, and a nested-model \(F\)-test if appropriate.
+  \item Brief the result in terms of the original problem, not just the equation.
+\end{enumerate}
+
+A clean result would be: the repaired model reduces the visible residual curve, improves validation error on the response scale, and has a defensible interpretation.
+}{
+\section{Worked Example: Residual Pattern to Repair Decision}
+
+A useful residual-repair workflow is: identify the visible pattern, connect it to a violated assumption or missing structure, propose one targeted repair, refit, and compare both residual behavior and prediction performance.  For example, a curved residual pattern suggests missing nonlinear mean structure; a reasonable repair is to add a transformed predictor column, then check whether the residual plot and test MSE improve.
+}
+\CoreCompress{
+\section{Residual Analysis Workflow}
+
+A reusable workflow is:
+\begin{enumerate}
+  \item Fit a simple, interpretable baseline model.
+  \item Compute fitted values and residuals.
+  \item Check residuals versus fitted values.
+  \item Check residuals versus important predictors.
+  \item Check residual distribution with a histogram and Q-Q plot.
+  \item Check residuals over time/order/group if applicable.
+  \item Check leverage and influence for unusual observations.
+  \item Propose one repair at a time.
+  \item Refit and repeat diagnostics.
+  \item Compare models on a common scale using validation or other appropriate criteria.
+  \item Document the decision.
+\end{enumerate}
+
+The last step is critical.  If an analyst tries several transformations and only reports the one that looks good, the analysis is less defensible.  A good report explains what was tried and why the final choice was made.
+
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for residual plots, Q-Q plots, influence measures, transformations, interactions, and validation RMSE have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the diagnostic logic and model-repair workflow.
+
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Treating residuals as the true errors}
+
+Residuals estimate error behavior, but they are not the unobserved errors.  They are constrained by the fitted model and satisfy \(\mathbf{X}^T\mathbf{e}=\mathbf{0}\).
+
+\subsection*{Mistake 2: Celebrating mean-zero residuals}
+
+If the model has an intercept, the residuals sum to zero automatically.  The meaningful question is whether residuals have no systematic pattern across predictor values.
+
+\subsection*{Mistake 3: Comparing transformed and untransformed RMSE directly}
+
+RMSE on \(Y\) and RMSE on \(\log(Y)\) are not on the same scale.  Compare models on the operational scale that matters.
+
+\subsection*{Mistake 4: Deleting outliers without explanation}
+
+Outlier removal must be repeatable and defensible.  If the point is valid and operationally relevant, deleting it may hide exactly the case the model needs to understand.
+
+\subsection*{Mistake 5: Adding every possible transformation}
+
+More columns reduce training RSS but can increase test error.  Add transformations because the residuals, domain knowledge, and validation evidence justify them.
+
+\subsection*{Mistake 6: Ignoring data quality}
+
+Sometimes residuals look bad because the data are bad: wrong units, miscoded categories, impossible values, repeated rows, or data-entry errors.  Model repair does not replace data cleaning.
+
+\subsection*{Mistake 7: Taking one hypothesis test in a vacuum}
+
+A small p-value for one transformation does not automatically make it the best model.  Consider residual behavior, prediction performance, assumptions, and operational meaning together.
+
+\section{Operational Briefing Checklist}
+
+When briefing residual analysis and model repair, answer:
+\begin{enumerate}
+  \item What was the baseline model?
+  \item What residual pattern indicated a problem?
+  \item Which assumption did that pattern threaten?
+  \item What repair options were considered?
+  \item Which repair was selected, and why?
+  \item Did residual behavior improve after the repair?
+  \item Did test MSE or cross-validation error improve on the response scale?
+  \item Did the repair change interpretation?
+  \item Were outliers or influential observations investigated?
+  \item Were any observations removed?  If yes, what was the defensible rule?
+  \item Are remaining limitations clear to the customer or commander?
+\end{enumerate}
+
+\section{Chapter Summary}
+
+The central residual-analysis loop is:
+\begin{equation}
+  \boxed{
+  \text{fit} \;\longrightarrow\; \text{diagnose residuals} \;\longrightarrow\; \text{repair model} \;\longrightarrow\; \text{re-check}.
+  }
+\end{equation}
+
+The residual vector is
+\begin{equation}
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}=(\mathbf{I}_n-\mathbf{H})\mathbf{y}.
+\end{equation}
+If the model is correctly specified, then
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{equation}
+Residual plots help us evaluate whether the leftover variation behaves like random noise or contains missed structure.
+
+A good residual plot is not proof that the model is true.  A bad residual plot is useful evidence that the model needs work.  Repairs include transformed predictors, transformed responses, interaction terms, different model families, robust methods, and sometimes better data.
+
+The guiding principle is:
+\begin{quote}
+  Residuals are the model's after-action report.  Read them before trusting the fit.
+\end{quote}
+
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 12 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Residual vectors in observation space & Vector notation in \(\mathbb{R}^n\), coordinates, and subvectors & Ch02 Secs. 2.1, 2.2, 2.6; Ch03 Sec. 3.1; Ch06 Sec. 6.5 \\
+\hline
+Orthogonality condition \(\mathbf{X}^T\mathbf{e}=\mathbf{0}\) & Dot products, Euclidean norms, and the zero-dot-product condition for orthogonality & Ch05 Secs. 5.1, 5.3, 5.5, 5.8 \\
+\hline
+Hat-matrix computations as linear transformations & Matrix notation, identity matrices, transposes, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.3, 7.4, 7.6.1, 7.6.2; Ch12 Sec. 12.12 \\
+\hline
+Column-space / residual-space viewpoint & Column rank, column space, and full-rank conditions & Ch02 Sec. 2.6; Ch05 Sec. 5.8; Ch10 Sec. 10.5; Ch11 Sec. 11.2 \\
+\hline
+Least-squares repair criterion & Stationary points, least-squares minimization, the normal equations, and the positive-semidefinite \(\mathbf{A}^T\mathbf{A}\) argument & Ch05 Sec. 5.5; Ch10 Sec. 10.6; Ch12 Secs. 12.8, 12.9, 12.11; Ch13 Sec. 13.4 \\
+\hline
+Identifiability after repair & Left inverses, linearly independent columns, rank, and full column rank & Ch06 Sec. 6.3; Ch10 Secs. 10.1, 10.3, 10.5; Ch11 Sec. 11.4 \\
+\hline
+Computational matrix operations & Python/NumPy arrays, shapes, transposes, and matrix multiplication & Ch07 Secs. 7.1, 7.4, 7.7 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after diagnosing and repairing a fitted model.
+
+\begin{enumerate}
+  \item Can you name the residual plot or diagnostic view you used?
+  \item Can you describe the observed residual pattern without overstating it?
+  \item Can you connect the pattern to the threatened assumption or modeling weakness?
+  \item Can you choose a repair: transform predictors, transform the response, add interactions, audit data, use a robust method, or change model family?
+  \item Can you refit and compare residual behavior, validation error, and interpretability?
+  \item Can you explain whether the repair changed the meaning of the coefficients or predictions?
+  \item Can you state the remaining limitations honestly in a briefing-style conclusion?
+\end{enumerate}
+}{
+\section{Residual Analysis Workflow}
+
+For the Core Reader, use this compact workflow:
+\begin{enumerate}
+  \item Fit the model and compute residuals.
+  \item Plot residuals against fitted values and key predictors.
+  \item Check for curvature, changing spread, outliers, influence, nonnormal shape, or time/order patterns.
+  \item Connect each pattern to the Big Three regression assumptions or to missing model structure.
+  \item Try one defensible repair at a time: transform variables, add interactions, address data issues, or change model class.
+  \item Compare repaired models using residual behavior, test MSE or cross-validation, interpretability, and domain knowledge.
+\end{enumerate}
+
+\section{Chapter Summary}
+
+A fitted model is not the end of the analysis.  Residual analysis asks whether the leftover pattern looks like random noise or structure the model failed to capture.  Residuals are computed from the fitted model; they are not the same as the true errors.  With an intercept, residuals sum to zero by construction, so a mean-zero residual average is not enough to validate the model.
+
+Residual plots help diagnose violations of the Big Three regression assumptions and missing model structure.  Curvature suggests a poor mean model, fan shapes suggest nonconstant variance, Q--Q plot problems suggest nonnormal residuals, time patterns suggest dependence, and isolated high-leverage points may be influential.
+
+Model repair should be deliberate.  Transform predictors or the response, add interactions, address data-quality problems, or admit that the current linear-model frame is inadequate.  Do not rely on a single hypothesis test, a single \(R^2\), or a single residual plot in isolation.
+
+\paragraph{Can you do this?}
+You should be able to explain what a residual plot is checking, connect patterns to assumptions, propose a targeted repair, compare repair candidates, and brief the limitations of the final model.  The full reference text contains the common-mistakes list, operational briefing checklist, complete Math Foundations source map, and reusable study template.
+}

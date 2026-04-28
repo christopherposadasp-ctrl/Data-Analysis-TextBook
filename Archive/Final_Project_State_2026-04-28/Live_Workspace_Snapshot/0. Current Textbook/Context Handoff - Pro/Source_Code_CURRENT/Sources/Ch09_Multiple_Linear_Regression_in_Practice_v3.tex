@@ -1,0 +1,621 @@
+% Chapter 9 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, and booktabs.
+\chapter{Multiple Linear Regression in Practice: Predictors, Hyperplanes, and the Advertising Example}
+\label{chap:mlr-in-practice-predictors-hyperplanes-advertising}
+
+\section{The Big Picture}
+
+The previous chapters built the geometry of least squares.  We now use that geometry in a practical multiple linear regression setting.  The goal is to move from the algebra
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}
+\end{equation}
+to the workflow an analyst actually uses when fitting, interpreting, and defending a regression model.
+
+The central message of this chapter is:
+\begin{quote}
+  Multiple linear regression is the same projection problem as simple linear regression, but the fitted values now live in a higher-dimensional subspace determined by multiple predictors.
+\end{quote}
+
+The practical challenge is that the model is still mathematically simple, but it becomes harder to visualize and harder to interpret casually.  With one predictor, the least squares fit is a line.  With two predictors, the fit is a plane.  With three or more predictors, the fit is a hyperplane.  The word changes, but the algebra stays the same.
+
+The main questions in this chapter are:
+\begin{enumerate}
+  \item Is at least one predictor useful in predicting the response?
+  \item Do all predictors help, or is only a subset useful?
+  \item How well does the model fit the data?
+  \item Given new predictor values, what response should we predict, and how accurate is that prediction?
+\end{enumerate}
+
+We will use the \texttt{Advertising.csv} data as the running example.  The response is \texttt{Sales}, and the predictors are advertising budgets for \texttt{TV}, \texttt{Radio}, and \texttt{Newspaper} across 200 markets.
+
+We keep the Chapter~\ref{chap:linear-regression-projection-design-matrix-hat-matrix} sample-level notation: \(\mathbf{y}\) is the observed response vector for the current data set, \(\mathbf{X}\) is the design matrix, and \(\widehat{\mathbf{y}}\) is the fitted vector.
+
+\paragraph{Math Foundations Connection.}
+This chapter uses vector notation, matrix dimensions, matrix-vector multiplication, column-space ideas, linear combinations, dot products, transposes, orthogonality, and rank/full-column-rank intuition.  These are covered in the Math Foundations textbook, Chapters~2, 3, 5, 7, 10, 11, and~12.
+
+\section{Simple Linear Regression and Multiple Linear Regression Use the Same Model Form}
+
+In simple linear regression, there is one predictor.  For observation \(i\), the model is
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_i+\epsilon_i.
+\end{equation}
+In vector form,
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+\end{equation}
+where
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}
+    1 & x_1\\
+    1 & x_2\\
+    \vdots & \vdots\\
+    1 & x_n
+  \end{bmatrix},
+  \qquad
+  \boldsymbol{\beta}=\begin{bmatrix}\beta_0\\\beta_1\end{bmatrix}.
+\end{equation}
+
+In multiple linear regression with \(p\) predictors, observation \(i\) has predictor values
+\begin{equation}
+  x_{i1},x_{i2},\ldots,x_{ip}.
+\end{equation}
+The model is
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\cdots+\beta_px_{ip}+\epsilon_i.
+\end{equation}
+In vector form, it is still
+\begin{equation}
+  \boxed{\mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}.}
+\end{equation}
+The only change is the number of columns in \(\mathbf{X}\):
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}
+    1 & x_{11} & x_{12} & \cdots & x_{1p}\\
+    1 & x_{21} & x_{22} & \cdots & x_{2p}\\
+    \vdots & \vdots & \vdots & \ddots & \vdots\\
+    1 & x_{n1} & x_{n2} & \cdots & x_{np}
+  \end{bmatrix}
+  \in \mathbb{R}^{n\times(p+1)}.
+\end{equation}
+
+The coefficient vector is
+\begin{equation}
+  \boldsymbol{\beta}=\begin{bmatrix}
+    \beta_0\\\beta_1\\\beta_2\\\vdots\\\beta_p
+  \end{bmatrix}
+  \in\mathbb{R}^{p+1}.
+\end{equation}
+
+\paragraph{Key point.}
+The notation \(\mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}\) is not unique to multiple regression.  It already describes simple linear regression.  Multiple regression simply adds more predictor columns to the design matrix.
+
+\section{The Design Matrix View}
+
+The design matrix stores the predictors in a way that lets one matrix-vector multiplication generate all fitted values at once.  For a coefficient vector \(\boldsymbol{\beta}\),
+\begin{equation}
+  \mathbf{X}\boldsymbol{\beta}
+  =\begin{bmatrix}
+    \beta_0+\beta_1x_{11}+\cdots+\beta_px_{1p}\\
+    \beta_0+\beta_1x_{21}+\cdots+\beta_px_{2p}\\
+    \vdots\\
+    \beta_0+\beta_1x_{n1}+\cdots+\beta_px_{np}
+  \end{bmatrix}.
+\end{equation}
+Thus, the \(i\)th fitted value is the inner product of row \(i\) of \(\mathbf{X}\) with \(\boldsymbol{\beta}\):
+\begin{equation}
+  \widehat{y}_i=\mathbf{x}_{i,:}^T\widehat{\boldsymbol{\beta}}.
+\end{equation}
+
+There is an equally important column-space interpretation:
+\begin{equation}
+  \widehat{\mathbf{y}}
+  =\widehat{\beta}_0\mathbf{1}
+  +\widehat{\beta}_1\mathbf{x}_1
+  +\widehat{\beta}_2\mathbf{x}_2
+  +\cdots
+  +\widehat{\beta}_p\mathbf{x}_p.
+\end{equation}
+Here \(\mathbf{x}_j\) is the \(j\)th predictor column.  Therefore,
+\begin{equation}
+  \widehat{\mathbf{y}}\in\operatorname{Col}(\mathbf{X}).
+\end{equation}
+Regression chooses the linear combination of design-matrix columns that gets closest to \(\mathbf{y}\) in squared-error distance.
+
+\section{What Changes Geometrically? Lines, Planes, and Hyperplanes}
+
+A simple linear regression fit looks like a line in a two-dimensional scatterplot.  With two predictors, the fitted relationship is a plane:
+\begin{equation}
+  \widehat{Y}=\widehat{\beta}_0+\widehat{\beta}_1X_1+\widehat{\beta}_2X_2.
+\end{equation}
+This plane lives in the ordinary three-dimensional plotting space with axes \(X_1\), \(X_2\), and \(Y\).
+
+With three predictors, the fitted relationship is
+\begin{equation}
+  \widehat{Y}=\widehat{\beta}_0+\widehat{\beta}_1X_1+\widehat{\beta}_2X_2+\widehat{\beta}_3X_3.
+\end{equation}
+This is a hyperplane.  It is not easy to draw because the graph would need one response axis plus three predictor axes.
+
+With \(p\) predictors, the fitted relationship is
+\begin{equation}
+  \boxed{\widehat{Y}=\widehat{\beta}_0+\sum_{j=1}^p \widehat{\beta}_jX_j.}
+\end{equation}
+This is a \(p\)-dimensional hyperplane in \((p+1)\)-dimensional predictor-response plotting space.
+
+\paragraph{Do not confuse two spaces.}
+There are two geometric pictures in play:
+\begin{enumerate}
+  \item The \textbf{predictor-response plot}: a line, plane, or hyperplane in the space with predictor axes and a response axis.
+  \item The \textbf{least-squares projection}: an orthogonal projection of \(\mathbf{y}\in\mathbb{R}^n\) onto \(\operatorname{Col}(\mathbf{X})\subseteq\mathbb{R}^n\).
+\end{enumerate}
+Both are useful.  The first helps us visualize the model.  The second explains the algebra.
+
+\section{Least Squares Estimation in Multiple Regression}
+
+The fitted coefficient vector minimizes the residual sum of squares:
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =\arg\min_{\mathbf{b}\in\mathbb{R}^{p+1}}\|\mathbf{y}-\mathbf{X}\mathbf{b}\|^2.
+\end{equation}
+The normal equations are
+\begin{equation}
+  \mathbf{X}^T\left(\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}}\right)=\mathbf{0}.
+\end{equation}
+Equivalently,
+\begin{equation}
+  \mathbf{X}^T\mathbf{X}\widehat{\boldsymbol{\beta}}=\mathbf{X}^T\mathbf{y}.
+\end{equation}
+If \(\mathbf{X}\) has full column rank, then \(\mathbf{X}^T\mathbf{X}\) is invertible, and
+\begin{equation}
+  \boxed{\widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}.}
+\end{equation}
+
+The fitted values are
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}}
+  =\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}
+  =\mathbf{H}\mathbf{y},
+\end{equation}
+where
+\begin{equation}
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+\end{equation}
+is the hat matrix.
+
+The residuals are
+\begin{equation}
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}=(\mathbf{I}-\mathbf{H})\mathbf{y}.
+\end{equation}
+The residuals are orthogonal to every column of \(\mathbf{X}\):
+\begin{equation}
+  \boxed{\mathbf{X}^T\mathbf{e}=\mathbf{0}.}
+\end{equation}
+This remains true whether there is one predictor or many.
+
+\section{The Advertising Data}
+
+The \texttt{Advertising.csv} data set contains observations from 200 markets.  The selected response variable is
+\begin{equation}
+  \texttt{Sales},
+\end{equation}
+measured in thousands of units sold.  The predictors are advertising budgets, measured in thousands of dollars:
+\begin{equation}
+  \texttt{TV},\qquad \texttt{Radio},\qquad \texttt{Newspaper}.
+\end{equation}
+
+A natural multiple linear regression model is
+\begin{equation}
+  \texttt{Sales}_i
+  =\beta_0
+  +\beta_1\texttt{TV}_i
+  +\beta_2\texttt{Radio}_i
+  +\beta_3\texttt{Newspaper}_i
+  +\epsilon_i.
+\end{equation}
+In vector form,
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+\end{equation}
+where
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}
+    1 & \texttt{TV}_1 & \texttt{Radio}_1 & \texttt{Newspaper}_1\\
+    1 & \texttt{TV}_2 & \texttt{Radio}_2 & \texttt{Newspaper}_2\\
+    \vdots & \vdots & \vdots & \vdots\\
+    1 & \texttt{TV}_{200} & \texttt{Radio}_{200} & \texttt{Newspaper}_{200}
+  \end{bmatrix}.
+\end{equation}
+Here
+\begin{equation}
+  n=200,\qquad p=3,\qquad \mathbf{X}\in\mathbb{R}^{200\times 4}.
+\end{equation}
+If the columns are linearly independent, then the residual degrees of freedom are
+\begin{equation}
+  n-p-1=200-3-1=196.
+\end{equation}
+
+\section{A Scatterplot Matrix Is the First Reconnaissance Tool}
+
+With one predictor, a scatterplot can show the relationship between the predictor and response.  With three predictors, we need to inspect several pairwise relationships.  A scatterplot matrix displays the pairwise relationships among
+\begin{equation}
+  \texttt{Sales},\quad \texttt{TV},\quad \texttt{Radio},\quad \texttt{Newspaper}.
+\end{equation}
+
+A scatterplot matrix helps answer two first-pass questions:
+\begin{enumerate}
+  \item Which predictors appear most strongly associated with \texttt{Sales}?
+  \item Which predictors appear most strongly associated with each other?
+\end{enumerate}
+
+The first question is about predictive signal.  The second question is about collinearity.  A predictor can look useful by itself but become less useful once another correlated predictor is included in the model.
+
+\paragraph{Important caution.}
+Pairwise plots are not the final analysis.  They are reconnaissance.  Multiple regression coefficients are interpreted after holding the other included predictors fixed.  Pairwise plots do not automatically show that adjusted relationship.
+
+\section{Question 1: Is At Least One Predictor Useful?}
+
+The first model-level question is whether at least one predictor is useful in predicting the response.  For the Advertising model,
+\begin{equation}
+  \texttt{Sales}_i
+  =\beta_0
+  +\beta_1\texttt{TV}_i
+  +\beta_2\texttt{Radio}_i
+  +\beta_3\texttt{Newspaper}_i
+  +\epsilon_i,
+\end{equation}
+the null hypothesis is
+\begin{equation}
+  H_0:\beta_1=\beta_2=\beta_3=0.
+\end{equation}
+The alternative is
+\begin{equation}
+  H_A:\text{at least one of }\beta_1,\beta_2,\beta_3\text{ is nonzero.}
+\end{equation}
+
+The test statistic is the overall regression \(F\)-statistic:
+\begin{equation}
+  F=\frac{(\operatorname{TSS}-\operatorname{RSS})/p}{\operatorname{RSS}/(n-p-1)}.
+\end{equation}
+Here
+\begin{align}
+  \operatorname{TSS} &= \sum_{i=1}^n (y_i-\bar{y})^2,\\
+  \operatorname{RSS} &= \sum_{i=1}^n (y_i-\widehat{y}_i)^2.
+\end{align}
+
+For the Advertising full model, the numerator degrees of freedom are \(p=3\), and the denominator degrees of freedom are \(n-p-1=196\).  A large \(F\)-statistic provides evidence that at least one advertising budget is associated with \texttt{Sales}.
+
+\section{Question 2: Which Predictors Help?}
+
+Once the global \(F\)-test suggests that at least one predictor is useful, the next question is which predictors matter after adjusting for the others.
+
+For each coefficient \(\beta_j\), the usual individual test is
+\begin{equation}
+  H_0:\beta_j=0
+  \qquad\text{versus}\qquad
+  H_A:\beta_j\neq 0.
+\end{equation}
+The corresponding \(t\)-statistic has the form
+\begin{equation}
+  t_j=\frac{\widehat{\beta}_j}{\operatorname{SE}(\widehat{\beta}_j)}.
+\end{equation}
+
+In the full Advertising model, the fitted coefficient estimates are commonly reported approximately as
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Term} & \textbf{Estimate} & \textbf{Std. error} & \textbf{t-statistic} & \textbf{p-value}\\
+\midrule
+Intercept & 2.939 & 0.312 & 9.42 & very small\\
+TV & 0.046 & 0.0014 & 32.81 & very small\\
+Radio & 0.189 & 0.0086 & 21.89 & very small\\
+Newspaper & -0.001 & 0.0059 & -0.18 & 0.86\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These results suggest that \texttt{TV} and \texttt{Radio} are useful after adjusting for the other included predictors.  \texttt{Newspaper} does not appear useful after adjusting for \texttt{TV} and \texttt{Radio}.
+
+\paragraph{Interpretation of the coefficient for \texttt{TV}.}
+Holding \texttt{Radio} and \texttt{Newspaper} fixed, an additional \(1\) thousand dollars in \texttt{TV} advertising is associated with about \(0.046\) thousand additional units sold.  That is about 46 additional units sold.
+
+\paragraph{Interpretation of the coefficient for \texttt{Radio}.}
+Holding \texttt{TV} and \texttt{Newspaper} fixed, an additional \(1\) thousand dollars in \texttt{Radio} advertising is associated with about \(0.189\) thousand additional units sold.  That is about 189 additional units sold.
+
+\paragraph{Interpretation of the coefficient for \texttt{Newspaper}.}
+Holding \texttt{TV} and \texttt{Radio} fixed, an additional \(1\) thousand dollars in \texttt{Newspaper} advertising is associated with an estimated change near zero.  In this model, \texttt{Newspaper} does not add meaningful predictive information after accounting for the other two media.
+
+\section{Why a Predictor Can Look Useful Alone but Not in the Full Model}
+
+A simple linear regression of \texttt{Sales} on \texttt{Newspaper} can show a positive association.  But the full multiple regression model can assign \texttt{Newspaper} a coefficient near zero.
+
+This is not a contradiction.  It is a lesson about adjustment.
+
+A simple regression asks:
+\begin{quote}
+  As \texttt{Newspaper} changes, how does \texttt{Sales} tend to change, ignoring other predictors?
+\end{quote}
+A multiple regression coefficient asks:
+\begin{quote}
+  As \texttt{Newspaper} changes, how does \texttt{Sales} tend to change while \texttt{TV} and \texttt{Radio} are held fixed?
+\end{quote}
+
+If \texttt{Newspaper} budgets are correlated with \texttt{Radio} budgets, then \texttt{Newspaper} may appear useful by itself because it is partly acting as a surrogate for \texttt{Radio}.  Once \texttt{Radio} is included directly, \texttt{Newspaper} may no longer have its own contribution.
+
+\paragraph{Reusable diagnostic phrase.}
+Simple regression measures marginal association.  Multiple regression measures adjusted association.
+
+\section{Question 3: How Well Does the Model Fit?}
+
+Two common fit summaries are the residual standard error and \(R^2\).
+
+The residual standard error is
+\begin{equation}
+  \operatorname{RSE}
+  =\sqrt{\frac{\operatorname{RSS}}{n-p-1}}.
+\end{equation}
+It measures a typical residual size in the response units.  For the Advertising full model, \(\operatorname{RSE}\) is about \(1.69\).  Since \texttt{Sales} is measured in thousands of units, this corresponds to a typical residual size of about 1,690 units.
+
+The coefficient of determination is
+\begin{equation}
+  R^2=1-\frac{\operatorname{RSS}}{\operatorname{TSS}}
+  =\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{TSS}}.
+\end{equation}
+It measures the proportion of sample variation in \(\mathbf{y}\) explained by the fitted model.  For the Advertising full model, \(R^2\) is about \(0.897\), meaning the model explains about 89.7 percent of the sample variation in \texttt{Sales}.
+
+\paragraph{Important limitation.}
+Training-set \(R^2\) does not prove that the model will predict well on new data.  It also does not prove that the model assumptions are correct.  It is a fit summary, not a full validation report.
+
+\section{Adjusted \texorpdfstring{\(R^2\)}{R2} as a Quick Complexity Penalty}
+
+Ordinary \(R^2\) cannot decrease when a predictor is added to the model, because adding a column to \(\mathbf{X}\) can only reduce or maintain the residual sum of squares.  This can make ordinary \(R^2\) too generous when comparing models with different numbers of predictors.
+
+Adjusted \(R^2\) introduces a degrees-of-freedom penalty:
+\begin{equation}
+  R^2_{\text{adj}}
+  =1-\frac{\operatorname{RSS}/(n-p-1)}{\operatorname{TSS}/(n-1)}.
+\end{equation}
+Unlike ordinary \(R^2\), adjusted \(R^2\) can decrease when a predictor is added.  It asks whether the reduction in RSS was large enough to justify the extra parameter.
+
+\paragraph{Practical use.}
+Adjusted \(R^2\) is a quick model-comparison tool, but it should not replace out-of-sample validation, residual diagnostics, or domain reasoning.
+
+\section{Question 4: What Should We Predict and How Accurate Is the Prediction?}
+
+For new predictor values
+\begin{equation}
+  \mathbf{x}_0=\begin{bmatrix}1 & x_{01} & x_{02} & \cdots & x_{0p}\end{bmatrix}^T,
+\end{equation}
+the point prediction is
+\begin{equation}
+  \boxed{\widehat{y}_0=\mathbf{x}_0^T\widehat{\boldsymbol{\beta}}.}
+\end{equation}
+
+For the Advertising model, suppose a market has
+\begin{equation}
+  \texttt{TV}=100,\qquad \texttt{Radio}=20,\qquad \texttt{Newspaper}=30,
+\end{equation}
+where each value is in thousands of dollars.  Using the approximate full-model estimates,
+\begin{align}
+  \widehat{\texttt{Sales}}
+  &\approx 2.939+0.046(100)+0.189(20)-0.001(30)\\
+  &=2.939+4.600+3.780-0.030\\
+  &=11.289.
+\end{align}
+The predicted sales are about 11.289 thousand units, or 11,289 units.
+
+There are two common uncertainty intervals:
+\begin{enumerate}
+  \item A \textbf{confidence interval for the mean response}: uncertainty about the average sales among many markets with these same predictor values.
+  \item A \textbf{prediction interval for a new response}: uncertainty about the sales in one individual new market.
+\end{enumerate}
+The prediction interval is wider because it includes both uncertainty in the estimated mean and the irreducible noise for a single future market.
+
+\CoreCompress{
+\section{Worked Example: Interpreting a Full Advertising Model}
+
+Assume the fitted model is approximately
+\begin{equation}
+  \widehat{\texttt{Sales}}
+  =2.939+0.046\texttt{TV}+0.189\texttt{Radio}-0.001\texttt{Newspaper}.
+\end{equation}
+All variables are in their original Advertising units: \texttt{Sales} in thousands of units and budgets in thousands of dollars.
+
+\subsection*{Example 1: Increase TV while holding other media fixed}
+
+Suppose \texttt{TV} increases by \(10\), meaning \(10\) thousand dollars, while \texttt{Radio} and \texttt{Newspaper} are held fixed.  Then
+\begin{equation}
+  \Delta\widehat{\texttt{Sales}}=0.046(10)=0.460.
+\end{equation}
+The predicted increase is about \(0.460\) thousand units, or 460 units.
+
+\subsection*{Example 2: Increase Radio while holding other media fixed}
+
+Suppose \texttt{Radio} increases by \(10\), meaning \(10\) thousand dollars, while \texttt{TV} and \texttt{Newspaper} are held fixed.  Then
+\begin{equation}
+  \Delta\widehat{\texttt{Sales}}=0.189(10)=1.890.
+\end{equation}
+The predicted increase is about \(1.890\) thousand units, or 1,890 units.
+
+\subsection*{Example 3: Increase all three budgets}
+
+Suppose the budgets change by
+\begin{equation}
+  \Delta\texttt{TV}=10,\qquad \Delta\texttt{Radio}=10,\qquad \Delta\texttt{Newspaper}=10.
+\end{equation}
+Then
+\begin{align}
+  \Delta\widehat{\texttt{Sales}}
+  &=0.046(10)+0.189(10)-0.001(10)\\
+  &=0.460+1.890-0.010\\
+  &=2.340.
+\end{align}
+The predicted increase is about \(2.340\) thousand units, or 2,340 units.
+
+\paragraph{Operational interpretation.}
+The fitted model suggests that, after adjusting for the other media, \texttt{Radio} has the largest estimated marginal effect per thousand dollars among the three predictors in this model.  That does not automatically mean all future spending should go to \texttt{Radio}; the model is local to the observed data, linear in the included predictors, and does not yet account for nonlinear saturation, interactions, campaign constraints, or causal design.
+}{
+\section{Worked Example: Interpreting a Full Advertising Model}
+
+Suppose the fitted model is
+\begin{equation}
+  \widehat{\text{Sales}}
+  =\widehat{\beta}_0+\widehat{\beta}_1\text{TV}+\widehat{\beta}_2\text{Radio}+\widehat{\beta}_3\text{Newspaper}.
+\end{equation}
+Each slope is interpreted while holding the other advertising budgets fixed.  For example, \(\widehat{\beta}_1\) estimates the expected change in sales for a one-unit increase in the TV budget, with Radio and Newspaper held constant.  If all three budgets change, the predicted change is the sum of the three coefficient-weighted changes.  The full reference text gives the longer worked interpretation examples.
+}
+\section{Assumptions Behind the Practical Regression Workflow}
+
+For estimating a useful least squares line or hyperplane, the weakest core condition is often written as
+\begin{equation}
+  \mathbb{E}[\boldsymbol{\epsilon}\mid \mathbf{X}]=\mathbf{0}.
+\end{equation}
+This says that the included predictors capture the conditional mean structure, leaving errors with mean zero after conditioning on the design matrix.
+
+For the usual standard errors, \(t\)-tests, and \(F\)-tests, a common working assumption is
+\begin{equation}
+  \operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}.
+\end{equation}
+This says the errors have constant variance and are uncorrelated across observations.
+
+For exact finite-sample normal-theory inference, we often further assume
+\begin{equation}
+  \boldsymbol{\epsilon}\mid\mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}).
+\end{equation}
+This assumption is stronger than what is needed for least squares estimation itself, but it supports exact \(t\)- and \(F\)-distribution calculations in the classical model.
+
+\section{Why Graphics Become Difficult in Higher Dimensions}
+
+In simple linear regression, one scatterplot can show the predictor, response, fitted line, and residual pattern.  In multiple regression, one plot cannot show everything.
+
+With two predictors, a 3D plot can show a regression plane, but even then it can be hard to see residual patterns, leverage, and interactions.  With three or more predictors, no ordinary static plot can show the full fitted hyperplane.
+
+Therefore, the practical workflow shifts toward:
+\begin{enumerate}
+  \item scatterplot matrices for pairwise reconnaissance,
+  \item correlation matrices for predictor relationships,
+  \item coefficient tables for adjusted effects,
+  \item residual plots for assumption checks,
+  \item partial residual or component-plus-residual plots for predictor-specific patterns,
+  \item test-set or cross-validation performance for generalization.
+\end{enumerate}
+
+\section{A Practical Modeling Workflow for the Advertising Example}
+
+A defensible multiple linear regression workflow for the Advertising data could look like this:
+\begin{enumerate}
+  \item State the response and predictor units.
+  \item Create scatterplots of \texttt{Sales} against each predictor.
+  \item Create a scatterplot matrix for \texttt{Sales}, \texttt{TV}, \texttt{Radio}, and \texttt{Newspaper}.
+  \item Check predictor-predictor relationships, especially possible collinearity.
+  \item Fit the full model with all three predictors.
+  \item Use the overall \(F\)-test to ask whether at least one predictor is useful.
+  \item Use coefficient tests and domain reasoning to ask which predictors contribute after adjustment.
+  \item Compare simpler models such as \texttt{Sales} on \texttt{TV} and \texttt{Radio} only.
+  \item Report RSE and \(R^2\), but do not stop there.
+  \item Check residual plots for nonlinearity, heteroskedasticity, and unusual observations.
+  \item Use prediction or confidence intervals depending on whether the question is about one future market or the mean response at a predictor setting.
+  \item Document all modeling decisions so the analysis is reproducible and defensible.
+\end{enumerate}
+
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for scatterplot matrices, full and reduced multiple-regression models, prediction intervals, and residual plots have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the applied modeling workflow and interpretation guidance.
+
+\section{Common Mistakes}
+
+\begin{enumerate}
+  \item \textbf{Forgetting that coefficients are adjusted effects.}  In MLR, \(\widehat{\beta}_j\) is interpreted while holding the other included predictors fixed.
+  \item \textbf{Treating pairwise plots as final proof.}  Scatterplot matrices are useful reconnaissance, but they do not replace adjusted model interpretation.
+  \item \textbf{Confusing units.}  In the Advertising data, \texttt{Sales} is in thousands of units and budgets are in thousands of dollars.
+  \item \textbf{Saying a nonsignificant coefficient proves no relationship.}  It means the fitted model did not provide strong evidence for an adjusted linear effect under the model assumptions.
+  \item \textbf{Ignoring correlation among predictors.}  Predictor-predictor relationships can change coefficient interpretation and standard errors.
+  \item \textbf{Using ordinary \(R^2\) alone to choose variables.}  Ordinary \(R^2\) increases or stays the same when predictors are added.
+  \item \textbf{Mixing confidence intervals and prediction intervals.}  Confidence intervals are for mean response; prediction intervals are for individual future responses.
+  \item \textbf{Drawing the hyperplane but skipping residual checks.}  A fitted plane can still be the wrong shape if the true relationship is nonlinear or contains interactions.
+  \item \textbf{Assuming predictive association is causal.}  Regression on observational data can estimate associations, but causal claims require design, assumptions, or additional evidence.
+\end{enumerate}
+
+\CoreCompress{
+\section{Chapter Summary}
+
+Multiple linear regression extends simple linear regression by adding predictor columns to the design matrix.  The model remains
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}.
+\end{equation}
+With \(p\) predictors and an intercept,
+\begin{equation}
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)}.
+\end{equation}
+Least squares chooses the coefficient vector that minimizes squared residual length:
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =\arg\min_{\mathbf{b}}\|\mathbf{y}-\mathbf{X}\mathbf{b}\|^2.
+\end{equation}
+If \(\mathbf{X}\) has full column rank,
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}.
+\end{equation}
+
+The fitted values live in \(\operatorname{Col}(\mathbf{X})\), and residuals are orthogonal to every column of \(\mathbf{X}\).  With one predictor, the fitted relationship is a line.  With two predictors, it is a plane.  With three or more predictors, it is a hyperplane.
+
+The Advertising example illustrates the main practical questions in MLR.  The overall \(F\)-test asks whether at least one predictor is useful.  Individual coefficient tests ask whether a predictor contributes after adjusting for the others.  RSE and \(R^2\) summarize model fit.  Prediction and confidence intervals quantify uncertainty for new predictor settings.
+
+Most importantly, MLR coefficients are adjusted effects.  A predictor can look useful in a simple regression but lose usefulness in a multiple regression after another correlated predictor is included.
+
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 9 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Response and predictor vectors & Vector notation in \(\mathbb{R}^n\), coordinates, and vector entries & Ch02 Secs. 2.1, 2.2, 2.6; Ch06 Sec. 6.5 \\
+\hline
+Column-space interpretation & Linear combinations of vectors, span/column-space ideas, and standard-basis intuition & Ch03 Sec. 3.5; Ch06 Secs. 6.1, 6.5; Ch11 Sec. 11.2; Ch12 Sec. 12.12 \\
+\hline
+Normal equations and orthogonality & Dot products, sums through \(\mathbf{1}^T\mathbf{a}\), Euclidean norm, orthogonality, and the least-squares normal-equation bridge & Ch02 Sec. 2.4; Ch05 Secs. 5.1, 5.3, 5.5, 5.8; Ch12 Secs. 12.9, 12.11, 12.12 \\
+\hline
+Design matrix dimensions & Matrix notation, tall matrices, transposes, identity matrices, and symmetry & Ch07 Secs. 7.1, 7.3, 7.4 \\
+\hline
+Fitted values as \(\mathbf{X}\widehat{\boldsymbol{\beta}}\) & Matrix-vector multiplication as row inner products and as a linear combination of columns & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3; Ch07 Secs. 7.1, 7.6.1, 7.6.2 \\
+\hline
+Full column rank requirement & Linear independence, bases, unique linear-combination intuition, and full-rank conditions & Ch06 Secs. 6.3, 6.5; Ch10 Sec. 10.5 \\
+\hline
+Software implementation & Python/NumPy arrays, shapes, transposes, and matrix multiplication with \texttt{@} & Ch07 Secs. 7.1, 7.4, 7.7 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after fitting and interpreting a multiple linear regression model.
+
+\begin{enumerate}
+  \item Can you identify the response, predictors, and their units?
+  \item Can you write both the scalar model and the design-matrix form?
+  \item Can you interpret each coefficient as an adjusted effect with other predictors held fixed?
+  \item Can you use the global \(F\)-test for the question ``is at least one predictor useful?''
+  \item Can you use coefficient tests for the question ``which predictors contribute after adjustment?''
+  \item Can you report RSE, \(R^2\), and adjusted \(R^2\) without relying on any one of them alone?
+  \item Can you use residual plots and EDA to check whether the fitted model is defensible?
+  \item Can you distinguish a confidence interval for a mean response from a prediction interval for a single future response?
+\end{enumerate}
+}{
+\section{Chapter Summary}
+
+Multiple linear regression uses the same least-squares projection idea as simple linear regression, but the design matrix has more predictor columns.  With an intercept and \(p\) predictors,
+\begin{equation}
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)},
+  \qquad
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}}.
+\end{equation}
+The fitted values live in the column space of \(\mathbf{X}\).  With one predictor, the fit is a line; with two predictors, it is a plane; with more predictors, it is a hyperplane.
+
+The practical MLR questions are the same ones emphasized in the Advertising example: whether at least one predictor is useful, which predictors help after controlling for the others, how well the model fits, and what predictions the model makes for new predictor values.  The overall \(F\)-test addresses the first question; individual coefficient tests address one predictor at a time; \(R^2\), adjusted \(R^2\), RSE, and prediction intervals help describe fit and prediction quality.
+
+\paragraph{Can you do this?}
+You should be able to write the MLR design matrix, interpret a coefficient while holding other predictors fixed, distinguish the overall \(F\)-test from individual \(t\)-tests, explain why simple and multiple regression can disagree, and brief the main findings from an Advertising-style model.  The full reference text contains the complete Math Foundations source map and reusable study template.
+}

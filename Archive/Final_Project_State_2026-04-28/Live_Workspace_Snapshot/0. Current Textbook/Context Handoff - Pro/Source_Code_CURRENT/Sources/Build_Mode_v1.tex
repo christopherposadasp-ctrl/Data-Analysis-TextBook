@@ -1,0 +1,5 @@
+% Shared build-mode helpers for the full reference textbook and the Student Core Reader.
+\newif\iffullversion
+\long\def\FullOnly#1{\iffullversion #1\fi}
+\long\def\CoreOnly#1{\iffullversion\else #1\fi}
+\long\def\CoreCompress#1#2{\iffullversion #1\else #2\fi}

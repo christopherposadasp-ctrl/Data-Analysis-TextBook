@@ -1,0 +1,135 @@
+\chapter{Data Analysis Bridge Index}
+\label{mf:data-analysis-bridge-index}
+
+\begingroup
+\sloppy
+
+This appendix is a navigation aid for students who later use the Data Analysis textbook. The main chapters of this Math Foundations textbook remain chronological, following the order in which the material was presented. This appendix does not reorganize the course. Instead, it points from common Data Analysis tasks back to the Math Foundations sections that support them.
+
+Use this appendix when a Data Analysis chapter says, for example, that residuals are orthogonal to fitted values, that a design matrix needs full column rank, or that a least-squares fit is a projection. The entries below identify the Math Foundations concepts behind those statements.
+
+\section{How to Use This Index}
+\label{mf:da-bridge-how-to-use}
+
+Each entry gives a Data Analysis idea followed by the Math Foundations sections that support it. The most important references are listed first. The goal is not to repeat the explanation from the main chapters, but to help the reader find it quickly.
+
+\begin{itemize}
+    \item If the issue is notation, start with vectors and matrices.
+    \item If the issue is prediction error or residual size, start with norms and distances.
+    \item If the issue is regression geometry, start with column spaces, orthogonality, and least squares.
+    \item If the issue is identifiability, start with linear independence, rank, and the null space.
+    \item If the issue is model repair or transformations, start with linear combinations, polynomial systems, and least squares.
+\end{itemize}
+
+\section{Core Objects Used in Data Analysis}
+\label{mf:da-bridge-core-objects}
+
+\begin{description}
+    \item[Feature vectors.] A feature vector is an ordered collection of measured inputs for one observation. See Sections~\ref{mf:vectors-rn}, \ref{mf:vector-entries-subvectors}, and \ref{mf:vectors-as-data}.
+
+    \item[Response, prediction, and residual vectors.] Data Analysis often stacks observed responses, fitted responses, and residuals into vectors. See Sections~\ref{mf:vectors-rn} and \ref{mf:vector-subtraction}.
+
+    \item[Data tables and design matrices.] A numeric data table is represented as a matrix. Regression design matrices use rows for observations and columns for candidate predictor directions. See Sections~\ref{mf:matrices-dimensions}, \ref{mf:matrices-rows-columns}, \ref{mf:matrix-vector-row-view}, and \ref{mf:matrix-vector-column-view}.
+
+    \item[The intercept column.] The intercept in a regression design matrix is represented by a column of ones. See Sections~\ref{mf:ones-vector}, \ref{mf:ones-vector-sums-means}, and \ref{mf:matrices-rows-columns}.
+
+    \item[Transposes and inner-product notation.] Expressions such as \(\boldsymbol\beta^T\mathbf{x}\), \(\mathbf{X}^T\mathbf{y}\), and \(\mathbf{X}^T\mathbf{X}\) use transpose and dot-product notation. See Sections~\ref{mf:transpose}, \ref{mf:dot-product}, and \ref{mf:inner-product-weighted-sums}.
+\end{description}
+
+\section{Prediction Error, EDA, and Geometry}
+\label{mf:da-bridge-prediction-eda-geometry}
+
+\begin{description}
+    \item[MSE, RMSE, and residual length.] Empirical mean squared error is a scaled squared norm of the residual vector. RMSE is the corresponding length scale in the response units. See Sections~\ref{mf:norms-euclidean}, \ref{mf:vector-distance}, and \ref{mf:dot-product}.
+
+    \item[Centered variables.] Variance, covariance, correlation, and many regression decompositions begin by subtracting a mean. See Sections~\ref{mf:centered-vectors} and \ref{mf:ones-vector-sums-means}.
+
+    \item[Correlation as alignment.] Correlation is closely related to the angle between centered vectors. See Sections~\ref{mf:angles}, \ref{mf:centered-vectors}, and \ref{mf:dot-product}.
+
+    \item[EDA summaries as vector operations.] Means, sums of squares, distances from center, and correlations are all functions of data vectors. See Sections~\ref{mf:vectors-rn}, \ref{mf:ones-vector-sums-means}, \ref{mf:norms-euclidean}, and \ref{mf:angles}.
+
+    \item[Data cleaning as set logic.] Filtering rows, defining allowable values, identifying missingness rules, and subsetting variables use set membership, complements, differences, and quantified statements. See Sections~\ref{mf:set-membership}, \ref{mf:set-operations}, \ref{mf:subsets}, and \ref{mf:quantifiers}.
+
+    \item[Reasoning from assumptions.] Model assumptions are premises. Valid conclusions depend on what those assumptions actually imply. See Sections~\ref{mf:logic-implication}, \ref{mf:logic-biconditional}, \ref{mf:logic-counterexamples}, and \ref{mf:logic-demorgan}.
+\end{description}
+
+\section{Regression Algebra and Geometry}
+\label{mf:da-bridge-regression-algebra-geometry}
+
+\begin{description}
+    \item[Linear models as weighted inputs.] A linear model forms a weighted sum of known inputs or feature columns. See Sections~\ref{mf:scalar-multiplication}, \ref{mf:linear-combinations}, and \ref{mf:dot-product}.
+
+    \item[Fitted values as column combinations.] In matrix form, fitted values have the form \(\widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol\beta}\), a linear combination of the design columns. See Sections~\ref{mf:matrix-vector-column-view}, \ref{mf:linear-combinations}, and \ref{mf:column-space}.
+
+    \item[Normal equations.] Least squares leads to the normal equations \(A^TA\mathbf{x}=A^T\mathbf{b}\). See Sections~\ref{mf:least-squares-objective}, \ref{mf:least-squares-expansion}, and \ref{mf:least-squares-normal-equations}.
+
+    \item[Residual orthogonality.] At a least-squares solution, the residual vector is orthogonal to the columns used to fit the model. See Sections~\ref{mf:orthogonality}, \ref{mf:least-squares-residual-orthogonality}, and \ref{mf:column-space}.
+
+    \item[Regression as projection.] Least squares chooses the closest vector in the column space of the design matrix. See Sections~\ref{mf:column-space}, \ref{mf:least-squares-projection-bridge}, and \ref{mf:least-squares-solution}.
+
+    \item[Hat-matrix intuition.] Data Analysis writes fitted values as \(\widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}\). The supporting ideas are matrix-vector multiplication, column-space projection, and least-squares normal equations. See Sections~\ref{mf:matrix-vector-multiplication}, \ref{mf:matrix-vector-column-view}, \ref{mf:least-squares-projection-bridge}, and \ref{mf:least-squares-normal-equations}.
+\end{description}
+
+\section{Identifiability, Degrees of Freedom, and Model Structure}
+\label{mf:da-bridge-identifiability-model-structure}
+
+\begin{description}
+    \item[Degrees of freedom.] Degrees of freedom count independent directions left after constraints or estimated parameters have consumed dimensions. See Sections~\ref{mf:linear-independence}, \ref{mf:bases}, \ref{mf:dimension}, \ref{mf:subspaces}, and \ref{mf:rank-nullity}.
+
+    \item[Full column rank.] A regression design matrix has uniquely identifiable coefficients when its columns are linearly independent. See Sections~\ref{mf:linear-independence} and \ref{mf:full-column-rank}.
+
+    \item[Null space and non-identifiability.] If a nonzero vector lies in the null space of the design matrix, then moving coefficients in that direction does not change fitted values. See Sections~\ref{mf:null-space} and \ref{mf:rank-nullity}.
+
+    \item[Multicollinearity.] Exact multicollinearity is a linear-dependence problem among design columns. Near multicollinearity is the numerical version of the same warning. See Sections~\ref{mf:linear-dependence}, \ref{mf:full-column-rank}, \ref{mf:ata-invertibility}, and \ref{mf:qr-factorization}.
+
+    \item[Pseudoinverse formulas.] When a matrix has full column rank, the left pseudoinverse formula \((A^TA)^{-1}A^T\) gives the least-squares coefficient formula. See Sections~\ref{mf:pseudoinverse-left}, \ref{mf:ata-invertibility}, and \ref{mf:least-squares-pseudoinverse}.
+
+    \item[Four fundamental subspaces.] Regression geometry uses the column space, row space, null space, and left null space to explain fitted values, identifiable directions, non-identifiable directions, and residual directions. See Sections~\ref{mf:column-space}, \ref{mf:row-space}, \ref{mf:null-space}, \ref{mf:left-null-space}, and \ref{mf:four-subspaces}.
+\end{description}
+
+\section{Transformations, Diagnostics, and Model Repair}
+\label{mf:da-bridge-transformations-diagnostics}
+
+\begin{description}
+    \item[Transformed predictors.] Polynomial terms, interaction terms, sine/cosine terms, and other engineered features create new design columns. See Sections~\ref{mf:linear-combinations}, \ref{mf:matrix-vector-column-view}, \ref{mf:polynomial-systems}, and \ref{mf:vandermonde-matrices}.
+
+    \item[Polynomial regression and Vandermonde matrices.] A polynomial model is linear in the unknown coefficients once powers of the predictor are placed into columns. See Sections~\ref{mf:polynomial-interpolation}, \ref{mf:vandermonde-matrices}, and \ref{mf:least-squares-motivation}.
+
+    \item[Orthogonalized columns.] Orthogonal bases and QR factorization help explain numerically stable fitting and orthogonal-polynomial intuition. See Sections~\ref{mf:orthogonal-bases}, \ref{mf:gram-schmidt}, \ref{mf:qr-factorization}, and \ref{mf:orthogonal-polynomials}.
+
+    \item[Residual diagnostics.] Residual plots are interpreted through residual length, orthogonality, projection, and the distinction between fitted structure and leftover structure. See Sections~\ref{mf:norms-euclidean}, \ref{mf:orthogonality}, and \ref{mf:least-squares-residual-orthogonality}.
+
+    \item[Model repair.] Transforming predictors, adding interactions, or changing model structure changes the columns available in the design matrix. That changes the column space and therefore changes which patterns the model can fit. See Sections~\ref{mf:matrix-vector-column-view}, \ref{mf:column-space}, \ref{mf:linear-combinations}, and \ref{mf:vandermonde-matrices}.
+
+    \item[Why the least-squares solution is a minimum.] The least-squares Hessian is \(2A^TA\), which is positive semidefinite and becomes positive definite under full column rank. See Sections~\ref{mf:hessian}, \ref{mf:positive-semidefinite}, \ref{mf:least-squares-minimum}, and \ref{mf:full-column-rank}.
+\end{description}
+
+\section{Data Analysis Chapter Lookup}
+\label{mf:da-bridge-chapter-lookup}
+
+This final list gives a quick chapter-by-chapter route from the Data Analysis textbook back to Math Foundations.
+
+\begin{description}
+    \item[Data Analysis Chapter 1: Statistical Learning.] Feature vectors, linear models, neural-network layers, correlation, and reasoning from assumptions use Sections~\ref{mf:vectors-as-data}, \ref{mf:linear-combinations}, \ref{mf:dot-product}, \ref{mf:matrix-vector-column-view}, \ref{mf:angles}, and \ref{mf:logic-implication}.
+
+    \item[Data Analysis Chapter 2: Prediction Error and Generalization.] MSE, RMSE, residual vectors, flexibility, and degrees of freedom use Sections~\ref{mf:vector-subtraction}, \ref{mf:norms-euclidean}, \ref{mf:vector-distance}, \ref{mf:linear-combinations}, \ref{mf:linear-independence}, and \ref{mf:dimension}.
+
+    \item[Data Analysis Chapter 3: Data Quality and Cleaning.] Data tables, variable columns, missingness rules, subsetting, and defensible cleaning predicates use Sections~\ref{mf:matrices-dimensions}, \ref{mf:matrices-rows-columns}, \ref{mf:set-membership}, \ref{mf:set-difference}, and \ref{mf:quantifiers}.
+
+    \item[Data Analysis Chapter 4: Exploratory Data Analysis.] Means, centered vectors, variance, covariance, correlation, and heatmaps use Sections~\ref{mf:ones-vector-sums-means}, \ref{mf:centered-vectors}, \ref{mf:norms-euclidean}, \ref{mf:dot-product}, and \ref{mf:angles}.
+
+    \item[Data Analysis Chapters 5--6: Simple Linear Regression.] Least-squares estimation, residuals, sums of squares, \(R^2\), and hypothesis-testing geometry use Sections~\ref{mf:least-squares-objective}, \ref{mf:least-squares-normal-equations}, \ref{mf:least-squares-residual-orthogonality}, \ref{mf:centered-vectors}, and \ref{mf:norms-euclidean}.
+
+    \item[Data Analysis Chapters 7--8: Projection, Hat Matrix, and Degrees of Freedom.] Design matrices, projections, subspaces, hat-matrix intuition, residual orthogonality, rank, and identifiability use Sections~\ref{mf:matrix-vector-column-view}, \ref{mf:column-space}, \ref{mf:least-squares-projection-bridge}, \ref{mf:four-subspaces}, \ref{mf:full-column-rank}, and \ref{mf:null-space}.
+
+    \item[Data Analysis Chapters 9--10: Multiple Regression and Estimator Behavior.] MLR, coefficient vectors, full-column-rank design matrices, estimator formulas, and residual geometry use Sections~\ref{mf:matrices-dimensions}, \ref{mf:matrix-vector-column-view}, \ref{mf:full-column-rank}, \ref{mf:pseudoinverse-left}, \ref{mf:least-squares-solution}, and \ref{mf:least-squares-residual-orthogonality}.
+
+    \item[Data Analysis Chapters 11--12: Transformations and Residual Repair.] Linear-in-parameters models, transformed design matrices, polynomial terms, residual diagnostics, interactions, and model repair use Sections~\ref{mf:linear-combinations}, \ref{mf:vandermonde-matrices}, \ref{mf:gram-schmidt}, \ref{mf:qr-factorization}, \ref{mf:least-squares-projection-bridge}, and \ref{mf:least-squares-minimum}.
+\end{description}
+
+\section{What This Appendix Does Not Replace}
+\label{mf:da-bridge-not-a-replacement}
+
+This appendix is not a substitute for the main Math Foundations chapters. It also does not replace the full metadata crosswalk used by the textbook project. The metadata files preserve the complete row-level mapping from Data Analysis source-map entries and integrated callouts to future Math Foundations labels. This appendix is the student-facing version: short enough to use, but complete enough to protect the major mathematical bridges.
+
+\endgroup

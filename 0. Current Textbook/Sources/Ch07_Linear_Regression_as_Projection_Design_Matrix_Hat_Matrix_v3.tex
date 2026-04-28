@@ -1,0 +1,705 @@
+% Chapter 7 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, and booktabs.
+\chapter{Linear Regression as Projection: Design Matrix and Hat Matrix}
+\label{chap:linear-regression-projection-design-matrix-hat-matrix}
+
+\section{The Big Picture}
+
+The last two chapters developed simple linear regression using calculus, sums of squares, and hypothesis tests.  This chapter rebuilds the same least squares estimator using linear algebra.  The payoff is substantial:
+\begin{quote}
+  Least squares regression is an orthogonal projection of the response vector onto the subspace spanned by the columns of the design matrix.
+\end{quote}
+
+This viewpoint explains why the normal equations appear, why residuals are orthogonal to fitted values, why the fitted values can be written with the hat matrix, and why the same formula works for multiple linear regression.
+
+The main objects in this chapter are:
+\begin{align}
+  \mathbf{y} &\in \mathbb{R}^n &&\text{the response vector}, \\
+  \mathbf{X} &\in \mathbb{R}^{n\times (p+1)} &&\text{the design matrix}, \\
+  \widehat{\boldsymbol{\beta}} &\in \mathbb{R}^{p+1} &&\text{the least squares coefficient vector}, \\
+  \widehat{\mathbf{y}} &= \mathbf{X}\widehat{\boldsymbol{\beta}} &&\text{the fitted-value vector}, \\
+  \mathbf{e} &= \mathbf{y}-\widehat{\mathbf{y}} &&\text{the residual vector}, \\
+  \mathbf{H} &= \mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T &&\text{the hat matrix}.
+\end{align}
+
+The key formula is
+\begin{equation}
+  \boxed{\widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}.}
+\end{equation}
+The matrix \(\mathbf{H}\) is called the hat matrix because it puts the hat on \(\mathbf{y}\): it turns observed responses into fitted responses.
+
+\paragraph{Notation bridge.}
+From this chapter onward, bold lowercase vectors such as \(\mathbf{y}\) denote observed sample vectors from the data in hand, while bold uppercase symbols such as \(\mathbf{X}\) denote matrices.  Chapter~\ref{chap:truth-error-estimator-behavior-residual-geometry} temporarily writes \(\mathbf{Y}\) when the full response vector is being treated as random conditional on a fixed design matrix.  The front-matter notation guide gives the book-wide convention.
+
+\paragraph{Math Foundations Connection.}
+This chapter uses vector notation in \(\mathbb{R}^n\), the ones vector \(\mathbf{1}\), linear combinations, dot products, norms, orthogonality, matrix notation, transpose notation, and matrix-vector multiplication.  These are covered in the Math Foundations textbook, Chapters 2, 3, 5, and 7.
+
+\section{Vectors Behind a Regression Scatterplot}
+
+A simple linear regression scatterplot displays points
+\begin{equation}
+  (x_1,y_1),(x_2,y_2),\ldots,(x_n,y_n).
+\end{equation}
+In matrix language, we separate the observed predictor values and response values into vectors:
+\begin{equation}
+  \mathbf{x}=\begin{bmatrix}x_1\\x_2\\ \vdots \\x_n\end{bmatrix},
+  \qquad
+  \mathbf{y}=\begin{bmatrix}y_1\\y_2\\ \vdots \\y_n\end{bmatrix},
+  \qquad
+  \mathbf{1}=\begin{bmatrix}1\\1\\ \vdots \\1\end{bmatrix}.
+\end{equation}
+
+The scatterplot is drawn in the usual \((x,y)\)-plane, but the regression calculation takes place in \(\mathbb{R}^n\).  The response vector \(\mathbf{y}\) is a point or vector in \(n\)-dimensional observation space.  The fitted vector \(\widehat{\mathbf{y}}\) is another vector in that same space.
+
+For simple linear regression, every fitted vector has the form
+\begin{equation}
+  \widehat{\mathbf{y}}
+  =\widehat{\beta}_0\mathbf{1}+\widehat{\beta}_1\mathbf{x}.
+  \label{eq:ch7-slr-fitted-linear-combination}
+\end{equation}
+Thus, the fitted values live in the set of all linear combinations of \(\mathbf{1}\) and \(\mathbf{x}\).  This set is the plane
+\begin{equation}
+  \operatorname{Col}(\mathbf{X})=\operatorname{span}\{\mathbf{1},\mathbf{x}\}
+\end{equation}
+inside \(\mathbb{R}^n\), provided \(\mathbf{1}\) and \(\mathbf{x}\) are linearly independent.
+
+\paragraph{Important interpretation.}
+A regression line in the scatterplot corresponds to a vector \(\widehat{\mathbf{y}}\) on a plane in \(\mathbb{R}^n\).  We are not projecting points in the two-dimensional scatterplot.  We are projecting the full response vector \(\mathbf{y}\) onto the subspace of fitted-value vectors.
+
+\section{The Linear Regression Problem as an Overdetermined System}
+
+Suppose we have three data points.  A perfect simple linear model would satisfy
+\begin{align}
+  y_1 &= \beta_0+\beta_1x_1, \\
+  y_2 &= \beta_0+\beta_1x_2, \\
+  y_3 &= \beta_0+\beta_1x_3.
+\end{align}
+There are three equations and only two unknowns.  With more than two points, the system is usually overdetermined.  In vector form, the exact system would be
+\begin{equation}
+  \mathbf{y}=\beta_0\mathbf{1}+\beta_1\mathbf{x}.
+\end{equation}
+Usually \(\mathbf{y}\notin\operatorname{span}\{\mathbf{1},\mathbf{x}\}\).  Therefore, no exact solution exists.
+
+Least squares solves the nearest possible problem:
+\begin{quote}
+  Find the vector in \(\operatorname{span}\{\mathbf{1},\mathbf{x}\}\) that is closest to \(\mathbf{y}\) in squared Euclidean distance.
+\end{quote}
+That nearest vector is the orthogonal projection of \(\mathbf{y}\) onto the fitted-value plane.
+
+\CoreCompress{
+\section{Projection Onto One Vector}
+
+Before projecting onto the two-dimensional regression plane, recall projection onto a single nonzero vector \(\mathbf{a}\).  The projection of \(\mathbf{y}\) onto the line spanned by \(\mathbf{a}\) is
+\begin{equation}
+  \operatorname{proj}_{\mathbf{a}}(\mathbf{y})
+  =\frac{\mathbf{a}^T\mathbf{y}}{\mathbf{a}^T\mathbf{a}}\mathbf{a}.
+  \label{eq:ch7-one-vector-projection}
+\end{equation}
+The residual from this projection is
+\begin{equation}
+  \mathbf{r}=\mathbf{y}-\operatorname{proj}_{\mathbf{a}}(\mathbf{y}).
+\end{equation}
+It is orthogonal to \(\mathbf{a}\):
+\begin{align}
+  \mathbf{a}^T\mathbf{r}
+  &=\mathbf{a}^T\left(\mathbf{y}-\frac{\mathbf{a}^T\mathbf{y}}{\mathbf{a}^T\mathbf{a}}\mathbf{a}\right) \\
+  &=\mathbf{a}^T\mathbf{y}-\frac{\mathbf{a}^T\mathbf{y}}{\mathbf{a}^T\mathbf{a}}\mathbf{a}^T\mathbf{a} \\
+  &=0.
+\end{align}
+Least squares regression is the same idea, but the target is not a line.  The target is the column space of a design matrix.
+
+\paragraph{Math Foundations Connection.}
+The projection formula uses dot products, squared lengths, and orthogonality.  Dot products and Euclidean norms are covered in the Math Foundations textbook, Chapters 5 and 12.
+}{
+\section{Projection Onto One Vector}
+
+Before projecting onto the two-dimensional regression plane, recall projection onto a single nonzero vector \(\mathbf{a}\):
+\begin{equation}
+  \operatorname{proj}_{\mathbf{a}}(\mathbf{y})
+  =\frac{\mathbf{a}^T\mathbf{y}}{\mathbf{a}^T\mathbf{a}}\mathbf{a}.
+  \label{eq:ch7-one-vector-projection}
+\end{equation}
+The key fact is geometric: the leftover vector
+\begin{equation}
+  \mathbf{r}=\mathbf{y}-\operatorname{proj}_{\mathbf{a}}(\mathbf{y})
+\end{equation}
+is orthogonal to \(\mathbf{a}\).  Least squares regression keeps the same logic, but the target is now the entire column space of the design matrix rather than a single line.
+}
+
+\section{The Design Matrix for Simple Linear Regression}
+
+For simple linear regression, define the design matrix
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}\mathbf{1}&\mathbf{x}\end{bmatrix}
+  =
+  \begin{bmatrix}
+    1 & x_1 \\
+    1 & x_2 \\
+    \vdots & \vdots \\
+    1 & x_n
+  \end{bmatrix}
+  \in \mathbb{R}^{n\times 2}.
+  \label{eq:ch7-slr-design-matrix}
+\end{equation}
+The coefficient vector is
+\begin{equation}
+  \boldsymbol{\beta}=\begin{bmatrix}\beta_0\\\beta_1\end{bmatrix}.
+\end{equation}
+Then the simple linear regression model can be written as
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}.
+  \label{eq:ch7-slr-matrix-model}
+\end{equation}
+The fitted values are
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}}.
+  \label{eq:ch7-fitted-values}
+\end{equation}
+
+The columns of \(\mathbf{X}\) are directions in \(\mathbb{R}^n\).  In SLR, those directions are \(\mathbf{1}\) and \(\mathbf{x}\).  The fitted vector \(\widehat{\mathbf{y}}\) is a linear combination of those columns.
+
+\section{The Normal Equations from Orthogonality}
+
+The least squares residual vector is
+\begin{equation}
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}
+  =\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}}.
+\end{equation}
+The orthogonal projection condition says that the residual vector must be orthogonal to every column of \(\mathbf{X}\).  For SLR, this means
+\begin{align}
+  \mathbf{1}^T\mathbf{e} &= 0, \\
+  \mathbf{x}^T\mathbf{e} &= 0.
+\end{align}
+Stacking these two equations gives
+\begin{equation}
+  \mathbf{X}^T\mathbf{e}=\mathbf{0}.
+\end{equation}
+Substitute \(\mathbf{e}=\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}}\):
+\begin{align}
+  \mathbf{X}^T(\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}})&=\mathbf{0}, \\
+  \mathbf{X}^T\mathbf{y}-\mathbf{X}^T\mathbf{X}\widehat{\boldsymbol{\beta}}&=\mathbf{0}, \\
+  \boxed{\mathbf{X}^T\mathbf{X}\widehat{\boldsymbol{\beta}}=\mathbf{X}^T\mathbf{y}.}
+  \label{eq:ch7-normal-equations}
+\end{align}
+These are the normal equations.
+
+If \(\mathbf{X}^T\mathbf{X}\) is invertible, then
+\begin{equation}
+  \boxed{\widehat{\boldsymbol{\beta}}=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}.}
+  \label{eq:ch7-beta-hat}
+\end{equation}
+The invertibility condition is equivalent to the columns of \(\mathbf{X}\) being linearly independent.  For SLR with an intercept, this requires the observed \(x_i\)'s not all being equal.
+
+\paragraph{Math Foundations Connection.}
+The step from \(\mathbf{X}^T\mathbf{e}=\mathbf{0}\) to the normal equations uses matrix transpose notation and matrix-vector multiplication.  Matrix-vector multiplication can be read both as row inner products and as column linear combinations; see the Math Foundations textbook, Chapters 3, 5, 7, and 12.
+
+\FullOnly{
+\section{Recovering the Familiar SLR Formulas}
+
+The matrix formula in~\eqref{eq:ch7-beta-hat} is not a different estimator.  It is the same least squares estimator from the calculus derivation.
+
+For SLR,
+\begin{equation}
+  \mathbf{X}^T\mathbf{X}
+  =
+  \begin{bmatrix}
+    \mathbf{1}^T\mathbf{1} & \mathbf{1}^T\mathbf{x} \\
+    \mathbf{x}^T\mathbf{1} & \mathbf{x}^T\mathbf{x}
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    n & \sum_{i=1}^n x_i \\
+    \sum_{i=1}^n x_i & \sum_{i=1}^n x_i^2
+  \end{bmatrix},
+\end{equation}
+and
+\begin{equation}
+  \mathbf{X}^T\mathbf{y}
+  =
+  \begin{bmatrix}
+    \mathbf{1}^T\mathbf{y} \\
+    \mathbf{x}^T\mathbf{y}
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    \sum_{i=1}^n y_i \\
+    \sum_{i=1}^n x_i y_i
+  \end{bmatrix}.
+\end{equation}
+Solving the two normal equations gives
+\begin{equation}
+  \widehat{\beta}_1
+  =\frac{\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y})}{\sum_{i=1}^n (x_i-\bar{x})^2},
+  \qquad
+  \widehat{\beta}_0=\bar{y}-\widehat{\beta}_1\bar{x}.
+\end{equation}
+Thus, the matrix formula and the scalar SLR formula are two views of the same least squares solution.
+}
+
+\CoreOnly{
+\paragraph{Core Reader note.}
+Chapter~\ref{chap:slr-model-assumptions-lse} already derived the familiar scalar formulas for \(\widehat{\beta}_0\) and \(\widehat{\beta}_1\).  The Core Reader keeps the matrix viewpoint here and leaves the full algebraic unpacking to the reference build.
+}
+
+\section{The Hat Matrix}
+
+Start with the fitted values:
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}}.
+\end{equation}
+Now substitute the least squares estimator from~\eqref{eq:ch7-beta-hat}:
+\begin{align}
+  \widehat{\mathbf{y}}
+  &=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}.
+\end{align}
+Define
+\begin{equation}
+  \boxed{\mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.}
+  \label{eq:ch7-hat-matrix}
+\end{equation}
+Then
+\begin{equation}
+  \boxed{\widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}.}
+  \label{eq:ch7-yhat-hy}
+\end{equation}
+
+The hat matrix is an \(n\times n\) matrix.  It maps observed response vectors in \(\mathbb{R}^n\) to fitted-value vectors in the column space of \(\mathbf{X}\):
+\begin{equation}
+  \mathbf{H}:\mathbb{R}^n\to \operatorname{Col}(\mathbf{X}).
+\end{equation}
+
+\CoreCompress{
+\section{Properties of the Hat Matrix}
+
+Assume \(\mathbf{X}\) has full column rank, so \(\mathbf{X}^T\mathbf{X}\) is invertible.
+
+\subsection{Symmetry}
+
+The hat matrix is symmetric:
+\begin{equation}
+  \boxed{\mathbf{H}^T=\mathbf{H}.}
+\end{equation}
+Proof:
+\begin{align}
+  \mathbf{H}^T
+  &=\left[\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\right]^T \\
+  &=\left(\mathbf{X}^T\right)^T\left[(\mathbf{X}^T\mathbf{X})^{-1}\right]^T\mathbf{X}^T \\
+  &=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T \\
+  &=\mathbf{H}.
+\end{align}
+The third line uses the fact that \(\mathbf{X}^T\mathbf{X}\) is symmetric, so its inverse is also symmetric.
+
+\subsection{Idempotence}
+
+The hat matrix is idempotent:
+\begin{equation}
+  \boxed{\mathbf{H}^2=\mathbf{H}.}
+\end{equation}
+Proof:
+\begin{align}
+  \mathbf{H}^2
+  &=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T
+    \mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T \\
+  &=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}
+    (\mathbf{X}^T\mathbf{X})(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T \\
+  &=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T \\
+  &=\mathbf{H}.
+\end{align}
+
+Idempotence means that once a vector has already been projected into the fitted-value subspace, projecting it again does not change it:
+\begin{equation}
+  \mathbf{H}\widehat{\mathbf{y}}
+  =\mathbf{H}(\mathbf{H}\mathbf{y})
+  =\mathbf{H}^2\mathbf{y}
+  =\mathbf{H}\mathbf{y}
+  =\widehat{\mathbf{y}}.
+\end{equation}
+
+\subsection{Orthogonal Projection}
+
+A matrix that is both symmetric and idempotent is an orthogonal projection matrix.  Therefore, \(\mathbf{H}\) is the orthogonal projection onto \(\operatorname{Col}(\mathbf{X})\).
+
+This is the geometric core of least squares:
+\begin{equation}
+  \boxed{\widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}\text{ is the closest vector to }\mathbf{y}\text{ in }\operatorname{Col}(\mathbf{X}).}
+\end{equation}
+
+\subsection{Influence}
+
+Because
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+\end{equation}
+we have componentwise
+\begin{equation}
+  \widehat{y}_i=\sum_{j=1}^n H_{ij}y_j.
+\end{equation}
+Therefore,
+\begin{equation}
+  \boxed{\frac{\partial \widehat{y}_i}{\partial y_j}=H_{ij}.}
+\end{equation}
+The entry \(H_{ij}\) measures how much the observed response \(y_j\) influences the fitted response \(\widehat{y}_i\).  The diagonal entries \(H_{ii}\) are called leverages.  A large leverage value means observation \(i\)'s predictor row has unusual position relative to the design matrix.
+}{
+\section{Properties of the Hat Matrix}
+
+For the Core Reader, keep the three high-yield facts about \(\mathbf{H}\):
+\begin{enumerate}
+  \item \textbf{Symmetry:} \(\mathbf{H}^T=\mathbf{H}\).
+  \item \textbf{Idempotence:} \(\mathbf{H}^2=\mathbf{H}\).
+  \item \textbf{Projection meaning:} \(\mathbf{H}\) is the orthogonal projection onto \(\operatorname{Col}(\mathbf{X})\).
+\end{enumerate}
+
+So
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}
+\end{equation}
+is the closest vector to \(\mathbf{y}\) inside the fitted-value space.  Once a vector has already been projected there, applying \(\mathbf{H}\) again does nothing.
+
+Because
+\begin{equation}
+  \widehat{y}_i=\sum_{j=1}^n H_{ij}y_j,
+\end{equation}
+the entries of \(\mathbf{H}\) tell us how observed responses influence fitted responses.  The diagonal entries \(H_{ii}\) are the leverage values.
+
+\paragraph{Core Reader note.}
+The full reference build keeps the step-by-step symmetry and idempotence proofs.
+}
+
+\section{The Residual Maker Matrix}
+
+The hat matrix makes fitted values.  The complementary matrix makes residuals.
+
+Define
+\begin{equation}
+  \mathbf{M}=\mathbf{I}-\mathbf{H}.
+\end{equation}
+Then
+\begin{align}
+  \mathbf{e}
+  &=\mathbf{y}-\widehat{\mathbf{y}} \\
+  &=\mathbf{y}-\mathbf{H}\mathbf{y} \\
+  &=(\mathbf{I}-\mathbf{H})\mathbf{y} \\
+  &=\mathbf{M}\mathbf{y}.
+\end{align}
+The matrix \(\mathbf{M}\) is also symmetric and idempotent:
+\begin{equation}
+  \mathbf{M}^T=\mathbf{M},
+  \qquad
+  \mathbf{M}^2=\mathbf{M}.
+\end{equation}
+It projects \(\mathbf{y}\) onto the residual subspace, which is the orthogonal complement of \(\operatorname{Col}(\mathbf{X})\).
+
+Because \(\mathbf{X}^T\mathbf{e}=\mathbf{0}\), the residual vector is orthogonal to every column of the design matrix.  Since \(\widehat{\mathbf{y}}\in\operatorname{Col}(\mathbf{X})\), the residual vector is also orthogonal to the fitted-value vector:
+\begin{equation}
+  \widehat{\mathbf{y}}^T\mathbf{e}=0.
+\end{equation}
+This gives the geometric decomposition
+\begin{equation}
+  \mathbf{y}=\widehat{\mathbf{y}}+\mathbf{e},
+  \qquad
+  \widehat{\mathbf{y}}\perp \mathbf{e}.
+\end{equation}
+
+\section{Dimensions and Degrees of Freedom}
+
+If \(\mathbf{X}\in\mathbb{R}^{n\times(p+1)}\) has full column rank, then
+\begin{equation}
+  \dim\operatorname{Col}(\mathbf{X})=p+1.
+\end{equation}
+The fitted values live in this \((p+1)\)-dimensional subspace.  The residuals live in the orthogonal complement, whose dimension is
+\begin{equation}
+  n-(p+1)=n-p-1.
+\end{equation}
+This is the linear algebra reason that the residual variance estimator in multiple linear regression divides by \(n-p-1\).
+
+For SLR, \(p=1\), so the fitted-value subspace has dimension \(2\), and the residual subspace has dimension
+\begin{equation}
+  n-2.
+\end{equation}
+
+\paragraph{Math Foundations Connection.}
+The dimension claim depends on linear independence and bases.  A set of linearly independent \(n\)-vectors can have at most \(n\) elements, and a basis provides unique linear-combination coordinates.  See the Math Foundations textbook, Chapters 2 and 6.
+
+\section{Multiple Linear Regression as the Same Projection}
+
+The design matrix generalizes immediately from simple linear regression to multiple linear regression.  With predictors \(\mathbf{x}_1,\ldots,\mathbf{x}_p\), define
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}\mathbf{1}&\mathbf{x}_1&\cdots&\mathbf{x}_p\end{bmatrix}
+  =
+  \begin{bmatrix}
+    1 & x_{11} & x_{12} & \cdots & x_{1p} \\
+    1 & x_{21} & x_{22} & \cdots & x_{2p} \\
+    \vdots & \vdots & \vdots & \ddots & \vdots \\
+    1 & x_{n1} & x_{n2} & \cdots & x_{np}
+  \end{bmatrix}.
+\end{equation}
+The coefficient vector is
+\begin{equation}
+  \boldsymbol{\beta}=\begin{bmatrix}
+    \beta_0\\\beta_1\\\vdots\\\beta_p
+  \end{bmatrix}.
+\end{equation}
+The model is
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}.
+\end{equation}
+The least squares solution is still
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y},
+\end{equation}
+and the fitted values are still
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+  \qquad
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+\end{equation}
+
+The only change is the subspace.  In SLR, \(\operatorname{Col}(\mathbf{X})\) is usually a two-dimensional plane in \(\mathbb{R}^n\).  In MLR, \(\operatorname{Col}(\mathbf{X})\) is usually a \((p+1)\)-dimensional subspace in \(\mathbb{R}^n\).
+
+\section{Design Matrix as a Modeling Choice}
+
+The design matrix tells the model what directions it is allowed to use to approximate \(\mathbf{y}\).  Choosing a model means choosing columns for \(\mathbf{X}\).
+
+Examples:
+\begin{align}
+  \text{SLR:}\qquad
+  \mathbf{X} &= \begin{bmatrix}\mathbf{1}&\mathbf{x}\end{bmatrix}, \\
+  \text{Polynomial model:}\qquad
+  \mathbf{X} &= \begin{bmatrix}\mathbf{1}&\mathbf{x}&\mathbf{x}^2&\mathbf{x}^3\end{bmatrix}, \\
+  \text{MLR:}\qquad
+  \mathbf{X} &= \begin{bmatrix}\mathbf{1}&\mathbf{x}_1&\cdots&\mathbf{x}_p\end{bmatrix}, \\
+  \text{Interaction model:}\qquad
+  \mathbf{X} &= \begin{bmatrix}\mathbf{1}&\mathbf{x}_1&\mathbf{x}_2&\mathbf{x}_1\odot\mathbf{x}_2\end{bmatrix}.
+\end{align}
+Here \(\odot\) means elementwise multiplication, so the interaction column has entries \(x_{i1}x_{i2}\).
+
+The same least squares machinery works for all of these models as long as the model is linear in the coefficients.  This is why regression can fit curved relationships using transformed columns while still being a linear model in parameters.
+
+\FullOnly{
+\section{Worked Example: Projection in SLR}
+
+Consider three observations:
+\begin{center}
+\begin{tabular}{cc}
+\hline
+\(x_i\) & \(y_i\) \\
+\hline
+\(-1\) & \(1\) \\
+\(0\) & \(0\) \\
+\(1\) & \(2\) \\
+\hline
+\end{tabular}
+\end{center}
+Then
+\begin{equation}
+  \mathbf{x}=\begin{bmatrix}-1\\0\\1\end{bmatrix},
+  \qquad
+  \mathbf{y}=\begin{bmatrix}1\\0\\2\end{bmatrix},
+  \qquad
+  \mathbf{X}=\begin{bmatrix}
+    1 & -1 \\
+    1 & 0 \\
+    1 & 1
+  \end{bmatrix}.
+\end{equation}
+Compute
+\begin{equation}
+  \mathbf{X}^T\mathbf{X}
+  =
+  \begin{bmatrix}
+    3 & 0 \\
+    0 & 2
+  \end{bmatrix},
+  \qquad
+  \mathbf{X}^T\mathbf{y}
+  =
+  \begin{bmatrix}
+    3 \\
+    1
+  \end{bmatrix}.
+\end{equation}
+Therefore,
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =
+  \begin{bmatrix}
+    3 & 0 \\
+    0 & 2
+  \end{bmatrix}^{-1}
+  \begin{bmatrix}
+    3 \\
+    1
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    1 \\
+    1/2
+  \end{bmatrix}.
+\end{equation}
+The fitted line is
+\begin{equation}
+  \widehat{y}=1+\frac{1}{2}x.
+\end{equation}
+The fitted-value vector is
+\begin{equation}
+  \widehat{\mathbf{y}}
+  =\mathbf{X}\widehat{\boldsymbol{\beta}}
+  =
+  \begin{bmatrix}
+    1/2 \\
+    1 \\
+    3/2
+  \end{bmatrix}.
+\end{equation}
+The residual vector is
+\begin{equation}
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}
+  =
+  \begin{bmatrix}
+    1/2 \\
+    -1 \\
+    1/2
+  \end{bmatrix}.
+\end{equation}
+Check the orthogonality conditions:
+\begin{align}
+  \mathbf{1}^T\mathbf{e}
+  &=\frac{1}{2}-1+\frac{1}{2}=0, \\
+  \mathbf{x}^T\mathbf{e}
+  &=(-1)\left(\frac{1}{2}\right)+0(-1)+1\left(\frac{1}{2}\right)=0.
+\end{align}
+Thus, the residual vector is orthogonal to both columns of \(\mathbf{X}\).  This confirms that \(\widehat{\mathbf{y}}\) is the orthogonal projection of \(\mathbf{y}\) onto \(\operatorname{span}\{\mathbf{1},\mathbf{x}\}\).
+
+For this example, the hat matrix is
+\begin{equation}
+  \mathbf{H}
+  =
+  \begin{bmatrix}
+    5/6 & 1/3 & -1/6 \\
+    1/3 & 1/3 & 1/3 \\
+    -1/6 & 1/3 & 5/6
+  \end{bmatrix}.
+\end{equation}
+Then
+\begin{equation}
+  \mathbf{H}\mathbf{y}
+  =
+  \begin{bmatrix}
+    1/2\\1\\3/2
+  \end{bmatrix}
+  =\widehat{\mathbf{y}}.
+\end{equation}
+}
+
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for building design matrices, hat matrices, fitted values, residuals, and leverage values have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the projection geometry and matrix interpretation.
+
+\section{Common Mistakes}
+
+\begin{enumerate}
+  \item \textbf{Projecting the scatterplot instead of the response vector.}  The projection takes place in \(\mathbb{R}^n\), not in the two-dimensional scatterplot.
+  \item \textbf{Forgetting the intercept column.}  With an intercept, the first column of \(\mathbf{X}\) is \(\mathbf{1}\).  Removing the intercept changes the projection subspace.
+  \item \textbf{Assuming \((\mathbf{X}^T\mathbf{X})^{-1}\) always exists.}  It exists only when the columns of \(\mathbf{X}\) are linearly independent.
+  \item \textbf{Confusing random errors and residuals.}  The model errors \(\boldsymbol{\epsilon}\) are unobserved.  The residuals \(\mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}\) are computed after fitting the model.
+  \item \textbf{Thinking the hat matrix estimates coefficients.}  The hat matrix maps \(\mathbf{y}\) to \(\widehat{\mathbf{y}}\).  The coefficient estimator is \((\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}\).
+  \item \textbf{Ignoring design-matrix columns.}  Transformed predictors, interaction terms, and categorical encodings are all columns of \(\mathbf{X}\).
+  \item \textbf{Treating high leverage as a residual problem only.}  Leverage comes from \(\mathbf{X}\), not from \(y\).  It measures unusual predictor geometry.
+\end{enumerate}
+
+\section{Chapter Summary}
+
+Simple linear regression can be written as
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+  \qquad
+  \mathbf{X}=\begin{bmatrix}\mathbf{1}&\mathbf{x}\end{bmatrix}.
+\end{equation}
+The fitted values are linear combinations of the columns of \(\mathbf{X}\):
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}}.
+\end{equation}
+Least squares chooses the fitted vector in \(\operatorname{Col}(\mathbf{X})\) closest to \(\mathbf{y}\).  The residual vector is orthogonal to every column of \(\mathbf{X}\), so
+\begin{equation}
+  \mathbf{X}^T(\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}})=\mathbf{0}.
+\end{equation}
+This gives the normal equations
+\begin{equation}
+  \mathbf{X}^T\mathbf{X}\widehat{\boldsymbol{\beta}}=\mathbf{X}^T\mathbf{y}.
+\end{equation}
+If \(\mathbf{X}^T\mathbf{X}\) is invertible, then
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}.
+\end{equation}
+The fitted values can be written as
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+  \qquad
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+\end{equation}
+The hat matrix is symmetric and idempotent, so it is an orthogonal projection matrix.  The diagonal entries of \(\mathbf{H}\) are leverage values, and the full matrix entries describe how observed responses influence fitted responses.
+
+The same projection formula generalizes immediately to multiple linear regression by adding more columns to the design matrix.  In MLR, when \(\mathbf{X}\) has full column rank, the fitted values are the projection of \(\mathbf{y}\) onto the \((p+1)\)-dimensional column space of \(\mathbf{X}\), and the residuals live in the \((n-p-1)\)-dimensional orthogonal complement.  If \(\operatorname{rank}(\mathbf{X})=r\), replace \(p+1\) by \(r\) and \(n-p-1\) by \(n-r\).  Chapter~\ref{chap:degrees-of-freedom-subspaces-identifiability} uses these dimensions to explain degrees of freedom and identifiability.
+
+\CoreCompress{
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 7 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Response vectors and predictor vectors & $\mathbb{R}^n$ vector notation, coordinates, and the ones vector $\mathbf{1}$ & Ch02 Secs. 2.1, 2.2, 2.4, 2.6; Ch06 Sec. 6.5 \\
+\hline
+Fitted values as linear combinations & Scalar-vector multiplication and linear combinations of vectors & Ch03 Secs. 3.4, 3.5; Ch07 Sec. 7.6.2 \\
+\hline
+Least squares objective & Euclidean norms, squared lengths, and distances & Ch05 Secs. 5.5, 5.7; Ch12 Sec. 12.9 \\
+\hline
+Residual orthogonality & Dot products and the zero-dot-product condition for orthogonality & Ch02 Sec. 2.6; Ch05 Secs. 5.1, 5.3, 5.8; Ch12 Sec. 12.12 \\
+\hline
+Normal equations & Matrix-vector multiplication as row inner products and column linear combinations & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3, 5.5; Ch07 Secs. 7.1, 7.6.1, 7.6.2; Ch12 Sec. 12.11 \\
+\hline
+Full rank and invertibility intuition & Linear independence, bases, and orthonormal-basis ideas & Ch05 Sec. 5.5; Ch06 Secs. 6.3, 6.5; Ch09 Sec. 9.1; Ch10 Secs. 10.3, 10.5 \\
+\hline
+Computational bridge & Python vector and matrix operations with NumPy arrays & Ch07 Sec. 7.7 \\
+\hline
+Normal-equation bridge & Least squares as minimizing $\|\mathbf{A}\mathbf{x}-\mathbf{b}\|^2$, the normal equations, and gradient-based reasoning & Ch05 Sec. 5.5; Ch12 Secs. 12.4, 12.9, 12.11 \\
+\hline
+\end{tabular}
+\end{center}
+}{
+\section{Math Foundations Source Map}
+
+The Core Reader keeps the geometry ideas from Math Foundations but omits the full Math Foundations textbook-location map.  The main supporting ideas here are vectors in \(\mathbb{R}^n\), dot products, orthogonality, bases, full rank, and least-squares normal equations.
+}
+
+\CoreCompress{
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after translating a regression problem into projection language.
+
+\begin{enumerate}
+  \item Can you build the design matrix \(\mathbf{X}\) with the intercept column and state its dimensions?
+  \item Can you explain why least squares projects \(\mathbf{y}\) onto \(\operatorname{Col}(\mathbf{X})\)?
+  \item Can you derive or recognize the normal equations \(\mathbf{X}^T\mathbf{X}\widehat{\boldsymbol{\beta}}=\mathbf{X}^T\mathbf{y}\)?
+  \item Can you write \(\widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}\) and \(\mathbf{e}=(\mathbf{I}_n-\mathbf{H})\mathbf{y}\)?
+  \item Can you explain what symmetry and idempotence of \(\mathbf{H}\) mean for projection?
+  \item Can you state the geometric meaning of \(\mathbf{e}\perp\operatorname{Col}(\mathbf{X})\)?
+\end{enumerate}
+}{
+\section{Practice and Workflow}
+\subsection*{Can You Do This?}
+
+For Core Reader study, be sure you can do the following.
+
+\begin{enumerate}
+  \item Build \(\mathbf{X}\) with the intercept column in the correct place.
+  \item Explain why least squares is a projection of \(\mathbf{y}\) onto \(\operatorname{Col}(\mathbf{X})\).
+  \item Write the normal equations and the coefficient formula.
+  \item Write \(\widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}\) and \(\mathbf{e}=(\mathbf{I}-\mathbf{H})\mathbf{y}\).
+  \item State the residual degrees of freedom \(n-p-1\).
+\end{enumerate}
+}

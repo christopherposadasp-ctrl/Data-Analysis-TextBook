@@ -1,0 +1,321 @@
+\chapter{Matrix Inverses, Rank, and Pseudoinverses}
+\label{mf:ch10-matrix-inverses-rank-pseudoinverses}
+
+Chapter 8 introduced systems of equations
+\[
+    A\mathbf{x}=\mathbf{b},
+\]
+and Chapter 9 showed how QR factorization can turn some matrix problems into triangular solves. This chapter asks when a matrix can be ``undone.'' For square matrices, the answer is the usual inverse. For rectangular matrices, the answer splits into two one-sided ideas: left inverses and right inverses.
+
+The shape and rank of a matrix determine what kind of inverse-like behavior is possible. A tall matrix may have independent columns and a left inverse. A wide matrix may have independent rows and a right inverse. A square matrix that has both is invertible in the usual sense. These ideas are central later because regression design matrices are usually tall, and unique regression coefficients require full column rank.
+
+This chapter focuses on inverse-like behavior, rank, and full-rank pseudoinverse formulas. Column space, row space, and null space are developed in the next chapter; least squares and normal equations appear later.
+
+\section{Left Inverses}
+\label{mf:left-inverse}
+
+Let \(A\in\mathbb{R}^{m\times n}\). A matrix \(C\in\mathbb{R}^{n\times m}\) is a \emph{left inverse} of \(A\) if
+\[
+    CA=I_n.
+\]
+It is called a left inverse because the undoing matrix appears on the left of \(A\).
+
+If \(A\mathbf{x}=\mathbf{b}\) has a solution and \(C\) is a left inverse, then
+\[
+    A\mathbf{x}=\mathbf{b}
+    \quad\Longrightarrow\quad
+    CA\mathbf{x}=C\mathbf{b}
+    \quad\Longrightarrow\quad
+    \mathbf{x}=C\mathbf{b}.
+\]
+Thus a left inverse gives a candidate solution
+\[
+    \widehat{\mathbf{x}}=C\mathbf{b}.
+\]
+The candidate must still be checked. If \(A\widehat{\mathbf{x}}=\mathbf{b}\), then \(\widehat{\mathbf{x}}\) is the solution. If \(A\widehat{\mathbf{x}}\neq\mathbf{b}\), then the system has no solution.
+
+The key structural fact is
+\[
+    A \text{ has a left inverse}
+    \quad\Longleftrightarrow\quad
+    \text{the columns of } A \text{ are linearly independent.}
+\]
+To see the important direction, suppose \(CA=I_n\) and \(A\mathbf{x}=\mathbf{0}\). Then
+\[
+    CA\mathbf{x}=C\mathbf{0},
+    \qquad
+    \mathbf{x}=\mathbf{0}.
+\]
+So the only solution to \(A\mathbf{x}=\mathbf{0}\) is the trivial solution, which means the columns of \(A\) are linearly independent.
+
+A left-invertible matrix must be square or tall. Since \(A\) has \(n\) independent columns in \(\mathbb{R}^m\), we must have
+\[
+    m\geq n.
+\]
+Left invertibility also gives uniqueness: if \(A\mathbf{x}=\mathbf{b}\) has a solution, then it has only one. If \(\mathbf{x}\) and \(\widehat{\mathbf{x}}\) both solve the system, then
+\[
+    A(\mathbf{x}-\widehat{\mathbf{x}})=\mathbf{0},
+\]
+and column independence forces \(\mathbf{x}-\widehat{\mathbf{x}}=\mathbf{0}\).
+
+\section{Right Inverses}
+\label{mf:right-inverse}
+
+A matrix \(C\in\mathbb{R}^{n\times m}\) is a \emph{right inverse} of \(A\in\mathbb{R}^{m\times n}\) if
+\[
+    AC=I_m.
+\]
+Right inverses are tied to rows rather than columns. Since
+\[
+    AC=I_m
+    \quad\Longrightarrow\quad
+    C^TA^T=I_m,
+\]
+the transpose \(C^T\) is a left inverse of \(A^T\). Therefore \(A^T\) has linearly independent columns, which means \(A\) has linearly independent rows. The converse is also true, so
+\[
+    A \text{ has a right inverse}
+    \quad\Longleftrightarrow\quad
+    \text{the rows of } A \text{ are linearly independent.}
+\]
+
+A right-invertible matrix must be square or wide:
+\[
+    m\leq n.
+\]
+Right invertibility guarantees existence, not uniqueness. If \(AC=I_m\), then for any \(\mathbf{b}\in\mathbb{R}^m\),
+\[
+    \widehat{\mathbf{x}}=C\mathbf{b}
+\]
+satisfies
+\[
+    A\widehat{\mathbf{x}}=AC\mathbf{b}=\mathbf{b}.
+\]
+So every right-hand side is reachable. But if the system is wide, there may be many different vectors \(\mathbf{x}\) that produce the same \(\mathbf{b}\).
+
+\section{Square Matrix Inverses}
+\label{mf:matrix-inverse}
+\label{mf:inverse-uniqueness}
+
+If a matrix has both a left inverse and a right inverse, then those inverse-like matrices must agree. Suppose
+\[
+    AX=I,\qquad YA=I,
+\]
+where \(X\) is a right inverse and \(Y\) is a left inverse. Then
+\[
+    X=IX=(YA)X=Y(AX)=YI=Y.
+\]
+The common matrix is denoted \(A^{-1}\). A square matrix with such an inverse is called \emph{invertible} or \emph{nonsingular}; a square matrix without an inverse is called \emph{singular}.
+
+For a square matrix \(A\in\mathbb{R}^{n\times n}\), the following statements are equivalent:
+\begin{enumerate}
+    \item \(A\) is invertible;
+    \item the columns of \(A\) are linearly independent;
+    \item the rows of \(A\) are linearly independent;
+    \item \(A\) has a left inverse;
+    \item \(A\) has a right inverse.
+\end{enumerate}
+When \(A\) is invertible, every system \(A\mathbf{x}=\mathbf{b}\) has exactly one solution:
+\[
+    \mathbf{x}=A^{-1}\mathbf{b}.
+\]
+Existence comes from right invertibility; uniqueness comes from left invertibility.
+
+\section{Computing a Square Inverse with QR}
+\label{mf:qr-square-inverse}
+\label{mf:qr-inverse-computation}
+
+Chapter 9 gave the factorization
+\[
+    A=QR,
+\]
+where \(Q\) has orthonormal columns and \(R\) is upper triangular. If \(A\) is square and invertible, then the inverse can be found by solving
+\[
+    AX=I.
+\]
+Substituting \(A=QR\) gives
+\[
+    QRX=I.
+\]
+Multiplying by \(Q^T\) gives
+\[
+    RX=Q^T.
+\]
+This is a collection of triangular systems, one for each column of \(X\). Thus QR reduces inverse computation to back substitution. The practical lesson is that factorizations often give better computational tools than explicitly forming inverse matrices.
+
+\section{Rank and Full Rank}
+\label{mf:rank}
+
+Rank measures how many independent directions a matrix contains. For \(A\in\mathbb{R}^{m\times n}\), the \emph{column rank} is the number of linearly independent columns, and the \emph{row rank} is the number of linearly independent rows.
+\label{mf:column-rank}
+\label{mf:row-rank}
+
+A standard theorem says that row rank and column rank are equal. This common value is called the \emph{rank} of \(A\), written
+\[
+    \operatorname{rank}(A).
+\]
+Because an \(m\times n\) matrix has only \(m\) rows and \(n\) columns,
+\[
+    \operatorname{rank}(A)\leq \min(m,n).
+\]
+
+A matrix has \emph{full rank} if
+\[
+    \operatorname{rank}(A)=\min(m,n).
+\]
+\label{mf:full-rank}
+There are two shape-dependent cases.
+
+If \(m\geq n\), full rank means
+\[
+    \operatorname{rank}(A)=n.
+\]
+Then all columns are independent, and \(A\) has \emph{full column rank}. This is the condition for a left inverse.
+\label{mf:full-column-rank}
+
+If \(m\leq n\), full rank means
+\[
+    \operatorname{rank}(A)=m.
+\]
+Then all rows are independent, and \(A\) has \emph{full row rank}. This is the condition for a right inverse.
+\label{mf:full-row-rank}
+
+For a square matrix, full row rank and full column rank are the same condition, and both are equivalent to ordinary invertibility.
+
+\section[Why A-Transpose-A Appears]{Why \(A^TA\) Appears}
+\label{mf:ata-invertibility}
+
+For tall full-column-rank matrices, the matrix \(A^TA\) is square and invertible. This fact explains the familiar expression
+\[
+    (A^TA)^{-1}A^T.
+\]
+
+Suppose \(A\) has linearly independent columns. To show \(A^TA\) is invertible, it is enough to show that
+\[
+    A^TA\mathbf{x}=\mathbf{0}
+\]
+has only the trivial solution. Multiply on the left by \(\mathbf{x}^T\):
+\[
+    \mathbf{x}^TA^TA\mathbf{x}=0.
+\]
+But
+\[
+    \mathbf{x}^TA^TA\mathbf{x}=(A\mathbf{x})^T(A\mathbf{x})=\|A\mathbf{x}\|^2.
+\]
+Therefore \(A\mathbf{x}=\mathbf{0}\). Since the columns of \(A\) are independent, \(\mathbf{x}=\mathbf{0}\). Thus \(A^TA\) is invertible.
+
+Conversely, if the columns of \(A\) are dependent, then some nonzero \(\mathbf{x}\) satisfies \(A\mathbf{x}=\mathbf{0}\), and therefore \(A^TA\mathbf{x}=\mathbf{0}\). So \(A^TA\) is not invertible.
+
+Hence
+\[
+    A^TA \text{ is invertible}
+    \quad\Longleftrightarrow\quad
+    A \text{ has linearly independent columns.}
+\]
+The row version is analogous:
+\[
+    AA^T \text{ is invertible}
+    \quad\Longleftrightarrow\quad
+    A \text{ has linearly independent rows.}
+\]
+\label{mf:aat-invertibility}
+
+\section{Full-Rank Pseudoinverse Formulas}
+\label{mf:pseudoinverse}
+\label{mf:pseudoinverse-full-rank}
+\label{mf:pseudoinverse-left}
+\label{mf:pseudoinverse-right}
+\label{mf:left-pseudoinverse}
+\label{mf:right-pseudoinverse}
+
+The source notes use the word \emph{pseudoinverse} for the following full-rank one-sided inverse formulas. We keep that convention here. More general pseudoinverse theory exists, but these full-rank cases are the formulas needed for this course. Thus, in this chapter, \emph{pseudoinverse} means the full-rank formula appropriate to the matrix shape, not the most general Moore--Penrose construction.
+
+If \(A\in\mathbb{R}^{m\times n}\) has full column rank, then
+\[
+    A^+_L=(A^TA)^{-1}A^T
+\]
+is a left inverse, because
+\[
+    A^+_L A=(A^TA)^{-1}A^TA=I_n.
+\]
+
+If \(A\in\mathbb{R}^{m\times n}\) has full row rank, then
+\[
+    A^+_R=A^T(AA^T)^{-1}
+\]
+is a right inverse, because
+\[
+    AA^+_R=AA^T(AA^T)^{-1}=I_m.
+\]
+
+These formulas match the solution behavior above: full column rank gives uniqueness when a solution exists, and full row rank gives existence for every right-hand side.
+
+\section{Computing Full-Rank Pseudoinverses with QR}
+\label{mf:qr-pseudoinverse}
+\label{mf:qr-pseudoinverse-computation}
+
+QR also gives a computational route to the full-rank pseudoinverse formulas.
+
+If \(A\in\mathbb{R}^{m\times n}\) has full column rank and thin QR factorization \(A=QR\), then
+\[
+    A^+_L=(A^TA)^{-1}A^T=R^{-1}Q^T.
+\]
+This follows from
+\[
+    A^TA=(QR)^T(QR)=R^TQ^TQR=R^TR.
+\]
+The source notes express this computationally as solving
+\[
+    RX=Q^T.
+\]
+The solution \(X\) is the left pseudoinverse.
+
+For the full-row-rank case, apply QR to the transpose:
+\[
+    A^T=QR.
+\]
+Then
+\[
+    A^+_R=A^T(AA^T)^{-1}=QR^{-T}.
+\]
+Here \(R^{-T}\) means \((R^T)^{-1}\).
+Equivalently, solve a triangular system involving \(R\), then transpose as needed. The key computational idea is the same: use QR and triangular solves rather than explicitly inverting large matrices when possible.
+
+\section{Rank Determination with QR}
+\label{mf:rank-determination-qr}
+
+QR can also help determine rank. In exact arithmetic:
+\begin{itemize}
+    \item to determine column rank, perform QR on \(A\) and inspect the diagonal of \(R\);
+    \item to determine row rank, perform QR on \(A^T\) and inspect the diagonal of \(R\).
+\end{itemize}
+A zero diagonal entry indicates that a new independent direction has failed to appear. In numerical work, the practical question is whether a diagonal entry is small relative to the scale of the problem, not whether it is symbolically zero.
+
+\section{Data Analysis Bridge}
+\label{mf:ch10-data-analysis-bridge}
+
+In regression, the design matrix usually has more rows than columns:
+\[
+    X\in\mathbb{R}^{n\times(p+1)}.
+\]
+The columns represent the intercept and predictor directions. For ordinary least squares coefficients to be uniquely identified, these columns must be linearly independent. In this chapter's language, \(X\) must have full column rank.
+
+When \(X\) has full column rank, \(X^TX\) is invertible, which is why the familiar coefficient formula
+\[
+    \widehat{\boldsymbol\beta}=(X^TX)^{-1}X^T\mathbf{y}
+\]
+requires a rank condition. If a predictor column is an exact linear combination of other columns, then \(X^TX\) is singular and the coefficient vector is not uniquely determined.
+
+This is the mathematical basis for common regression warnings: do not include duplicate predictors, do not include all dummy variables plus an intercept, and be careful when transformed columns create exact redundancy. The next chapter develops the subspace language that explains these non-identifiable directions.
+
+\section{Chapter Summary}
+\label{mf:matrix-inverses-rank-summary}
+
+Carry forward these inverse and rank facts:
+\begin{itemize}
+    \item Left inverses give uniqueness when a solution exists; right inverses give existence for every right-hand side but not necessarily uniqueness.
+    \item A square matrix is invertible exactly when its rows and columns are independent.
+    \item Rank is the common row/column independence count; full rank means \(\operatorname{rank}(A)=\min(m,n)\).
+    \item Full column rank supports left-inverse behavior and makes \(A^TA\) invertible; full row rank supports right-inverse behavior and makes \(AA^T\) invertible.
+    \item In the full-rank cases, the one-sided pseudoinverse formulas are \((A^TA)^{-1}A^T\) and \(A^T(AA^T)^{-1}\).
+    \item QR factorization converts inverse and pseudoinverse computation into triangular solves.
+\end{itemize}

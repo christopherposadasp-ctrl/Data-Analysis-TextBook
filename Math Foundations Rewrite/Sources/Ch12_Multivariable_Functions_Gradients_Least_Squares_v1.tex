@@ -1,0 +1,582 @@
+\chapter{Multivariable Functions, Gradients, and Least Squares}
+\label{mf:ch12-multivariable-functions-gradients-least-squares}
+
+The previous chapters developed the linear algebra needed to describe systems of equations, inverse-like behavior, rank, and subspaces. We now return to calculus. The goal is not to develop a full optimization course. The goal is more focused: we need the derivative language that explains why least squares leads to the normal equations and why the residual vector is orthogonal to the columns of the matrix.
+
+The main objects in this chapter are functions whose inputs are vectors. A function may take a vector and output a scalar,
+\[
+    f:\mathbb{R}^n\to\mathbb{R},
+\]
+or it may take a vector and output another vector,
+\[
+    f:\mathbb{R}^n\to\mathbb{R}^m.
+\]
+For scalar-valued functions, gradients point in directions of steepest increase. For vector-valued functions, derivatives are matrices. Those matrices are called Jacobians. Both ideas are needed for least squares and for the chain-rule calculations that appear in modern modeling methods.
+
+\section{Multivariable Functions}
+\label{mf:multivariable-functions}
+
+A multivariable function is a function whose input has more than one coordinate. For example,
+\[
+    f:\mathbb{R}^n\to\mathbb{R}
+\]
+takes an input vector
+\[
+    \mathbf{x}=\begin{bmatrix}x_1\\x_2\\ \vdots\\x_n\end{bmatrix}
+\]
+and returns a scalar. A quadratic function such as
+\[
+    f(\mathbf{x})=\frac{1}{2}\mathbf{x}^T A\mathbf{x}+\mathbf{b}^T\mathbf{x}
+\]
+is one example. These functions appear when we write optimization problems with vector decision variables.
+
+A vector-valued function has the form
+\[
+    f:\mathbb{R}^n\to\mathbb{R}^m.
+\]
+For such a function, each input vector produces an output vector with \(m\) entries. We can write
+\[
+    f(\mathbf{x})=\begin{bmatrix}
+        f_1(\mathbf{x})\\
+        f_2(\mathbf{x})\\
+        \vdots\\
+        f_m(\mathbf{x})
+    \end{bmatrix}.
+\]
+A linear transformation \(f(\mathbf{x})=A\mathbf{x}\), where \(A\in\mathbb{R}^{m\times n}\), is the most important first example.
+
+\section{Partial Derivatives}
+\label{mf:partial-derivatives}
+
+For a scalar-valued function
+\[
+    f:\mathbb{R}^n\to\mathbb{R},
+\]
+the partial derivative with respect to \(x_i\) measures the rate of change of \(f\) as only the \(i\)th coordinate changes. Holding all other coordinates fixed,
+\[
+    \frac{\partial f}{\partial x_i}(\mathbf{x})
+    =\lim_{h\to 0}\frac{f(\mathbf{x}+h\mathbf{e}_i)-f(\mathbf{x})}{h},
+\]
+where \(\mathbf{e}_i\) is the \(i\)th standard basis vector.
+
+Thus a partial derivative is a directional rate of change in a coordinate direction. The standard basis vector \(\mathbf{e}_i\) changes only the \(i\)th coordinate, so the limit above asks: what happens to \(f\) if we move slightly in the \(x_i\) direction and leave all other coordinates fixed?
+
+\subsection*{Example: A Quadratic Function}
+
+Let
+\[
+    f(\mathbf{x})=\frac{1}{2}\mathbf{x}^T A\mathbf{x},
+    \qquad
+    \mathbf{x}=\begin{bmatrix}x_1\\x_2\end{bmatrix},
+    \qquad
+    A=\begin{bmatrix}1&1\\1&1\end{bmatrix}.
+\]
+Then
+\[
+    f(\mathbf{x})
+    =\frac{1}{2}
+    \begin{bmatrix}x_1&x_2\end{bmatrix}
+    \begin{bmatrix}1&1\\1&1\end{bmatrix}
+    \begin{bmatrix}x_1\\x_2\end{bmatrix}
+    =\frac{1}{2}(x_1^2+2x_1x_2+x_2^2).
+\]
+Therefore
+\[
+    \frac{\partial f}{\partial x_1}=x_1+x_2,
+    \qquad
+    \frac{\partial f}{\partial x_2}=x_1+x_2.
+\]
+This foreshadows a general rule: differentiating a quadratic produces a linear expression.
+
+\section{Directional Derivatives}
+\label{mf:directional-derivatives}
+
+Partial derivatives move only in standard coordinate directions. Sometimes we want to move in an arbitrary direction \(\mathbf{v}\in\mathbb{R}^n\). The directional derivative of \(f\) at \(\mathbf{a}\) in the direction \(\mathbf{v}\) is
+\[
+    D_{\mathbf{v}}f(\mathbf{a})
+    =\lim_{h\to 0}\frac{f(\mathbf{a}+h\mathbf{v})-f(\mathbf{a})}{h},
+\]
+whenever this limit exists.
+
+A directional derivative depends on both the direction and the magnitude of \(\mathbf{v}\). If \(\mathbf{v}=\alpha\mathbf{u}\), then
+\[
+    D_{\mathbf{v}}f(\mathbf{a})=\alpha D_{\mathbf{u}}f(\mathbf{a}).
+\]
+For this reason, when we want a pure direction, we often use a unit vector \(\mathbf{u}\) with \(\|\mathbf{u}\|=1\).
+
+The key connection to differentiability is
+\[
+    D_{\mathbf{v}}f(\mathbf{a})=Df(\mathbf{a})\mathbf{v}.
+\]
+For scalar-valued functions, this becomes
+\[
+    D_{\mathbf{v}}f(\mathbf{a})=(\nabla f(\mathbf{a}))^T\mathbf{v}.
+\]
+So the directional derivative is a dot product between the gradient and the direction vector.
+
+\section{Differentiability, Derivatives, and the Gradient}
+\label{mf:gradient}
+
+In one-variable calculus, the derivative gives the slope of the tangent line. That tangent line is the best local linear approximation to the function. The same idea extends to functions of several variables.
+
+A scalar-valued function \(f:\mathbb{R}^n\to\mathbb{R}\) is differentiable at \(\mathbf{a}\) if there is a linear function
+\[
+    Df(\mathbf{a}):\mathbb{R}^n\to\mathbb{R}
+\]
+such that
+\[
+    \lim_{\mathbf{h}\to\mathbf{0}}
+    \frac{f(\mathbf{a}+\mathbf{h})-f(\mathbf{a})-Df(\mathbf{a})\mathbf{h}}
+    {\|\mathbf{h}\|}=0.
+\]
+Here \(\mathbf{h}\) is a vector. The term \(Df(\mathbf{a})\mathbf{h}\) is the linear approximation to the change in \(f\).
+
+For a scalar-valued differentiable function, the derivative can be represented by a row vector:
+\[
+    Df(\mathbf{a})=\begin{bmatrix}
+        \frac{\partial f}{\partial x_1}(\mathbf{a}) &
+        \frac{\partial f}{\partial x_2}(\mathbf{a}) &
+        \cdots &
+        \frac{\partial f}{\partial x_n}(\mathbf{a})
+    \end{bmatrix}.
+\]
+The gradient is the corresponding column vector:
+\[
+    \nabla f(\mathbf{a})=\begin{bmatrix}
+        \frac{\partial f}{\partial x_1}(\mathbf{a})\\
+        \frac{\partial f}{\partial x_2}(\mathbf{a})\\
+        \vdots\\
+        \frac{\partial f}{\partial x_n}(\mathbf{a})
+    \end{bmatrix}.
+\]
+Thus
+\[
+    Df(\mathbf{a})=(\nabla f(\mathbf{a}))^T.
+\]
+
+The gradient points in the direction of maximum increase. If \(\mathbf{u}\) is constrained to be a unit vector, then by Cauchy-Schwarz,
+\[
+    D_{\mathbf{u}}f(\mathbf{a})
+    =(\nabla f(\mathbf{a}))^T\mathbf{u}
+    \leq \|\nabla f(\mathbf{a})\|\,\|\mathbf{u}\|
+    =\|\nabla f(\mathbf{a})\|.
+\]
+Equality occurs when \(\mathbf{u}\) is aligned with \(\nabla f(\mathbf{a})\). Therefore \(\nabla f(\mathbf{a})\) is the direction of steepest ascent, while \(-\nabla f(\mathbf{a})\) is the direction of steepest descent.
+
+\section{Jacobians for Vector-Valued Functions}
+\label{mf:jacobian}
+
+For a vector-valued function
+\[
+    f:\mathbb{R}^n\to\mathbb{R}^m,
+\]
+partial derivatives are vectors in \(\mathbb{R}^m\). The derivative is the matrix obtained by stacking these partial derivative vectors as columns:
+\[
+    Df(\mathbf{a})=\begin{bmatrix}
+        \frac{\partial f}{\partial x_1}(\mathbf{a}) &
+        \frac{\partial f}{\partial x_2}(\mathbf{a}) &
+        \cdots &
+        \frac{\partial f}{\partial x_n}(\mathbf{a})
+    \end{bmatrix}
+    \in\mathbb{R}^{m\times n}.
+\]
+This matrix is called the \emph{Jacobian matrix}.
+
+\begin{quote}
+\textbf{Convention note.} We use the convention \(Df(\mathbf{a})\in\mathbb{R}^{m\times n}\), with column \(j\) equal to the partial derivative of \(f\) with respect to \(x_j\). Some texts transpose this layout; always check the convention.
+\end{quote}
+
+For example, let
+\[
+    f(\mathbf{x})=\begin{bmatrix}
+        x_1^2+x_2^2\\
+        x_1+x_2+x_1x_2
+    \end{bmatrix}.
+\]
+Then
+\[
+    \frac{\partial f}{\partial x_1}
+    =\begin{bmatrix}2x_1\\1+x_2\end{bmatrix},
+    \qquad
+    \frac{\partial f}{\partial x_2}
+    =\begin{bmatrix}2x_2\\1+x_1\end{bmatrix},
+\]
+so
+\[
+    Df(\mathbf{x})=\begin{bmatrix}
+        2x_1 & 2x_2\\
+        1+x_2 & 1+x_1
+    \end{bmatrix}.
+\]
+At \(\mathbf{x}=(1,1)^T\), the directional derivative in the direction \(\mathbf{v}=(1,1)^T\) is
+\[
+    D_{\mathbf{v}}f(\mathbf{x})
+    =Df(\mathbf{x})\mathbf{v}
+    =\begin{bmatrix}2&2\\2&2\end{bmatrix}
+    \begin{bmatrix}1\\1\end{bmatrix}
+    =\begin{bmatrix}4\\4\end{bmatrix}.
+\]
+The output is a vector because the function itself has vector output.
+
+\section{Derivative Rules}
+\label{mf:derivative-rules}
+
+The source notes emphasize a few derivative rules that are especially useful for linear algebra and optimization.
+
+\subsection*{Linear functions}
+
+If
+\[
+    f(\mathbf{x})=A\mathbf{x},
+    \qquad A\in\mathbb{R}^{m\times n},
+\]
+then
+\[
+    Df(\mathbf{x})=A.
+\]
+The derivative of a linear transformation is the matrix itself.
+
+\subsection*{Quadratic functions}
+
+If
+\[
+    f(\mathbf{x})=\mathbf{x}^T P\mathbf{x},
+\]
+where \(P\in\mathbb{R}^{n\times n}\), then
+\[
+    Df(\mathbf{x})=\mathbf{x}^T(P+P^T),
+\]
+and
+\[
+    \nabla f(\mathbf{x})=(P+P^T)\mathbf{x}.
+\]
+If \(P\) is symmetric, this simplifies to
+\[
+    \nabla f(\mathbf{x})=2P\mathbf{x}.
+\]
+
+\subsection*{Inner products}
+
+If \(\mathbf{v}\in\mathbb{R}^n\) is constant and
+\[
+    f(\mathbf{x})=\mathbf{x}^T\mathbf{v}=\mathbf{v}^T\mathbf{x},
+\]
+then
+\[
+    Df(\mathbf{x})=\mathbf{v}^T,
+    \qquad
+    \nabla f(\mathbf{x})=\mathbf{v}.
+\]
+
+\subsection*{Product rule}
+
+If \(f,g:\mathbb{R}^n\to\mathbb{R}\), then
+\[
+    D(fg)(\mathbf{a})\mathbf{v}
+    =Df(\mathbf{a})\mathbf{v}\,g(\mathbf{a})
+    +f(\mathbf{a})Dg(\mathbf{a})\mathbf{v}.
+\]
+This is the multivariable version of the one-variable rule \((fg)'=f'g+fg'\).
+
+\section{The Chain Rule}
+\label{mf:chain-rule}
+
+The chain rule is the most important rule for differentiating composed functions. Suppose
+\[
+    g:\mathbb{R}^n\to\mathbb{R}^m,
+    \qquad
+    f:\mathbb{R}^m\to\mathbb{R}^k.
+\]
+Then the composition \(f\circ g:\mathbb{R}^n\to\mathbb{R}^k\) is defined by
+\[
+    (f\circ g)(\mathbf{x})=f(g(\mathbf{x})).
+\]
+If both functions are differentiable, then
+\[
+    D(f\circ g)(\mathbf{a})=Df(g(\mathbf{a}))Dg(\mathbf{a}).
+\]
+The dimensions line up as
+\[
+    Df(g(\mathbf{a}))\in\mathbb{R}^{k\times m},
+    \qquad
+    Dg(\mathbf{a})\in\mathbb{R}^{m\times n},
+\]
+so
+\[
+    D(f\circ g)(\mathbf{a})\in\mathbb{R}^{k\times n}.
+\]
+
+\subsection*{Example: Distance from a Radar Tower}
+
+Suppose an airplane is near a radar tower at the origin. Let
+\[
+    \mathbf{g}(t)=\begin{bmatrix}g_1(t)\\g_2(t)\\g_3(t)\end{bmatrix}
+\]
+be the aircraft's position at time \(t\), where \(g_1\) measures miles east of the tower, \(g_2\) measures miles north of the tower, and \(g_3\) measures height in miles. The distance from the tower is
+\[
+    f(\mathbf{g}(t)),
+    \qquad
+    f(\mathbf{x})=\sqrt{x_1^2+x_2^2+x_3^2}.
+\]
+By the chain rule,
+\[
+    D(f\circ \mathbf{g})(t)=Df(\mathbf{g}(t))D\mathbf{g}(t).
+\]
+For \(f(\mathbf{x})=\|\mathbf{x}\|\),
+\[
+    Df(\mathbf{x})=\begin{bmatrix}
+        \frac{x_1}{\sqrt{x_1^2+x_2^2+x_3^2}} &
+        \frac{x_2}{\sqrt{x_1^2+x_2^2+x_3^2}} &
+        \frac{x_3}{\sqrt{x_1^2+x_2^2+x_3^2}}
+    \end{bmatrix}.
+\]
+At the instant in the notes, the aircraft is 3 miles west of the tower and 4 miles high, so
+\[
+    \mathbf{g}(t)=\begin{bmatrix}-3\\0\\4\end{bmatrix}.
+\]
+It is flying due east at 450 miles per hour and climbing at 5 miles per hour, so
+\[
+    D\mathbf{g}(t)=\begin{bmatrix}450\\0\\5\end{bmatrix}.
+\]
+Thus
+\[
+    D(f\circ \mathbf{g})(t)
+    =\frac{1}{5}\begin{bmatrix}-3&0&4\end{bmatrix}
+    \begin{bmatrix}450\\0\\5\end{bmatrix}
+    =\frac{-1350+20}{5}
+    =-266.
+\]
+The distance is changing at \(-266\) miles per hour. The negative sign means the plane is getting closer to the tower at that instant.
+
+\section{Stationary Points}
+\label{mf:stationary-points}
+
+For a scalar-valued function
+\[
+    f:\mathbb{R}^n\to\mathbb{R},
+\]
+a point \(\mathbf{x}\in\mathbb{R}^n\) is called a \emph{stationary point} if
+\[
+    \nabla f(\mathbf{x})=\mathbf{0}.
+\]
+This is the multivariable analogue of solving \(f'(x)=0\) in one-variable calculus.
+
+Local minimizers and local maximizers, when they occur in the interior of the domain and the function is differentiable, must be stationary points. However, not every stationary point is a minimum or maximum. A stationary point may also be a saddle point. Chapter 13 develops the Hessian and second-order tests that help distinguish these cases. In this chapter, we use the stationary-point condition to derive the least-squares normal equations.
+
+\section{The Least-Squares Problem}
+\label{mf:least-squares-objective}
+
+Suppose
+\[
+    A\in\mathbb{R}^{m\times n},
+    \qquad
+    \mathbf{b}\in\mathbb{R}^m,
+    \qquad
+    \mathbf{x}\in\mathbb{R}^n,
+\]
+where \(\mathbf{x}\) is the unknown vector. The least-squares minimization problem can be stated for any matrix \(A\). In this section, we first assume \(A\) has full column rank, so \(m\ge n\), and the familiar unique solution formula is available. The system
+\[
+    A\mathbf{x}=\mathbf{b}
+\]
+may have no exact solution because \(\mathbf{b}\) may not lie in \(\operatorname{Col}(A)\). Least squares changes the question from exact solution to best approximation:
+\[
+    \min_{\mathbf{x}\in\mathbb{R}^n}\|A\mathbf{x}-\mathbf{b}\|^2.
+\]
+The residual vector for a candidate \(\mathbf{x}\) is
+\[
+    \mathbf{r}(\mathbf{x})=A\mathbf{x}-\mathbf{b}.
+\]
+The least-squares objective is the squared residual length:
+\[
+    \|A\mathbf{x}-\mathbf{b}\|^2.
+\]
+Since a norm is always nonnegative, the best possible case is \(\|A\mathbf{x}-\mathbf{b}\|^2=0\), which means the original system has an exact solution. When no exact solution exists, least squares chooses the \(\mathbf{x}\) that makes the residual as small as possible.
+
+\section{Expanding the Least-Squares Objective}
+\label{mf:least-squares-expansion}
+
+Expand the objective:
+\[
+\begin{aligned}
+    \|A\mathbf{x}-\mathbf{b}\|^2
+    &=(A\mathbf{x}-\mathbf{b})^T(A\mathbf{x}-\mathbf{b})\\
+    &=(\mathbf{x}^T A^T-\mathbf{b}^T)(A\mathbf{x}-\mathbf{b})\\
+    &=\mathbf{x}^T A^T A\mathbf{x}
+      -\mathbf{x}^T A^T\mathbf{b}
+      -\mathbf{b}^T A\mathbf{x}
+      +\mathbf{b}^T\mathbf{b}.
+\end{aligned}
+\]
+The middle two terms are scalars, and
+\[
+    \mathbf{x}^T A^T\mathbf{b}=\mathbf{b}^T A\mathbf{x}.
+\]
+Therefore
+\[
+    \|A\mathbf{x}-\mathbf{b}\|^2
+    =\mathbf{x}^T A^T A\mathbf{x}
+    -2\mathbf{b}^T A\mathbf{x}
+    +\mathbf{b}^T\mathbf{b}.
+\]
+This is a quadratic function of \(\mathbf{x}\). The last term \(\mathbf{b}^T\mathbf{b}\) does not depend on \(\mathbf{x}\), so it does not affect which \(\mathbf{x}\) minimizes the objective.
+
+\section{Gradient and the Normal Equations}
+\label{mf:least-squares-gradient}
+
+Using the derivative rules above, the gradient of the quadratic term is
+\[
+    \nabla_{\mathbf{x}}(\mathbf{x}^T A^T A\mathbf{x})
+    =2A^T A\mathbf{x},
+\]
+because \(A^T A\) is symmetric. The gradient of the linear term is
+\[
+    \nabla_{\mathbf{x}}(-2\mathbf{b}^T A\mathbf{x})=-2A^T\mathbf{b}.
+\]
+Thus
+\[
+    \nabla_{\mathbf{x}}\|A\mathbf{x}-\mathbf{b}\|^2
+    =2A^T A\mathbf{x}-2A^T\mathbf{b}.
+\]
+At a stationary point, this gradient is zero:
+\[
+    2A^T A\mathbf{x}-2A^T\mathbf{b}=\mathbf{0}.
+\]
+Dividing by 2 gives
+\[
+    A^T A\mathbf{x}=A^T\mathbf{b}.
+\]
+These are the \emph{normal equations}.
+\label{mf:least-squares-normal-equations}
+
+If the columns of \(A\) are linearly independent, then \(A^T A\) is invertible. Therefore the least-squares solution is
+\[
+    \widehat{\mathbf{x}}
+    =(A^T A)^{-1}A^T\mathbf{b}.
+\]
+Using the full-column-rank left-pseudoinverse notation from Chapter 10,
+\[
+    A^+_L=(A^T A)^{-1}A^T,
+\]
+so
+\[
+    \widehat{\mathbf{x}}=A^+_L\mathbf{b}.
+\]
+\label{mf:least-squares-solution}
+\label{mf:least-squares-pseudoinverse}
+
+Chapter 13 explains the second-order viewpoint behind why this stationary point is a minimum. For now, the key point is that full column rank gives a unique least-squares solution.
+
+\section{Residual Orthogonality and Projection}
+\label{mf:least-squares-residual-orthogonality}
+
+The normal equations can be rewritten as
+\[
+    A^T(A\widehat{\mathbf{x}}-\mathbf{b})=\mathbf{0}.
+\]
+Using \(\mathbf{r}=A\widehat{\mathbf{x}}-\mathbf{b}\), this says
+\[
+    A^T\mathbf{r}=\mathbf{0}.
+\]
+So the least-squares residual is orthogonal to every column of \(A\).
+
+In many applications, including regression, it is more natural to define the error vector with the opposite sign:
+\[
+    \mathbf{e}=\mathbf{b}-A\widehat{\mathbf{x}}.
+\]
+Then
+\[
+    A^T\mathbf{e}=\mathbf{0}
+\]
+as well. Changing the sign of the residual does not change orthogonality.
+
+This gives the geometric interpretation of least squares. The vector \(A\widehat{\mathbf{x}}\) lies in the column space of \(A\). Least squares chooses the vector in \(\operatorname{Col}(A)\) that is closest to \(\mathbf{b}\). The difference between \(\mathbf{b}\) and that closest vector is orthogonal to the column space. Geometrically, the fitted vector is the shadow of \(\mathbf{b}\) on \(\operatorname{Col}(A)\), and the residual is the part of \(\mathbf{b}\) left over in the orthogonal direction.
+\label{mf:least-squares-projection-bridge}
+
+In words:
+\begin{quote}
+Least squares projects \(\mathbf{b}\) onto the column space of \(A\).
+\end{quote}
+
+This is the mathematical foundation for the regression statement that fitted values live in the column space of the design matrix and residuals are orthogonal to the design columns.
+
+\section{A Chain-Rule Application: Neural-Network Loss}
+\label{mf:chain-rule-neural-network-bridge}
+
+The source notes use a neural-network example to show why the multivariable chain rule matters computationally. Let
+\[
+    f:\mathbb{R}^n\to\mathbb{R}^t
+\]
+be a model output, and let \(\mathbf{c}\in\mathbb{R}^t\) be a target vector. Define the squared-error loss
+\[
+    g(\mathbf{x})=\|f(\mathbf{x})-\mathbf{c}\|^2.
+\]
+Let
+\[
+    u(\mathbf{z})=\|\mathbf{z}-\mathbf{c}\|^2.
+\]
+Then
+\[
+    g=u\circ f.
+\]
+The derivative of \(u\) is
+\[
+    Du(\mathbf{z})=2(\mathbf{z}-\mathbf{c})^T.
+\]
+By the chain rule,
+\[
+    Dg(\mathbf{x})=Du(f(\mathbf{x}))Df(\mathbf{x})
+    =2(f(\mathbf{x})-\mathbf{c})^T Df(\mathbf{x}).
+\]
+
+For a network made of alternating linear transformations and elementwise nonlinearities, such as
+\[
+    f(\mathbf{x})=W_4\sigma(W_3\sigma(W_2\sigma(W_1\mathbf{x}))),
+\]
+the derivative \(Df(\mathbf{x})\) is a product of Jacobians. The derivative of a linear layer is its weight matrix. The derivative of an elementwise activation \(\sigma\) is a diagonal matrix whose entries are the scalar derivatives \(\sigma'(z_i)\):
+\[
+    D\sigma(\mathbf{z})=\begin{bmatrix}
+        \sigma'(z_1) & 0 & \cdots & 0\\
+        0 & \sigma'(z_2) & \cdots & 0\\
+        \vdots & \vdots & \ddots & \vdots\\
+        0 & 0 & \cdots & \sigma'(z_n)
+    \end{bmatrix}.
+\]
+For the ReLU activation,
+\[
+    \sigma(z)=\max(0,z),
+\]
+the derivative is 1 when the unit is active and 0 when it is inactive, ignoring the nondifferentiable point at zero for this introductory discussion.
+
+The important point is not the neural-network architecture itself. The important point is that the same derivative bookkeeping used in least squares also underlies modern gradient-based fitting: define a scalar loss, compute its gradient, and use that gradient to update the inputs or parameters.
+
+\section{Data Analysis Bridge}
+\label{mf:ch12-data-analysis-bridge}
+
+In the Data Analysis textbook, least squares regression is written with a design matrix \(X\), response vector \(\mathbf{y}\), coefficient vector \(\boldsymbol{\beta}\), fitted vector \(X\widehat{\boldsymbol{\beta}}\), and residual vector
+\[
+    \mathbf{e}=\mathbf{y}-X\widehat{\boldsymbol{\beta}}.
+\]
+This chapter explains why the coefficient estimate satisfies
+\[
+    X^T X\widehat{\boldsymbol{\beta}}=X^T\mathbf{y},
+\]
+and why
+\[
+    X^T\mathbf{e}=\mathbf{0}.
+\]
+The first equation is the normal equation. The second equation is residual orthogonality. Together they say that least squares chooses the fitted vector in \(\operatorname{Col}(X)\) closest to the observed response vector.
+
+This is the same projection idea that appears in regression geometry. The only difference is notation: in this chapter the generic matrix is \(A\) and the generic right-hand side is \(\mathbf{b}\); in regression, \(A\) becomes \(X\) and \(\mathbf{b}\) becomes \(\mathbf{y}\).
+
+\section{Chapter Summary}
+\label{mf:multivariable-gradient-least-squares-summary}
+
+Carry forward these calculus-to-least-squares ideas:
+\begin{itemize}
+    \item Partial derivatives change one coordinate at a time; directional derivatives change the input in a chosen vector direction.
+    \item The gradient collects partial derivatives and points in the steepest-ascent direction.
+    \item The Jacobian organizes derivatives for vector-valued functions, and the chain rule multiplies Jacobians in composition order.
+    \item A stationary point satisfies \(\nabla f(\mathbf{x})=\mathbf{0}\).
+    \item Least squares minimizes \(\|A\mathbf{x}-\mathbf{b}\|^2\); setting its gradient to zero gives \(A^TA\widehat{\mathbf{x}}=A^T\mathbf{b}\).
+    \item With linearly independent columns, \(\widehat{\mathbf{x}}=(A^TA)^{-1}A^T\mathbf{b}\), and the residual is orthogonal to the columns of \(A\).
+\end{itemize}

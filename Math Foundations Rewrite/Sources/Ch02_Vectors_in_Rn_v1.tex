@@ -1,0 +1,206 @@
+\chapter{Vectors in \texorpdfstring{$\mathbb{R}^n$}{R\string^n}}
+\label{mf:ch02-vectors-rn}
+
+The next part of the course begins the linear algebra pillar. The basic object is a vector. Vectors will later be added, scaled, multiplied through dot products, collected into matrices, and used to describe regression geometry. Before doing any of that, we need a clear answer to a simpler question: what is a vector?
+
+In this chapter, a vector is an ordered collection of real numbers. The entries might represent coordinates in physical space, but they might also represent inventory amounts, probabilities, measurements over time, or values of a variable in a data set. The important point is that the entries are organized and interpreted together.
+
+\section{The Space \texorpdfstring{$\mathbb{R}^n$}{R\string^n}}
+\label{mf:vectors-rn}
+
+Let \(\mathbb{R}\) denote the set of real numbers. For a positive integer \(n\), the set \(\mathbb{R}^n\) is the set of all ordered lists of \(n\) real numbers. An element of \(\mathbb{R}^n\) is called an \emph{\(n\)-vector}. Unless stated otherwise, vectors are written as columns:
+\[
+\mathbf{x}
+=
+\begin{bmatrix}
+ x_1 \\
+ x_2 \\
+ \vdots \\
+ x_n
+\end{bmatrix}
+\in \mathbb{R}^n.
+\]
+The same vector is sometimes written on one line as
+\[
+\mathbf{x} = (x_1,x_2,\ldots,x_n)^T,
+\]
+where the superscript \(T\) indicates transpose. The transpose notation reminds us that the displayed list \((x_1,x_2,\ldots,x_n)\) is being treated as a column vector.
+
+The number \(n\) is the \emph{dimension} or \emph{length} of the vector. A scalar is a single number; a vector is a structured collection of numbers. For example,
+\[
+\begin{bmatrix}
+5 \\
+2 \\
+9
+\end{bmatrix}
+\in \mathbb{R}^3
+\]
+is a 3-vector, while \(5\in\mathbb{R}\) is a scalar.
+
+\section{Entries, Coordinates, and Subvectors}
+\label{mf:vector-entries-subvectors}
+
+For a vector \(\mathbf{x}\in\mathbb{R}^n\), the scalar values
+\[
+ x_1,x_2,\ldots,x_n
+\]
+are called the \emph{entries}, \emph{components}, \emph{elements}, or \emph{coordinates} of \(\mathbf{x}\). The notation \(x_i\) means the \(i\)th entry of \(\mathbf{x}\).
+
+It is often useful to build a larger vector by stacking smaller vectors. Suppose
+\[
+\mathbf{b}\in\mathbb{R}^m,
+\qquad
+\mathbf{c}\in\mathbb{R}^n,
+\qquad
+\mathbf{d}\in\mathbb{R}^p.
+\]
+Then the stacked vector
+\[
+\mathbf{a}
+=
+\begin{bmatrix}
+\mathbf{b} \\
+\mathbf{c} \\
+\mathbf{d}
+\end{bmatrix}
+\]
+belongs to \(\mathbb{R}^{m+n+p}\). In this situation, \(\mathbf{b}\), \(\mathbf{c}\), and \(\mathbf{d}\) are \emph{subvectors} or \emph{slices} of \(\mathbf{a}\).
+
+Colon notation is often used to describe consecutive entries. If \(r\leq s\), then
+\[
+\mathbf{a}_{r:s} = (a_r,a_{r+1},\ldots,a_s)^T.
+\]
+For the stacked vector above,
+\[
+\mathbf{b}=\mathbf{a}_{1:m},
+\qquad
+\mathbf{c}=\mathbf{a}_{m+1:m+n},
+\qquad
+\mathbf{d}=\mathbf{a}_{m+n+1:m+n+p}.
+\]
+This notation will later be useful for selecting portions of vectors, rows of data, and groups of variables.
+
+\section{Indexing Conventions}
+\label{mf:vector-indexing}
+
+In the mathematical notation used in this course, vectors are usually \emph{1-indexed}. That means the first entry of \(\mathbf{x}\) is \(x_1\), the second entry is \(x_2\), and the final entry is \(x_n\).
+
+Some programming languages, including Python and C/C++, are \emph{0-indexed}. In those languages, the first entry of a stored vector or array has index 0. This difference is not a mathematical disagreement; it is a convention. When translating between mathematics and code, always check whether an index begins at 0 or 1.
+
+\section{Special Vectors}
+\label{mf:special-vectors}
+
+Several vectors occur so often that they receive special notation.
+
+\paragraph{The zero vector.}
+\label{mf:zero-vector}
+The \emph{zero vector} in \(\mathbb{R}^n\), written \(\mathbf{0}_n\) or simply \(\mathbf{0}\) when the dimension is clear, contains only zeros:
+\[
+\mathbf{0}_n=
+\begin{bmatrix}
+0\\0\\\vdots\\0
+\end{bmatrix}.
+\]
+
+\paragraph{The ones vector.}
+\label{mf:ones-vector}
+The \emph{ones vector} in \(\mathbb{R}^n\), written \(\mathbf{1}_n\) or simply \(\mathbf{1}\), contains only ones:
+\[
+\mathbf{1}_n=
+\begin{bmatrix}
+1\\1\\\vdots\\1
+\end{bmatrix}.
+\]
+The ones vector is especially important later because it represents an intercept column in regression and helps express sample sums and sample means.
+
+\paragraph{Standard basis vectors.}
+\label{mf:standard-basis-vectors}
+For \(i=1,\ldots,n\), the \(i\)th \emph{standard basis vector} \(\mathbf{e}_i\in\mathbb{R}^n\) has a 1 in position \(i\) and 0 in every other position. For example, in \(\mathbb{R}^3\),
+\[
+\mathbf{e}_1=\begin{bmatrix}1\\0\\0\end{bmatrix},
+\qquad
+\mathbf{e}_2=\begin{bmatrix}0\\1\\0\end{bmatrix},
+\qquad
+\mathbf{e}_3=\begin{bmatrix}0\\0\\1\end{bmatrix}.
+\]
+These vectors will become important when we discuss linear combinations and bases.
+
+\section{Sparse and Dense Vectors}
+\label{mf:sparse-vectors}
+
+A vector is called \emph{sparse} if many of its entries are zero. A vector that is not sparse is often called \emph{dense}. The \emph{sparsity pattern} of a vector is the set of positions where the entries are nonzero.
+
+For example,
+\[
+\begin{bmatrix}
+0\\0\\7\\0\\0\\2
+\end{bmatrix}
+\]
+is sparse because only two of its six entries are nonzero. We sometimes write \(\operatorname{nnz}(\mathbf{x})\) for the number of nonzero entries of \(\mathbf{x}\).
+
+Sparsity is not merely a technical detail. If a vector records the quantity of many different resources in a warehouse, sparsity means that most resource types are absent. If a vector records words in a document, sparsity means that most words in the vocabulary do not appear in that document. Recognizing sparsity can simplify computation and interpretation.
+
+\section{Vectors as Data and Measurements}
+\label{mf:vectors-as-data}
+
+A vector should not be thought of only as a point in physical space. That picture is useful in some settings, but the broader idea is more important:
+
+\begin{quote}
+A vector is an ordered collection of quantities that pertain to the same object, system, or concept.
+\end{quote}
+
+Here are several common interpretations.
+
+\begin{center}
+\begin{tabular}{p{0.27\textwidth} p{0.58\textwidth}}
+\hline
+Vector interpretation & Example \\
+\hline
+Location & \((\text{longitude},\text{latitude},\text{elevation})\in\mathbb{R}^3\) \\
+Displacement & \((\Delta\text{longitude},\Delta\text{latitude},\Delta\text{elevation})\in\mathbb{R}^3\) \\
+Color & RGB values such as \((1,0,0)\) for red or \((0,1,0)\) for green \\
+Quantities & Amounts of different resources, products, or inventory classes \\
+Time series & Values of a signal or measurement at successive times \\
+Data record & Measurements or features describing one observation \\
+\hline
+\end{tabular}
+\end{center}
+
+The same mathematical object can therefore support different interpretations. In operations research and data analysis, this flexibility is essential. A vector might describe a ship's position, a unit's inventory, a time series of sensor readings, or one row of a data table.
+
+\paragraph{Data Analysis bridge.}
+In the Data Analysis textbook, a feature vector is one observation's ordered collection of input measurements. A response vector is the collection of observed outputs over many observations. Later, a residual vector will collect the leftover errors from a fitted model. All of these are instances of the same basic object: a vector in some \(\mathbb{R}^n\).
+
+\section{Probability Vectors and Time Series}
+\label{mf:probability-vectors}
+\label{mf:time-series-vectors}
+
+Two examples deserve special attention because they recur often in modeling.
+
+A \emph{probability vector} records the probabilities of a finite set of outcomes. For example, for a fair six-sided die,
+\[
+\mathbf{w}=\left(\frac16,\frac16,\frac16,\frac16,\frac16,\frac16\right)^T.
+\]
+For \(\mathbf{w}\) to be a valid probability vector, its entries must be nonnegative and must sum to 1:
+\[
+ w_i\geq 0 \quad \text{for all } i,
+ \qquad
+ \sum_{i=1}^n w_i=1.
+\]
+Probability vectors will later connect naturally to weighted averages and expectations.
+
+A \emph{time-series vector} records the value of some quantity at ordered time points. For example, an audio signal can be represented as a vector whose entries record acoustic pressure at equally spaced times. When a vector represents a time series, it is natural to plot the entry \(x_i\) against the time index \(i\).
+
+\section{Chapter Summary}
+\label{mf:vectors-summary}
+
+Carry forward these vector ideas:
+\begin{itemize}
+    \item \(\mathbb{R}^n\) is the set of all length-\(n\) real vectors; vectors have entries, components, or coordinates.
+    \item Subvectors such as \(\mathbf{a}_{r:s}\) select consecutive entries, and mathematical indexing usually begins at 1.
+    \item The zero vector, ones vector, and standard basis vectors are recurring building blocks.
+    \item Sparse vectors have many zero entries; dense vectors do not.
+    \item In this course, vectors are not limited to physical arrows. They can represent records, quantities, probabilities, time series, or data columns.
+\end{itemize}
+
+The next chapter develops vector arithmetic and linear combinations.

@@ -1,0 +1,71 @@
+\documentclass[11pt,oneside]{book}
+
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{verbatim}
+\usepackage[hidelinks,bookmarksnumbered]{hyperref}
+\usepackage{bookmark}
+\input{Sources/Build_Mode_v1}
+\fullversionfalse
+
+\pagestyle{plain}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{topsep=0.4em,itemsep=0.2em}
+\setlist[enumerate]{topsep=0.4em,itemsep=0.2em}
+\emergencystretch=3em
+
+\pdfstringdefDisableCommands{%
+  \def\mathbf#1{#1}%
+  \def\boldsymbol#1{#1}%
+  \def\mathbb#1{#1}%
+  \def\operatorname#1{#1}%
+  \def\text#1{#1}%
+  \def\hat#1{#1}%
+  \def\widehat#1{#1}%
+  \def\epsilon{epsilon}%
+  \def\beta{beta}%
+  \def\sigma{sigma}%
+}
+
+\begin{document}
+
+\frontmatter
+\begin{titlepage}
+  \centering
+  \vspace*{2.5in}
+  {\Huge\bfseries Data Analysis\par}
+  \vspace{1em}
+  {\Large Student Core Reader v1\par}
+  \vfill
+  {\large Compressed student reader from the live shared textbook sources\par}
+  \thispagestyle{empty}
+\end{titlepage}
+\tableofcontents
+\clearpage
+
+\input{Sources/FrontMatter_Notation_Guide_v3}
+
+\mainmatter
+\input{Sources/Ch01_Data_Analysis_as_Statistical_Learning_v3}
+\input{Sources/Ch02_Prediction_Error_Flexibility_Generalization_v3}
+\input{Sources/Ch03_Data_Quality_Cleaning_Trustworthy_Variables_v3}
+\input{Sources/Ch04_Exploratory_Data_Analysis_Summaries_Visual_Structure_v3}
+\input{Sources/Ch05_Simple_Linear_Regression_Model_Assumptions_Least_Squares_Estimation_v3}
+\input{Sources/Ch06_Simple_Linear_Regression_Fit_Quality_R2_Hypothesis_Testing_v3}
+\input{Sources/Ch07_Linear_Regression_as_Projection_Design_Matrix_Hat_Matrix_v3}
+\input{Sources/Ch08_Degrees_of_Freedom_Subspaces_Identifiability_v3}
+\input{Sources/Ch09_Multiple_Linear_Regression_in_Practice_v3}
+\input{Sources/Ch10_Truth_Error_Estimator_Behavior_Residual_Geometry_v3}
+\input{Sources/Ch11_Linear_Models_Beyond_Straight_Lines_Transformations_Linear_in_Parameters_v3}
+\input{Sources/Ch12_Residual_Analysis_Model_Repair_v3}
+
+\end{document}

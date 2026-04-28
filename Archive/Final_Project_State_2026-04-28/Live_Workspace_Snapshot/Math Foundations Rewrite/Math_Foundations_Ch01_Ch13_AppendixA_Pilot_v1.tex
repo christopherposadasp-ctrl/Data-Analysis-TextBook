@@ -1,0 +1,70 @@
+\documentclass[11pt,oneside]{book}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{array,booktabs,longtable}
+\usepackage[hidelinks,bookmarksnumbered]{hyperref}
+
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+% Smallest tested Chapter 2 bottom-margin reduction that removes its short trailing page.
+\providecommand{\ChapterTwoBottomMargin}{0.9269in}
+
+\makeatletter
+\def\@makechapterhead#1{%
+  \vspace*{0pt}%
+  {\parindent \z@ \centering \normalfont
+    \ifnum \c@secnumdepth >\m@ne
+      {\large\bfseries \@chapapp\ \thechapter\par}%
+      \vspace{0.525em}%
+    \fi
+    {\Huge\bfseries #1\par}%
+    \vspace{0.5625em}%
+    \rule{0.52\textwidth}{0.4pt}\par
+    \vspace{1.35em}%
+  }%
+}
+\def\@makeschapterhead#1{%
+  \vspace*{0pt}%
+  {\parindent \z@ \centering \normalfont
+    {\Huge\bfseries #1\par}%
+    \vspace{0.5625em}%
+    \rule{0.52\textwidth}{0.4pt}\par
+    \vspace{1.35em}%
+  }%
+}
+\makeatother
+
+\title{Math Foundations Textbook Pilot}
+\author{Data Analysis Textbook Project}
+\date{Chapters 1--13 and Appendix A Pilot Build}
+
+\begin{document}
+
+\frontmatter
+\maketitle
+\setcounter{page}{2}
+\input{Sources/FrontMatter_Acknowledgments_v1.tex}
+\tableofcontents
+
+\mainmatter
+\input{Sources/Ch01_Logic_and_Deductive_Reasoning_v1.tex}
+\newgeometry{top=1in,bottom=\ChapterTwoBottomMargin,left=1in,right=1in}
+\input{Sources/Ch02_Vectors_in_Rn_v1.tex}
+\restoregeometry
+\input{Sources/Ch03_Vector_Operations_and_Linear_Combinations_v1.tex}
+\input{Sources/Ch04_Sets_Set_Operations_and_Quantifiers_v1.tex}
+\input{Sources/Ch05_Dot_Products_Norms_Distance_Angles_Orthogonality_v1.tex}
+\input{Sources/Ch06_Linear_Independence_Span_Bases_Dimension_v1.tex}
+\input{Sources/Ch07_Matrices_and_Matrix_Vector_Multiplication_v1.tex}
+\input{Sources/Ch08_Linear_Systems_Polynomial_Systems_Vandermonde_Matrices_v1.tex}
+\input{Sources/Ch09_Orthogonal_Bases_Gram_Schmidt_QR_v1.tex}
+\input{Sources/Ch10_Matrix_Inverses_Rank_Pseudoinverses_v1.tex}
+\input{Sources/Ch11_Subspaces_Column_Row_Null_v1.tex}
+\input{Sources/Ch12_Multivariable_Functions_Gradients_Least_Squares_v1.tex}
+\input{Sources/Ch13_Hessians_Quadratic_Forms_Second_Order_Conditions_v1.tex}
+
+\appendix
+\input{Sources/AppendixA_Data_Analysis_Bridge_Index_v1.tex}
+
+\end{document}

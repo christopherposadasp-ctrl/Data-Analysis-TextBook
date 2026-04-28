@@ -1,0 +1,799 @@
+% Chapter 5 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, and array.
+\chapter{Simple Linear Regression: Model, Assumptions, and Least Squares Estimation}
+\label{chap:slr-model-assumptions-lse}
+
+\section{The Big Picture}
+
+The previous chapters built the workflow needed before formal modeling: define trustworthy variables, clean the data, summarize distributions, and visualize relationships.  This chapter begins the formal regression sequence.
+
+The central question is:
+\begin{quote}
+  Given one input variable and one quantitative response variable, what is the equation of the best line through the data?
+\end{quote}
+
+Simple linear regression, or SLR, is the first model we use to answer that question.  It predicts a quantitative response $Y$ using a single predictor $X$.  The word \emph{simple} means one predictor.  The word \emph{linear} means that the conditional mean of $Y$ is modeled as a straight-line function of $X$.
+
+SLR is important for three reasons.
+\begin{enumerate}
+  \item It is the cleanest place to see the difference between a true model and an estimated model.
+  \item It gives explicit formulas for the least squares estimators $\widehat{\beta}_0$ and $\widehat{\beta}_1$.
+  \item It introduces residuals, normal equations, and model assumptions that appear throughout the rest of regression.
+\end{enumerate}
+
+\section{Review: From Statistical Learning to Linear Regression}
+
+In the statistical learning framework, we assume that a response variable $Y$ is related to predictors through
+\begin{equation}
+  Y=f(\mathbf{X})+\epsilon,
+  \label{eq:ch5-general-learning-model}
+\end{equation}
+where $f$ is the systematic part of the relationship and $\epsilon$ is random error or noise.
+
+If $\mathbb{E}[\epsilon \mid \mathbf{X}=\mathbf{x}]=0$, then
+\begin{align}
+  \mathbb{E}[Y\mid \mathbf{X}=\mathbf{x}]
+  &=\mathbb{E}[f(\mathbf{X})+\epsilon\mid \mathbf{X}=\mathbf{x}] \\
+  &= f(\mathbf{x})+\mathbb{E}[\epsilon\mid \mathbf{X}=\mathbf{x}] \\
+  &= f(\mathbf{x}).
+\end{align}
+Thus, under the mean-zero error condition, $f(\mathbf{x})$ is the conditional mean of $Y$ given the input values.  It is the best mean-squared-error predictor of $Y$ given the information in $\mathbf{X}$.
+
+In simple linear regression, there is only one predictor.  We replace the general unknown function $f(X)$ with a parametric straight-line model:
+\begin{equation}
+  f(X)=\beta_0+\beta_1X.
+\end{equation}
+The modeling assumption becomes
+\begin{equation}
+  Y=\beta_0+\beta_1X+\epsilon.
+  \label{eq:ch5-slr-population-model}
+\end{equation}
+The unknown parameters are:
+\begin{itemize}
+  \item $\beta_0$, the intercept;
+  \item $\beta_1$, the slope.
+\end{itemize}
+
+Once we estimate these parameters from data, our fitted regression function is
+\begin{equation}
+  \widehat{f}(X)=\widehat{\beta}_0+\widehat{\beta}_1X.
+\end{equation}
+In data analysis language, we say that we \emph{regress $Y$ onto $X$}.
+
+\section{Data Notation}
+
+Suppose we observe $n$ paired data points:
+\begin{equation}
+  (x_1,y_1),(x_2,y_2),\ldots,(x_n,y_n).
+\end{equation}
+Here:
+\begin{itemize}
+  \item $x_i$ is the observed predictor value for observation $i$;
+  \item $y_i$ is the observed response value for observation $i$.
+\end{itemize}
+
+It is often useful to collect the observations in vectors:
+\begin{equation}
+  \mathbf{x}=\begin{bmatrix}x_1\\x_2\\\vdots\\x_n\end{bmatrix},
+  \qquad
+  \mathbf{y}=\begin{bmatrix}y_1\\y_2\\\vdots\\y_n\end{bmatrix}.
+\end{equation}
+The fitted response vector is
+\begin{equation}
+  \widehat{\mathbf{y}}=\begin{bmatrix}\widehat{y}_1\\\widehat{y}_2\\\vdots\\\widehat{y}_n\end{bmatrix},
+  \qquad
+  \widehat{y}_i=\widehat{\beta}_0+\widehat{\beta}_1x_i.
+\end{equation}
+The residual vector is
+\begin{equation}
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}
+  =\begin{bmatrix}e_1\\e_2\\\vdots\\e_n\end{bmatrix},
+  \qquad
+  e_i=y_i-\widehat{y}_i.
+\end{equation}
+
+\paragraph{Math Foundations Connection.}
+A variable column is a vector in $\mathbb{R}^n$; see the Math Foundations textbook, Chapters 2, 3, 5, and 12.  The dot product and Euclidean norm give compact ways to write sums of products and sums of squared deviations.  This is why least squares can be written both as a calculus problem and as a geometry problem.
+
+\section{Predicted Values, Residuals, MSE, and RSS}
+
+For any proposed line
+\begin{equation}
+  \widehat{y}=b_0+b_1x,
+\end{equation}
+where $b_0$ and $b_1$ are candidate values, the residual for observation $i$ is
+\begin{equation}
+  e_i(b_0,b_1)=y_i-(b_0+b_1x_i).
+\end{equation}
+The empirical mean squared error is
+\begin{equation}
+  \operatorname{MSE}(b_0,b_1)=\frac{1}{n}\sum_{i=1}^n\left[y_i-(b_0+b_1x_i)\right]^2.
+  \label{eq:ch5-empirical-mse}
+\end{equation}
+The residual sum of squares is
+\begin{equation}
+  \operatorname{RSS}(b_0,b_1)=\sum_{i=1}^n\left[y_i-(b_0+b_1x_i)\right]^2.
+  \label{eq:ch5-rss}
+\end{equation}
+Because $\operatorname{MSE}(b_0,b_1)=\operatorname{RSS}(b_0,b_1)/n$, minimizing MSE and minimizing RSS give the same fitted line.
+
+The least squares estimators are the values of $b_0$ and $b_1$ that minimize the empirical mean squared error:
+\begin{equation}
+  (\widehat{\beta}_0,\widehat{\beta}_1)
+  =\arg\min_{b_0,b_1}\frac{1}{n}\sum_{i=1}^n\left[y_i-(b_0+b_1x_i)\right]^2.
+  \label{eq:ch5-lse-objective}
+\end{equation}
+
+\section{The Big Three Regression Assumptions}
+
+The source lectures present these as three increasingly strong assumptions.  We keep that same three-step ladder throughout the regression chapters.
+
+The model
+\begin{equation}
+  Y=\beta_0+\beta_1X+\epsilon
+\end{equation}
+can be paired with three assumption levels.  These levels matter because they determine what claims we are allowed to make.
+
+\subsection{Assumption 1: Mean-zero errors}
+
+The first assumption is
+\begin{equation}
+  \mathbb{E}[\epsilon\mid X=x]=0 \qquad \text{for every }x.
+  \label{eq:ch5-mean-zero-error}
+\end{equation}
+Then
+\begin{equation}
+  \mathbb{E}[Y\mid X=x]=\beta_0+\beta_1x.
+\end{equation}
+In simple linear regression, this means that the line is the conditional mean of $Y$ given $X=x$.  In this setting, the line is a statement about average behavior, not about every individual observation.
+
+\subsection{Assumption 2: Constant variance and uncorrelated errors}
+
+The second assumption is stated after conditioning on the observed predictor values.  In other words, we treat the predictor values as fixed and study the remaining randomness in the errors:
+\begin{align}
+  \mathbb{E}[\epsilon_i\mid X_i=x_i]&=0, \\
+  \operatorname{Var}(\epsilon_i\mid X_i=x_i)&=\sigma^2 \qquad \text{for all } i, \\
+  \operatorname{Cov}(\epsilon_i,\epsilon_j\mid X_1=x_1,\ldots,X_n=x_n)&=0 \qquad \text{for } i\neq j.
+\end{align}
+The second condition is constant error variance, also called homoskedasticity.  The third condition says that, after the predictor values are fixed, errors are uncorrelated across observations.
+
+These assumptions support the classical standard error formulas and hypothesis tests that appear later.
+
+\subsection{Assumption 3: Gaussian errors}
+
+The third assumption is the Gaussian version of the same fixed-predictor idea:
+\begin{equation}
+  \boldsymbol{\epsilon}\mid X_1=x_1,\ldots,X_n=x_n
+  \sim \mathcal{N}(\mathbf{0},\sigma^2\mathbf{I}_n).
+\end{equation}
+Equivalently, conditional on the observed predictor values, the errors are independent normal random variables with mean zero and common variance \(\sigma^2\).  This Gaussian error model supports exact finite-sample inference using $t$ and $F$ distributions.  This assumption is powerful, but it should not be made casually.  Residual diagnostics later in the course help us check whether it is plausible.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{p{0.28\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
+\hline
+Assumption level & What it says & What it supports \\
+\hline
+Mean-zero errors & $\mathbb{E}[\epsilon\mid X=x]=0$ & Line estimates the conditional mean \\
+Constant variance and uncorrelated errors & Conditional mean zero, constant variance, uncorrelated errors after fixing predictor values & Standard errors and approximate inference \\
+Gaussian errors & Conditional independent normal errors with common variance & Exact classical inference under the model \\
+\hline
+\end{tabular}
+\caption{The three-step regression assumption ladder for simple linear regression.}
+\label{tab:ch5-assumption-sets}
+\end{table}
+
+\CoreCompress{
+\section{Deriving the Least Squares Estimators}
+
+We now derive the formulas for $\widehat{\beta}_0$ and $\widehat{\beta}_1$ by minimizing the empirical MSE.
+
+Define the objective function
+\begin{equation}
+  Q(b_0,b_1)=\frac{1}{n}\sum_{i=1}^n\left[y_i-(b_0+b_1x_i)\right]^2.
+  \label{eq:ch5-objective-q}
+\end{equation}
+Let
+\begin{equation}
+  r_i(b_0,b_1)=y_i-(b_0+b_1x_i).
+\end{equation}
+Then
+\begin{equation}
+  Q(b_0,b_1)=\frac{1}{n}\sum_{i=1}^n r_i(b_0,b_1)^2.
+\end{equation}
+
+\subsection{Partial Derivative with Respect to $b_0$}
+
+Using the chain rule,
+\begin{align}
+  \frac{\partial Q}{\partial b_0}
+  &=\frac{1}{n}\sum_{i=1}^n 2r_i(b_0,b_1)\frac{\partial r_i}{\partial b_0} \\
+  &=\frac{1}{n}\sum_{i=1}^n 2r_i(b_0,b_1)(-1) \\
+  &=-\frac{2}{n}\sum_{i=1}^n\left[y_i-(b_0+b_1x_i)\right].
+  \label{eq:ch5-dq-db0}
+\end{align}
+Setting this derivative equal to zero gives
+\begin{equation}
+  \frac{1}{n}\sum_{i=1}^n\left[y_i-(\widehat{\beta}_0+\widehat{\beta}_1x_i)\right]=0.
+  \label{eq:ch5-normal-equation-one}
+\end{equation}
+
+\subsection{Partial Derivative with Respect to $b_1$}
+
+Similarly,
+\begin{align}
+  \frac{\partial Q}{\partial b_1}
+  &=\frac{1}{n}\sum_{i=1}^n 2r_i(b_0,b_1)\frac{\partial r_i}{\partial b_1} \\
+  &=\frac{1}{n}\sum_{i=1}^n 2r_i(b_0,b_1)(-x_i) \\
+  &=-\frac{2}{n}\sum_{i=1}^n x_i\left[y_i-(b_0+b_1x_i)\right].
+  \label{eq:ch5-dq-db1}
+\end{align}
+Setting this derivative equal to zero gives
+\begin{equation}
+  \frac{1}{n}\sum_{i=1}^n x_i\left[y_i-(\widehat{\beta}_0+\widehat{\beta}_1x_i)\right]=0.
+  \label{eq:ch5-normal-equation-two}
+\end{equation}
+
+\subsection{The Normal Equations}
+
+Equations~\eqref{eq:ch5-normal-equation-one} and~\eqref{eq:ch5-normal-equation-two} are called the normal equations.  They can be written in a compact residual form:
+\begin{align}
+  \sum_{i=1}^n e_i &=0, \\
+  \sum_{i=1}^n x_i e_i &=0.
+\end{align}
+The first equation says that least squares residuals sum to zero.  The second says that least squares residuals have zero dot product with the predictor vector.
+
+Using sample averages, define
+\begin{align}
+  \bar{x}&=\frac{1}{n}\sum_{i=1}^n x_i, \\
+  \bar{y}&=\frac{1}{n}\sum_{i=1}^n y_i, \\
+  \overline{x^2}&=\frac{1}{n}\sum_{i=1}^n x_i^2, \\
+  \overline{xy}&=\frac{1}{n}\sum_{i=1}^n x_i y_i.
+\end{align}
+Then the normal equations become
+\begin{align}
+  \bar{y}-\widehat{\beta}_0-\widehat{\beta}_1\bar{x}&=0,
+  \label{eq:ch5-normal-avg-one} \\
+  \overline{xy}-\widehat{\beta}_0\bar{x}-\widehat{\beta}_1\overline{x^2}&=0.
+  \label{eq:ch5-normal-avg-two}
+\end{align}
+
+\subsection{Solving for $\widehat{\beta}_1$}
+
+From~\eqref{eq:ch5-normal-avg-one},
+\begin{equation}
+  \widehat{\beta}_0=\bar{y}-\widehat{\beta}_1\bar{x}.
+  \label{eq:ch5-beta0-from-beta1}
+\end{equation}
+Substitute this into~\eqref{eq:ch5-normal-avg-two}:
+\begin{align}
+  \overline{xy}-(\bar{y}-\widehat{\beta}_1\bar{x})\bar{x}-\widehat{\beta}_1\overline{x^2}&=0 \\
+  \overline{xy}-\bar{x}\bar{y}+\widehat{\beta}_1\bar{x}^2-\widehat{\beta}_1\overline{x^2}&=0.
+\end{align}
+Rearranging gives
+\begin{equation}
+  \widehat{\beta}_1(\overline{x^2}-\bar{x}^2)=\overline{xy}-\bar{x}\bar{y}.
+\end{equation}
+Therefore,
+\begin{equation}
+  \boxed{\widehat{\beta}_1=\frac{\overline{xy}-\bar{x}\bar{y}}{\overline{x^2}-\bar{x}^2}.}
+  \label{eq:ch5-beta1-raw-moment-form}
+\end{equation}
+Then
+\begin{equation}
+  \boxed{\widehat{\beta}_0=\bar{y}-\widehat{\beta}_1\bar{x}.}
+  \label{eq:ch5-beta0-formula}
+\end{equation}
+}{
+\section{Deriving the Least Squares Estimators}
+
+For the Core Reader, keep the optimization target and the key stationarity conditions.  The least squares line minimizes
+\begin{equation}
+  Q(b_0,b_1)=\frac{1}{n}\sum_{i=1}^n\left[y_i-(b_0+b_1x_i)\right]^2.
+  \label{eq:ch5-objective-q}
+\end{equation}
+Setting the two partial derivatives equal to zero gives the normal equations
+\begin{align}
+  \sum_{i=1}^n\left[y_i-(\widehat{\beta}_0+\widehat{\beta}_1x_i)\right] &= 0,
+  \label{eq:ch5-normal-equation-one} \\
+  \sum_{i=1}^n x_i\left[y_i-(\widehat{\beta}_0+\widehat{\beta}_1x_i)\right] &= 0.
+  \label{eq:ch5-normal-equation-two}
+\end{align}
+Equivalently,
+\begin{align}
+  \sum_{i=1}^n e_i &= 0, \\
+  \sum_{i=1}^n x_i e_i &= 0.
+\end{align}
+So least squares residuals must balance to zero overall and be orthogonal to the predictor direction.
+
+Solving the normal equations yields
+\begin{equation}
+  \boxed{\widehat{\beta}_1=\frac{\overline{xy}-\bar{x}\bar{y}}{\overline{x^2}-\bar{x}^2}}
+  \label{eq:ch5-beta1-raw-moment-form}
+\end{equation}
+and
+\begin{equation}
+  \boxed{\widehat{\beta}_0=\bar{y}-\widehat{\beta}_1\bar{x}.}
+  \label{eq:ch5-beta0-formula}
+\end{equation}
+
+\paragraph{Core Reader note.}
+The full reference build keeps the complete calculus derivation step by step.  Here the main point is the logic: minimize squared residuals, use the normal equations, and solve for slope and intercept.
+}
+
+\section{Equivalent Centered Form}
+
+The slope formula in~\eqref{eq:ch5-beta1-raw-moment-form} can be written in a more interpretable centered form.  First,
+\begin{align}
+  \frac{1}{n}\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y})
+  &=\frac{1}{n}\sum_{i=1}^n \left(x_i y_i-x_i\bar{y}-\bar{x}y_i+\bar{x}\bar{y}\right) \\
+  &=\overline{xy}-\bar{x}\bar{y}-\bar{x}\bar{y}+\bar{x}\bar{y} \\
+  &=\overline{xy}-\bar{x}\bar{y}.
+  \label{eq:ch5-centered-cov-identity}
+\end{align}
+Similarly,
+\begin{align}
+  \frac{1}{n}\sum_{i=1}^n (x_i-\bar{x})^2
+  &=\overline{x^2}-\bar{x}^2.
+  \label{eq:ch5-centered-var-identity}
+\end{align}
+Thus,
+\begin{equation}
+  \widehat{\beta}_1
+  =\frac{\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y})}{\sum_{i=1}^n (x_i-\bar{x})^2}.
+  \label{eq:ch5-beta1-centered-form}
+\end{equation}
+This is often the most useful formula for interpreting the slope.
+
+\section{Slope as Covariance Divided by Variance}
+
+The unbiased sample covariance of $x$ and $y$ is
+\begin{equation}
+  s_{xy}=\frac{1}{n-1}\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y}),
+  \label{eq:ch5-unbiased-cov}
+\end{equation}
+while the unbiased sample variance of $x$ is
+\begin{equation}
+  s_x^2=\frac{1}{n-1}\sum_{i=1}^n (x_i-\bar{x})^2.
+  \label{eq:ch5-unbiased-var}
+\end{equation}
+Because the same denominator $n-1$ appears in both quantities, it cancels in the ratio.  Therefore,
+\begin{equation}
+  \boxed{\widehat{\beta}_1=\frac{s_{xy}}{s_x^2}.}
+  \label{eq:ch5-beta1-cov-var}
+\end{equation}
+
+Equivalently, if we use biased denominator-$n$ versions,
+\begin{align}
+  \widehat{\sigma}_{xy}&=\frac{1}{n}\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y}), \\
+  \widehat{\sigma}_{x}^2&=\frac{1}{n}\sum_{i=1}^n (x_i-\bar{x})^2,
+\end{align}
+then
+\begin{equation}
+  \widehat{\beta}_1=\frac{\widehat{\sigma}_{xy}}{\widehat{\sigma}_{x}^2}.
+\end{equation}
+For the slope, the biased-versus-unbiased denominator choice does not change the answer because the denominator cancels.
+
+\subsection{Interpretation of the Ratio}
+
+The numerator measures how $x$ and $y$ move together.  The denominator measures how much $x$ itself varies.  Thus,
+\begin{quote}
+  The least squares slope is the co-movement of $x$ and $y$, scaled by the variation in $x$.
+\end{quote}
+
+If $x$ and $y$ tend to move together, then $s_{xy}>0$ and the slope is positive.  If larger $x$ values tend to pair with smaller $y$ values, then $s_{xy}<0$ and the slope is negative.  If $x$ and $y$ have little linear co-movement, then $s_{xy}$ is near zero and the slope is near zero.
+
+\section{When the Slope Is Not Identified}
+
+The formula
+\begin{equation}
+  \widehat{\beta}_1=\frac{\sum_{i=1}^n (x_i-\bar{x})(y_i-\bar{y})}{\sum_{i=1}^n (x_i-\bar{x})^2}
+\end{equation}
+requires
+\begin{equation}
+  \sum_{i=1}^n (x_i-\bar{x})^2>0.
+\end{equation}
+This condition means that the observed $x$ values are not all identical.
+
+If every observation has the same predictor value, then there is no information about how $Y$ changes when $X$ changes.  The intercept may still describe the mean response at that one $X$ value, but the slope cannot be estimated from the data.  This is the simple-regression version of identifiability.
+
+\FullOnly{
+\section{Why the Critical Point Is a Minimum}
+
+The calculus derivation found a critical point.  We also need to know that this critical point minimizes the objective.  Let
+\begin{equation}
+  Q(b_0,b_1)=\frac{1}{n}\sum_{i=1}^n\left[y_i-(b_0+b_1x_i)\right]^2.
+\end{equation}
+This is a sum of squared functions of $b_0$ and $b_1$.  Therefore, it is a convex quadratic function.
+
+The Hessian matrix is
+\begin{equation}
+  \nabla^2Q(b_0,b_1)=\frac{2}{n}
+  \begin{bmatrix}
+    n & \sum_{i=1}^n x_i \\
+    \sum_{i=1}^n x_i & \sum_{i=1}^n x_i^2
+  \end{bmatrix}.
+  \label{eq:ch5-hessian}
+\end{equation}
+This matrix is positive definite when the $x_i$ values are not all identical.  Therefore, the critical point is the unique global minimizer.
+}
+
+\section{Matrix and Geometry View}
+
+\paragraph{Math Foundations Connection.}
+The matrix notation below uses the design matrix, transposes, matrix-vector multiplication, dot products, norms, and orthogonality.  These supporting concepts are covered in the Math Foundations textbook, Chapters 5 and 7.
+
+Although this chapter derives the estimators using calculus, the same result has a clean linear algebra form.  Define the design matrix
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}
+    1 & x_1 \\
+    1 & x_2 \\
+    \vdots & \vdots \\
+    1 & x_n
+  \end{bmatrix},
+  \qquad
+  \boldsymbol{\beta}=\begin{bmatrix}b_0\\b_1\end{bmatrix}.
+\end{equation}
+Then the fitted vector is
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}},
+\end{equation}
+and the least squares objective can be written as
+\begin{equation}
+  \|\mathbf{y}-\mathbf{X}\boldsymbol{\beta}\|^2.
+\end{equation}
+Using the dot product definition of the Euclidean norm,
+\begin{equation}
+  \|\mathbf{y}-\mathbf{X}\boldsymbol{\beta}\|^2
+  =(\mathbf{y}-\mathbf{X}\boldsymbol{\beta})^T(\mathbf{y}-\mathbf{X}\boldsymbol{\beta}).
+\end{equation}
+Taking derivatives in matrix form gives
+\begin{equation}
+  \mathbf{X}^T(\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}})=\mathbf{0}.
+\end{equation}
+Equivalently,
+\begin{equation}
+  \boxed{\mathbf{X}^T\mathbf{X}\widehat{\boldsymbol{\beta}}=\mathbf{X}^T\mathbf{y}.}
+  \label{eq:ch5-matrix-normal-equations}
+\end{equation}
+These are the normal equations in matrix form.
+
+The vector equation
+\begin{equation}
+  \mathbf{X}^T\mathbf{e}=\mathbf{0}
+\end{equation}
+says that the residual vector is orthogonal to both columns of $\mathbf{X}$: the ones column and the predictor column.  This is the geometric meaning of least squares.  The fitted vector is the point in the line-generated model space that is closest to the observed response vector.
+
+\paragraph{Bridge to Later Chapters.}
+In the next regression geometry chapters, we will generalize this same idea: least squares projects $\mathbf{y}$ onto the subspace spanned by the columns of the design matrix.
+
+\section{Interpreting $\widehat{\beta}_0$ and $\widehat{\beta}_1$}
+
+The fitted simple linear regression model is
+\begin{equation}
+  \widehat{\mathbb{E}}[Y\mid X=x]=\widehat{\beta}_0+\widehat{\beta}_1x.
+\end{equation}
+
+\subsection{Intercept}
+
+The intercept $\widehat{\beta}_0$ estimates the expected value of $Y$ when $X=0$:
+\begin{equation}
+  \widehat{\beta}_0 \approx \mathbb{E}[Y\mid X=0].
+\end{equation}
+This interpretation is meaningful only when $X=0$ is within the scope of the data and the model.
+
+For example, if $X$ is years of experience, then $X=0$ may be meaningful.  If $X$ is adult height measured in inches, then $X=0$ is not meaningful in the observed population.  In that case, the intercept is still mathematically necessary for the line, but it should not be given a literal operational interpretation.
+
+\subsection{Slope}
+
+The slope $\widehat{\beta}_1$ estimates the change in the conditional mean of $Y$ for a one-unit increase in $X$:
+\begin{equation}
+  \widehat{\beta}_1 \approx \mathbb{E}[Y\mid X=x+1]-\mathbb{E}[Y\mid X=x].
+\end{equation}
+When the linear model is appropriate, this change is constant across $x$.
+
+The units of the slope are
+\begin{equation}
+  \frac{\text{units of }Y}{\text{units of }X}.
+\end{equation}
+For example, if $Y$ is test score and $X$ is hours studied, then the slope is measured in test-score points per hour studied.
+
+\section{Association Is Not Causation}
+
+The slope is a statement about association unless the study design and assumptions justify a causal interpretation.
+
+Suppose $X$ is the height of mercury in a thermometer and $Y$ is ambient temperature.  A fitted regression may show a strong positive slope.  But if we artificially raise the mercury level by one unit, we should not expect the ambient temperature to rise.  The mercury height measures temperature; it does not cause temperature.
+
+Before interpreting a slope causally, ask:
+\begin{enumerate}
+  \item Was $X$ randomly assigned or experimentally controlled?
+  \item Could another variable cause both $X$ and $Y$?
+  \item Is there a plausible mechanism from $X$ to $Y$?
+  \item Is the interpretation inside the range of observed $X$ values?
+  \item Would changing $X$ actually change $Y$, or only change how we measure $Y$?
+\end{enumerate}
+
+In this course, unless a causal design has been established, interpret regression slopes as associational.
+
+\section{Variance and Covariance Notation}
+
+The notation difference between variance and covariance is worth understanding.
+
+For a single variable $X$, variance is a second central moment:
+\begin{equation}
+  \operatorname{Var}(X)=\mathbb{E}[(X-\mu_X)^2].
+\end{equation}
+It has squared units.  If $X$ is measured in meters, then $\operatorname{Var}(X)$ is measured in square meters.
+
+For two variables $X$ and $Y$, covariance is a cross-moment:
+\begin{equation}
+  \operatorname{Cov}(X,Y)=\mathbb{E}[(X-\mu_X)(Y-\mu_Y)].
+\end{equation}
+It has product units.  If $X$ is measured in meters and $Y$ is measured in seconds, then covariance is measured in meter-seconds.
+
+This is why the sample variance is written with a square,
+\begin{equation}
+  s_x^2,
+\end{equation}
+while sample covariance is written with two subscripts,
+\begin{equation}
+  s_{xy}.
+\end{equation}
+The square in $s_x^2$ signals the squared unit structure of a variance.  The subscripts in $s_{xy}$ signal co-movement between two variables.
+
+\FullOnly{
+\section{Biased and Unbiased Variance Estimators}
+
+Two common sample variance estimators are
+\begin{align}
+  \widehat{\sigma}_x^2&=\frac{1}{n}\sum_{i=1}^n (x_i-\bar{x})^2, \\
+  s_x^2&=\frac{1}{n-1}\sum_{i=1}^n (x_i-\bar{x})^2.
+\end{align}
+The first uses denominator $n$ and is biased for the population variance in the usual independent-sample setting.  The second uses denominator $n-1$ and is unbiased.
+
+The unbiased estimator corrects the expected value, but it can have higher variance.  This is a concrete example of the bias-variance tradeoff.  Sometimes we intentionally accept bias to reduce variance or improve prediction performance.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{p{0.32\textwidth}p{0.32\textwidth}p{0.25\textwidth}}
+\hline
+Goal & Common choice & Reason \\
+\hline
+Classical inference & Unbiased estimators such as $s_x^2$ & Supports standard inferential formulas \\
+Maximum likelihood under normality & Denominator-$n$ estimator & Matches the likelihood optimizer \\
+Prediction-focused modeling & Sometimes biased estimators & May reduce MSE \\
+Regularized regression & Intentionally biased estimates & Bias can reduce variance \\
+\hline
+\end{tabular}
+\caption{Biased estimators are not automatically bad; the choice depends on the objective.}
+\label{tab:ch5-biased-unbiased}
+\end{table}
+
+For simple linear regression slope estimation, the denominator choice cancels if covariance and variance are computed consistently:
+\begin{equation}
+  \widehat{\beta}_1=\frac{s_{xy}}{s_x^2}=\frac{\widehat{\sigma}_{xy}}{\widehat{\sigma}_{x}^2}.
+\end{equation}
+}
+
+\CoreCompress{
+\section{Worked Example: Computing the Least Squares Line by Hand}
+
+Consider three observations:
+\begin{center}
+\begin{tabular}{cc}
+\hline
+$x_i$ & $y_i$ \\
+\hline
+1 & 2 \\
+2 & 3 \\
+3 & 5 \\
+\hline
+\end{tabular}
+\end{center}
+
+First compute the sample means:
+\begin{equation}
+  \bar{x}=\frac{1+2+3}{3}=2,
+  \qquad
+  \bar{y}=\frac{2+3+5}{3}=\frac{10}{3}.
+\end{equation}
+
+Next compute the centered numerator:
+\begin{align}
+  \sum_{i=1}^3(x_i-\bar{x})(y_i-\bar{y})
+  &=(1-2)\left(2-\frac{10}{3}\right)+(2-2)\left(3-\frac{10}{3}\right)+(3-2)\left(5-\frac{10}{3}\right) \\
+  &=(-1)\left(-\frac{4}{3}\right)+0\left(-\frac{1}{3}\right)+(1)\left(\frac{5}{3}\right) \\
+  &=3.
+\end{align}
+Then compute the centered denominator:
+\begin{equation}
+  \sum_{i=1}^3(x_i-\bar{x})^2=(-1)^2+0^2+1^2=2.
+\end{equation}
+Thus,
+\begin{equation}
+  \widehat{\beta}_1=\frac{3}{2}=1.5.
+\end{equation}
+The intercept is
+\begin{equation}
+  \widehat{\beta}_0=\bar{y}-\widehat{\beta}_1\bar{x}=\frac{10}{3}-1.5(2)=\frac{1}{3}.
+\end{equation}
+The least squares line is
+\begin{equation}
+  \widehat{y}=\frac{1}{3}+1.5x.
+\end{equation}
+
+The fitted values and residuals are:
+\begin{center}
+\begin{tabular}{ccccc}
+\hline
+$i$ & $x_i$ & $y_i$ & $\widehat{y}_i$ & $e_i=y_i-\widehat{y}_i$ \\
+\hline
+1 & 1 & 2 & $11/6$ & $1/6$ \\
+2 & 2 & 3 & $10/3$ & $-1/3$ \\
+3 & 3 & 5 & $29/6$ & $1/6$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Check the normal equations:
+\begin{align}
+  \sum_{i=1}^3 e_i&=\frac{1}{6}-\frac{1}{3}+\frac{1}{6}=0, \\
+  \sum_{i=1}^3 x_i e_i&=1\left(\frac{1}{6}\right)+2\left(-\frac{1}{3}\right)+3\left(\frac{1}{6}\right)=0.
+\end{align}
+The residuals are orthogonal to both the intercept column and the predictor column.
+}{
+\section{Worked Example: Computing the Least Squares Line by Hand}
+
+Consider three observations:
+\begin{center}
+\begin{tabular}{cc}
+\hline
+$x_i$ & $y_i$ \\
+\hline
+1 & 2 \\
+2 & 3 \\
+3 & 5 \\
+\hline
+\end{tabular}
+\end{center}
+
+The sample means are
+\begin{equation}
+  \bar{x}=2,
+  \qquad
+  \bar{y}=\frac{10}{3}.
+\end{equation}
+The centered slope formula gives
+\begin{equation}
+  \widehat{\beta}_1
+  =\frac{\sum_{i=1}^3(x_i-\bar{x})(y_i-\bar{y})}{\sum_{i=1}^3(x_i-\bar{x})^2}
+  =\frac{3}{2}=1.5.
+\end{equation}
+Then
+\begin{equation}
+  \widehat{\beta}_0=\bar{y}-\widehat{\beta}_1\bar{x}=\frac{1}{3},
+\end{equation}
+so the least squares line is
+\begin{equation}
+  \widehat{y}=\frac{1}{3}+1.5x.
+\end{equation}
+The normal-equation checks still hold:
+\begin{equation}
+  \sum_{i=1}^3 e_i=0,
+  \qquad
+  \sum_{i=1}^3 x_i e_i=0.
+\end{equation}
+
+This is the representative hand-computation example for the Core Reader; the full reference build keeps the longer arithmetic walkthrough.
+}
+
+\section{A Practical Interpretation Checklist}
+
+When interpreting a fitted SLR model,
+\begin{equation}
+  \widehat{y}=\widehat{\beta}_0+\widehat{\beta}_1x,
+\end{equation}
+work through the following checklist.
+
+\begin{enumerate}
+  \item \textbf{Response:} What is $Y$, and what are its units?
+  \item \textbf{Predictor:} What is $X$, and what are its units?
+  \item \textbf{Intercept:} Is $X=0$ meaningful and inside the data range?
+  \item \textbf{Slope:} What does ``one unit of $X$'' mean operationally?
+  \item \textbf{Association:} Does the slope describe association or causation?
+  \item \textbf{Range:} Are predictions being made inside the observed $X$ range?
+  \item \textbf{Residuals:} Are residuals small enough for the model to be useful?
+  \item \textbf{Assumptions:} Which assumption set is needed for the claim being made?
+\end{enumerate}
+
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for fitting simple linear regression and producing quick residual plots have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the derivation, interpretation checklist, and common mistakes.
+
+\section{Common Mistakes}
+
+\begin{enumerate}
+  \item \textbf{Dropping the parentheses in the residual.}  The residual is $y_i-(b_0+b_1x_i)$, not $y_i-b_0+b_1x_i$.
+  \item \textbf{Treating the intercept as always meaningful.}  The intercept is only meaningful when $X=0$ is meaningful in context.
+  \item \textbf{Calling the slope causal without design support.}  Regression slopes are usually associational.
+  \item \textbf{Ignoring units.}  The slope has units of response per predictor unit.
+  \item \textbf{Extrapolating outside the data range.}  A fitted line may behave badly outside the observed $X$ values.
+  \item \textbf{Confusing residuals with true errors.}  Residuals estimate errors, but they are not the unobserved errors themselves.
+  \item \textbf{Forgetting the denominator condition.}  If all $x_i$ values are the same, the slope cannot be estimated.
+\end{enumerate}
+
+\section{Chapter Summary}
+
+Simple linear regression estimates the conditional mean of a quantitative response using one predictor.  The model is
+\begin{equation}
+  Y=\beta_0+\beta_1X+\epsilon.
+\end{equation}
+The least squares estimators minimize the empirical mean squared error, equivalently the residual sum of squares.  Calculus gives the normal equations, and solving them yields
+\begin{align}
+  \widehat{\beta}_1&=\frac{\sum_{i=1}^n(x_i-\bar{x})(y_i-\bar{y})}{\sum_{i=1}^n(x_i-\bar{x})^2}
+  =\frac{s_{xy}}{s_x^2}, \\
+  \widehat{\beta}_0&=\bar{y}-\widehat{\beta}_1\bar{x}.
+\end{align}
+The slope is the sample covariance of $x$ and $y$ scaled by the sample variance of $x$.  The intercept anchors the line through the sample means.  The residuals sum to zero and are orthogonal to the predictor column.
+
+The main interpretive discipline is this: least squares gives the best line under a squared-error criterion, but the usefulness of that line depends on modeling assumptions, residual behavior, variable meaning, and whether the analyst is making an associational or causal claim.
+
+
+
+\CoreCompress{
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 5 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Data columns as vectors & $\mathbb{R}^n$ vector notation, vector entries, and the ones vector $\mathbf{1}$ & Ch02 Secs. 2.1, 2.2, 2.4, 2.6 \\
+\hline
+Centered vectors and sums & Vector subtraction, scalar multiplication, and linear combinations & Ch03 Secs. 3.1, 3.2, 3.4, 3.5 \\
+\hline
+Sample means as sums & Dot product examples, including $\mathbf{1}^T\mathbf{a}=\sum_i a_i$ and $(1/n)\mathbf{1}^T\mathbf{a}$ as a sample mean & Ch02 Sec. 2.4; Ch05 Secs. 5.1, 5.3 \\
+\hline
+Least squares objective as a norm & $\mathbf{a}^T\mathbf{a}=\sum_i a_i^2$ and the Euclidean norm $\|\mathbf{x}\|=\sqrt{\mathbf{x}^T\mathbf{x}}$ & Ch05 Secs. 5.1, 5.3, 5.5; Ch12 Sec. 12.9 \\
+\hline
+Residual orthogonality & Dot products, angles, and the special case $\mathbf{a}^T\mathbf{b}=0$ meaning orthogonality & Ch02 Sec. 2.6; Ch05 Secs. 5.1, 5.3, 5.8; Ch12 Sec. 12.12 \\
+\hline
+Design matrix notation & Matrix size, transpose notation, and matrix-vector multiplication as row inner products / linear combinations of columns & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3; Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
+\hline
+\end{tabular}
+\end{center}
+}{
+\section{Math Foundations Source Map}
+
+This chapter's Math Foundations support is still active in the Core Reader, but the full Math Foundations textbook-location map is kept in the full reference build.  The most important connections here are vectors in \(\mathbb{R}^n\), dot products and norms, orthogonality, and matrix-vector multiplication.
+}
+
+\CoreCompress{
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after working a simple linear regression problem.
+
+\begin{enumerate}
+  \item Can you write the model \(Y=\beta_0+\beta_1X+\epsilon\) and state which rung of the Big Three assumptions the task requires?
+  \item Can you compute \(\widehat{\beta}_1\) and \(\widehat{\beta}_0\) from the centered-sum formulas?
+  \item Can you write the fitted line and compute residuals \(e_i=y_i-\widehat{y}_i\)?
+  \item Can you interpret the slope with units and avoid over-interpreting the intercept?
+  \item Can you use \(\sum e_i=0\) and \(\sum x_i e_i=0\) as algebra checks rather than as evidence that the model is correct?
+  \item Can you separate association from causation in your conclusion?
+\end{enumerate}
+}{
+\section{Practice and Workflow}
+\subsection*{Can You Do This?}
+
+For Core Reader study, be sure you can do the following without looking up the full template.
+
+\begin{enumerate}
+  \item Write the SLR model and name the assumption level needed for the claim.
+  \item Compute \(\widehat{\beta}_1\) and \(\widehat{\beta}_0\) from centered sums.
+  \item Interpret the slope with units and the intercept only when \(X=0\) is meaningful.
+  \item Explain why \(\sum e_i=0\) and \(\sum x_i e_i=0\) are the key algebra checks.
+  \item Say clearly whether the fitted relationship is associational or causal.
+\end{enumerate}
+}

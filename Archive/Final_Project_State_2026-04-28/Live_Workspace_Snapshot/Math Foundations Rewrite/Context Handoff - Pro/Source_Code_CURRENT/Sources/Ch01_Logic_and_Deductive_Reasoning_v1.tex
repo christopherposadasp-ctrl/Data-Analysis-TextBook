@@ -1,0 +1,307 @@
+\chapter{Logic and Deductive Reasoning}
+\label{mf:ch01-logic-deductive-reasoning}
+\label{mf:logic-course-frame}
+
+Mathematical foundations for operations research begin with the language of careful reasoning. Before we solve systems of equations, analyze vectors, optimize functions, or interpret least-squares estimates, we need to be precise about what a statement means and what conclusions follow from a set of assumptions.
+
+This course is built around three pillars:
+\begin{enumerate}
+    \item set theory and logic,
+    \item linear algebra, and
+    \item multivariate differential calculus.
+\end{enumerate}
+Logic comes first because it gives us the grammar for mathematical arguments. In later chapters, assumptions will play the role of premises. Conclusions are only as reliable as the assumptions and reasoning that support them.
+
+\section{Statements and Logical Connectives}
+\label{mf:logic-statements}
+\label{mf:logic-connectives}
+
+A \emph{statement} is a sentence that has a truth value: it is either true or false. For example, ``8 is prime'' is a statement, and so is ``8 is composite.'' In mathematical logic, we often replace statements with symbols so that we can focus on the structure of an argument rather than the specific subject matter.
+
+Let
+\[
+P: \text{``8 is prime''},
+\qquad
+Q: \text{``8 is composite''}.
+\]
+The English statement ``8 is either prime or composite'' can then be written symbolically as
+\[
+P \lor Q.
+\]
+Here \(\lor\) means \emph{or}. We also use \(\land\) for \emph{and} and \(\neg\) for \emph{not}. These are called \emph{logical connectives} because they combine simpler statements into compound statements.
+
+\begin{center}
+\begin{tabular}{c c}
+\hline
+Symbol & Meaning \\
+\hline
+\(P \lor Q\) & \(P\) or \(Q\) \\
+\(P \land Q\) & \(P\) and \(Q\) \\
+\(\neg P\) & not \(P\) \\
+\hline
+\end{tabular}
+\end{center}
+
+\label{mf:logic-negation}
+The negation \(\neg P\) reverses the truth value of \(P\). If \(P\) is true, then \(\neg P\) is false. If \(P\) is false, then \(\neg P\) is true.
+
+\section{Inclusive Or and Truth Tables}
+\label{mf:logic-truth-tables}
+
+In mathematics, the word ``or'' is usually \emph{inclusive}. This means that \(P \lor Q\) is true when \(P\) is true, when \(Q\) is true, or when both are true. This differs from exclusive-or, which means ``one or the other, but not both.'' Exclusive-or is sometimes written \(\operatorname{xor}\), but it is much less common in the logic used in this course.
+
+One way to verify a logical argument is to build a \emph{truth table}. A truth table lists all possible truth values of the basic statements and then computes the truth values of the compound statements.
+
+For example, consider the argument
+\[
+P \lor Q,
+\qquad
+\neg P,
+\qquad
+\therefore Q.
+\]
+In words: if either \(P\) or \(Q\) is true, and \(P\) is not true, then \(Q\) must be true. This is the same structure as the argument
+\begin{quote}
+Every natural number greater than 1 is either prime or composite. The number 8 is not prime. Therefore, 8 is composite.
+\end{quote}
+It is also the same structure as
+\begin{quote}
+Every natural number is either even or odd. The number 7 is not divisible by 2. Therefore, 7 is odd.
+\end{quote}
+
+The truth table for the relevant statements is
+\begin{center}
+\begin{tabular}{c c c c}
+\hline
+\(P\) & \(Q\) & \(\neg P\) & \(P \lor Q\) \\
+\hline
+F & F & T & F \\
+F & T & T & T \\
+T & F & F & T \\
+T & T & F & T \\
+\hline
+\end{tabular}
+\end{center}
+The only row in which both premises \(P \lor Q\) and \(\neg P\) are true is the second row. In that row, \(Q\) is also true. Therefore, the argument is valid.
+
+\section{Valid Arguments and Counterexamples}
+\label{mf:logic-argument-validity}
+\label{mf:logic-counterexamples}
+
+A logical argument is \emph{valid} if, whenever all of its premises are true, its conclusion must also be true. Validity is about the structure of the reasoning, not about whether the particular real-world statements are interesting or important.
+
+To show that an argument is \emph{not} valid, it is enough to find one counterexample: one assignment of truth values that makes every premise true while making the conclusion false.
+
+Consider the argument
+\begin{quote}
+Either the butler or the maid is guilty. Either the maid or the cook is guilty. Therefore, either the butler or the cook is guilty.
+\end{quote}
+Let
+\[
+P: \text{``the butler is guilty''},
+\qquad
+Q: \text{``the maid is guilty''},
+\qquad
+R: \text{``the cook is guilty''}.
+\]
+The argument becomes
+\[
+P \lor Q,
+\qquad
+Q \lor R,
+\qquad
+\therefore P \lor R.
+\]
+The truth table is
+\begin{center}
+\begin{tabular}{c c c c c c}
+\hline
+\(P\) & \(Q\) & \(R\) & \(P \lor Q\) & \(Q \lor R\) & \(P \lor R\) \\
+\hline
+F & F & F & F & F & F \\
+F & F & T & F & T & T \\
+F & T & F & T & T & F \\
+F & T & T & T & T & T \\
+T & F & F & T & F & T \\
+T & F & T & T & T & T \\
+T & T & F & T & T & T \\
+T & T & T & T & T & T \\
+\hline
+\end{tabular}
+\end{center}
+The third row is a counterexample. In that row, \(P\) is false, \(Q\) is true, and \(R\) is false. Both premises \(P \lor Q\) and \(Q \lor R\) are true, but the conclusion \(P \lor R\) is false. Therefore, the argument is not valid.
+
+\section{Translating Logical Formulas}
+\label{mf:logic-translation}
+
+Symbolic notation is useful only if we can translate between symbols and ordinary language. Let
+\[
+S: \text{``John is stupid''},
+\qquad
+L: \text{``John is lazy''}.
+\]
+Then the following formulas have different logical structures:
+\begin{center}
+\begin{tabular}{p{0.28\textwidth} p{0.58\textwidth}}
+\hline
+Formula & Meaning \\
+\hline
+\((\neg S \land L) \lor S\) & either John is not stupid and is lazy, or John is stupid \\
+\(\neg S \lor (L \lor S)\) & John is not stupid, or John is lazy, or John is stupid \\
+\(\neg(S \land L) \lor S\) & either John is not both stupid and lazy, or John is stupid \\
+\hline
+\end{tabular}
+\end{center}
+The exact English sentence is less important than the structure. Parentheses show which statements are grouped together. The outermost connective determines the main logical relationship.
+
+\section{Tautologies, Contradictions, and Logical Equivalence}
+\label{mf:logic-tautology-contradiction}
+\label{mf:logic-equivalence}
+
+A logical formula is a \emph{tautology} if it is true for every assignment of truth values. A simple example is
+\[
+P \lor \neg P.
+\]
+Either \(P\) is true, or it is not true. There is no third possibility in classical logic.
+
+A logical formula is a \emph{contradiction} if it is false for every assignment of truth values. A simple example is
+\[
+P \land \neg P.
+\]
+A statement and its negation cannot both be true at the same time.
+
+Two logical formulas are \emph{logically equivalent} if they have the same truth value for every possible assignment of truth values. We write logical equivalence with \(\equiv\). For example, if two formulas are equivalent, they can be substituted for one another inside a larger logical argument without changing the argument's truth structure.
+
+\section{De Morgan's Laws}
+\label{mf:logic-demorgan}
+
+De Morgan's laws are two important logical equivalences involving negation, \emph{and}, and \emph{or}:
+\[
+\neg(P \land Q) \equiv \neg P \lor \neg Q,
+\]
+\[
+\neg(P \lor Q) \equiv \neg P \land \neg Q.
+\]
+The first law says that ``not both'' is equivalent to ``at least one is not.'' The second law says that ``neither'' is equivalent to ``not the first and not the second.''
+
+These laws are easy to state but important to use correctly. For example, the negation of
+\[
+P \land Q
+\]
+is not
+\[
+\neg P \land \neg Q.
+\]
+The correct negation is
+\[
+\neg P \lor \neg Q.
+\]
+This distinction matters whenever we negate assumptions or construct complements of sets.
+
+A truth table can verify the first law:
+\begin{center}
+\begin{tabular}{c c c c c c}
+\hline
+\(P\) & \(Q\) & \(P \land Q\) & \(\neg(P \land Q)\) & \(\neg P\) & \(\neg P \lor \neg Q\) \\
+\hline
+T & T & T & F & F & F \\
+T & F & F & T & F & T \\
+F & T & F & T & T & T \\
+F & F & F & T & T & T \\
+\hline
+\end{tabular}
+\end{center}
+The columns for \(\neg(P \land Q)\) and \(\neg P \lor \neg Q\) match in every row, so the formulas are logically equivalent.
+
+\section{Implication}
+\label{mf:logic-implication}
+
+A conditional statement, or \emph{implication}, has the form
+\[
+P \Rightarrow Q.
+\]
+This is read as ``if \(P\), then \(Q\),'' or ``\(P\) implies \(Q\).'' The statement \(P\) is the premise or antecedent, and \(Q\) is the conclusion or consequent.
+
+For example,
+\begin{quote}
+If I leave in 10 minutes, then I will be late.
+\end{quote}
+can be represented by
+\[
+P \Rightarrow Q,
+\]
+where \(P\) is ``I leave in 10 minutes'' and \(Q\) is ``I will be late.''
+
+The truth table for implication is
+\begin{center}
+\begin{tabular}{c c c}
+\hline
+\(P\) & \(Q\) & \(P \Rightarrow Q\) \\
+\hline
+F & F & T \\
+F & T & T \\
+T & F & F \\
+T & T & T \\
+\hline
+\end{tabular}
+\end{center}
+An implication is false only in the case where the premise \(P\) is true and the conclusion \(Q\) is false. If the premise is false, then the implication is true as a statement of logic. This convention may feel strange at first, but it gives implication the behavior needed for mathematical arguments.
+
+One useful way to remember implication is:
+\begin{quote}
+To disprove ``if \(P\), then \(Q\),'' find a case where \(P\) is true but \(Q\) is false.
+\end{quote}
+That case is the counterexample.
+
+\section{Biconditional Statements}
+\label{mf:logic-biconditional}
+
+A biconditional statement has the form
+\[
+P \Leftrightarrow Q.
+\]
+It is read as ``\(P\) if and only if \(Q\),'' often abbreviated as ``\(P\) iff \(Q\).'' The biconditional is true exactly when \(P\) and \(Q\) have the same truth value.
+
+Equivalently,
+\[
+P \Leftrightarrow Q
+\]
+has the same truth values as
+\[
+(P \Rightarrow Q) \land (Q \Rightarrow P).
+\]
+Thus, to prove a biconditional, one usually proves two implications:
+\begin{enumerate}
+    \item if \(P\), then \(Q\);
+    \item if \(Q\), then \(P\).
+\end{enumerate}
+
+The truth table is
+\begin{center}
+\begin{tabular}{c c c}
+\hline
+\(P\) & \(Q\) & \(P \Leftrightarrow Q\) \\
+\hline
+F & F & T \\
+F & T & F \\
+T & F & F \\
+T & T & T \\
+\hline
+\end{tabular}
+\end{center}
+The biconditional is stronger than implication. The statement \(P \Rightarrow Q\) says that \(P\) is sufficient for \(Q\). The statement \(P \Leftrightarrow Q\) says that each statement implies the other.
+
+\section{Chapter Summary}
+\label{mf:logic-summary}
+
+Carry forward these logic habits:
+\begin{itemize}
+    \item Statements are sentences with definite truth values, and compound statements are built with \(\lor\), \(\land\), and \(\neg\).
+    \item Mathematical \(\lor\) is inclusive unless stated otherwise.
+    \item Truth tables test validity by checking every assignment of truth values.
+    \item A counterexample is one assignment where all premises are true and the conclusion is false.
+    \item Tautologies are always true, contradictions are always false, and De Morgan's laws show how negation distributes across \(\lor\) and \(\land\).
+    \item An implication \(P\Rightarrow Q\) fails only when \(P\) is true and \(Q\) is false; a biconditional \(P\Leftrightarrow Q\) means each statement implies the other.
+\end{itemize}
+
+The next chapter begins the linear algebra portion of the course with vectors in \(\mathbb{R}^n\).

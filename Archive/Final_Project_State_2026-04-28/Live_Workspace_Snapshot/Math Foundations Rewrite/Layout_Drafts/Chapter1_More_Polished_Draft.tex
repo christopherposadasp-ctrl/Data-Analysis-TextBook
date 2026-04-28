@@ -1,0 +1,37 @@
+\documentclass[11pt,oneside]{book}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{array,booktabs,longtable}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+
+\makeatletter
+\def\@makechapterhead#1{%
+  \vspace*{0.9em}%
+  {\parindent \z@ \centering \normalfont
+    {\small\scshape Chapter \thechapter\par}%
+    \vspace{0.6em}%
+    {\Huge\bfseries #1\par}%
+    \vspace{0.55em}%
+    \rule{0.18\textwidth}{0.6pt}\par
+    \vspace{1.15em}%
+  }%
+}
+\def\@makeschapterhead#1{%
+  \vspace*{0.9em}%
+  {\parindent \z@ \centering \normalfont
+    {\Huge\bfseries #1\par}%
+    \vspace{0.55em}%
+    \rule{0.18\textwidth}{0.6pt}\par
+    \vspace{1.15em}%
+  }%
+}
+\makeatother
+
+\begin{document}
+\mainmatter
+\input{../Sources/Ch01_Logic_and_Deductive_Reasoning_v1.tex}
+\end{document}

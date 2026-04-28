@@ -1,0 +1,435 @@
+% Chapter 3 draft for textbook inclusion. Assumes a textbook preamble with amsmath and amssymb.
+\chapter{Data Quality, Cleaning, and Trustworthy Variables}
+\label{chap:data-quality-cleaning-trustworthy-variables}
+
+\CoreCompress{
+\section{Why Data Quality Comes Before Modeling}
+
+Before we build a statistical model, compute a regression line, or compare prediction errors, we need to know whether the variables in the data set can be trusted.  Exploratory data analysis begins with the habit of ``listening to the data.''  That means stepping back from the final question we want to answer and first asking what the data are trying to tell us about themselves.
+
+Data cleaning is not a clerical step that happens before the real analysis.  It is part of the analysis.  A model can only learn from the variables we give it.  If those variables are mislabeled, inconsistently recorded, stored in the wrong type, or contaminated by impossible values, then the model may produce output that looks mathematical but is not analytically defensible.
+
+This chapter focuses on the practical question:
+\begin{quote}
+  What must be true about our variables before we trust them enough to summarize, visualize, or model them?
+\end{quote}
+
+A trustworthy variable is one whose meaning, type, units, allowable values, and missing-value behavior are understood well enough that another analyst could reproduce the cleaning decision and defend it to a customer, commander, or reviewer.  The goal is not to make the data look perfect.  The goal is to make the workflow repeatable and the decisions defensible.
+
+\section{Data Tables, Observations, and Variables}
+
+A data set is often organized as a rectangular table.  The rows are observations, and the columns are variables.  If there are $n$ observations and $p$ variables, we can represent the data as a matrix
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}
+    x_{11} & x_{12} & \cdots & x_{1p} \\
+    x_{21} & x_{22} & \cdots & x_{2p} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    x_{n1} & x_{n2} & \cdots & x_{np}
+  \end{bmatrix} \in \mathbb{R}^{n\times p}
+  \label{eq:ch3-data-matrix}
+\end{equation}
+when all entries are numeric.  The entry $x_{ij}$ is the value of variable $j$ for observation $i$.
+
+The $i$th row,
+\[
+  \mathbf{x}_i^T=(x_{i1},x_{i2},\ldots,x_{ip}),
+\]
+contains all measured information for observation $i$.  The $j$th column,
+\[
+  \mathbf{x}_j=(x_{1j},x_{2j},\ldots,x_{nj})^T,
+\]
+contains all observed values of variable $j$.
+
+This matrix notation is useful, but it can also hide an important fact: not every variable is genuinely numeric.  Some columns may contain categories, ordered labels, dates, text, identifiers, or codes.  A column made of numbers is not automatically a numerical variable in the statistical sense.
+
+\paragraph{Math Foundations Connection.}
+In linear algebra, a vector is a collection of entries that pertain to the same object or concept.  In data analysis, a numeric variable can be viewed as a vector of observed values, and a full numeric data table can be viewed as a matrix whose columns are variable vectors.  This perspective helps later when we discuss design matrices, regression, and projections.  For cleaning, it helps us remember that operations applied to a column should make sense for the type of object that column represents.  See the Math Foundations textbook, Chapters~2, 4, and~7.
+
+\section{Variable Types}
+
+A variable is an attribute that may change its value between observations in a data set.  The type of a variable determines which summaries, plots, transformations, and models are meaningful.
+
+\begin{center}
+\begin{tabular}{p{0.20\textwidth}p{0.45\textwidth}p{0.25\textwidth}}
+\hline
+\textbf{Variable type} & \textbf{Meaning} & \textbf{Natural summaries} \\
+\hline
+Continuous numeric & Values can be thought of as varying across a range, rather than only at isolated counts.  The observed minimum and maximum are sample bounds, not part of the definition. & mean, median, spread, histogram \\
+Discrete numeric & Values are usually counts or integer-valued measurements. & counts, mean, spread, bar plot or histogram \\
+Ordinal & Categories have an order, but distances between categories may not be meaningful. & counts, proportions, median, ordered bar plot \\
+Categorical & Categories are labels without a natural ordering. & counts, proportions, mode, bar plot \\
+\hline
+\end{tabular}
+\end{center}
+
+Examples of continuous numeric variables include age, temperature, height, time to complete a task, and distance traveled.  Examples of discrete numeric variables include number of missions completed, number of defects found during inspection, and number of officers in a unit.  Enlisted rank is an ordinal variable: the order matters, but the numerical distance from one rank to the next is not usually treated as constant.  Service branch, blood type, platform type, and property view are categorical variables.
+
+A common trap is treating numeric codes as quantitative measurements.  A survey might record service branch as Army = 1, Marine Corps = 2, Navy = 3, Air Force = 4, Space Force = 5, and Coast Guard = 6.  Those numbers are convenient labels, not measurements.  The average of Army and Navy is not Marine Corps, and the value 6 is not larger than the value 1 in a quantitative sense.  Later, categorical variables can be encoded numerically for modeling, but those encodings are modeling tools rather than evidence that the original category has arithmetic meaning.
+
+\section{Why Data Become Messy}
+
+Data can be messy for many reasons.  Some problems are obvious, such as impossible values.  Others are subtle, such as inconsistent units or category codes that look numeric.  Common sources of data problems include data-entry errors, non-standardized labels, missing or incomplete data, inconsistent survey responses, inconsistent units or scales, duplicate records, impossible values, incorrect data types, dates stored as text, categorical variables stored as integers, and numeric variables stored as strings.
+
+The analyst's job is not merely to find these issues.  The analyst must decide what to do about them and document the decision well enough that someone else could follow the same logic.
+
+\section{The Data Cleaning Workflow}
+
+Data cleaning is the process of identifying, documenting, and correcting data-quality issues before analysis.  A useful first-pass workflow is:
+\begin{enumerate}
+  \item identify and handle missing values,
+  \item fix data types,
+  \item rename and standardize columns,
+  \item subset rows and columns as needed,
+  \item detect outliers,
+  \item conduct basic sanity checks.
+\end{enumerate}
+
+This sequence is not strictly linear.  Fixing a data type may reveal new missing values; detecting an outlier may reveal a unit mismatch; a sanity check may send you back to the original data source.  The workflow is iterative.
+
+A cleaning decision should satisfy two standards.  First, it should be \emph{repeatable}: the same code plus the same raw data should produce the same cleaned data.  Second, it should be \emph{defensible}: the analyst should be able to explain why the decision was reasonable for the variable, the data source, and the purpose of the analysis.
+
+A minimal cleaning log should record the variable, the issue, the decision, and enough detail for another analyst to reproduce the choice.  For example, ``\texttt{weight\_lb}: values less than or equal to 0 are physically impossible for the study population; recoded as missing.''  The log does not need to be elaborate, but it should prevent the cleaning process from becoming a set of undocumented manual edits.
+
+\section{Missing Values and Imputation}
+
+Missing values occur when an observation should have a value for a variable but the recorded data do not contain that value.  Missingness can be explicit, such as \texttt{NA}, \texttt{NaN}, blank cells, or \texttt{NULL}.  Missingness can also be implicit, such as a value of 0 used as a placeholder for an impossible measurement.
+
+For a data matrix, define a missingness indicator
+\begin{equation}
+  m_{ij}=\begin{cases}
+    1, & \text{if } x_{ij} \text{ is missing},\\
+    0, & \text{if } x_{ij} \text{ is observed}.
+  \end{cases}
+  \label{eq:ch3-missing-indicator}
+\end{equation}
+Then the number of missing values in variable $j$ is
+\begin{equation}
+  M_j=\sum_{i=1}^n m_{ij},
+  \label{eq:ch3-missing-count-column}
+\end{equation}
+and the missingness rate is
+\begin{equation}
+  r_j=\frac{M_j}{n}.
+  \label{eq:ch3-missing-rate-column}
+\end{equation}
+These simple counts identify which variables have missingness and how severe it is.
+
+One of the most important missing-data checks is distinguishing \emph{true zeros} from \emph{missing zeros}.  A true zero means the value is genuinely zero, such as \texttt{sibling\_count = 0}.  A missing zero means zero was used as a placeholder for a missing or invalid value, such as \texttt{weight\_lb = 0} for an adult human.  Missingness cannot be detected by a universal rule such as ``replace all zeros.''  The rule must depend on the variable definition.
+
+Once missing values are identified, the analyst usually has three choices: drop, impute, or flag.
+
+\begin{center}
+\begin{tabular}{p{0.22\textwidth}p{0.36\textwidth}p{0.32\textwidth}}
+\hline
+\textbf{Action} & \textbf{When it may be reasonable} & \textbf{Main risk} \\
+\hline
+Drop rows & Missingness is limited, the variables are required, and the complete rows are still representative. & Can remove useful data or bias the analysis. \\
+Drop columns & A variable is unnecessary, too incomplete, unreliable, or poorly defined. & May discard a useful signal for a later analysis. \\
+Impute & A missing value can be replaced using a defensible rule or model. & Can create false precision or distort distributions and relationships. \\
+Flag missingness & Missingness itself may be informative. & Requires careful interpretation in summaries and models. \\
+\hline
+\end{tabular}
+\end{center}
+
+For complete-case analysis, if $J$ is the set of variables required for a particular analysis, the retained row set is
+\begin{equation}
+  I_{\text{complete}}=\{i: m_{ij}=0 \text{ for all } j\in J\}.
+  \label{eq:ch3-complete-case-set}
+\end{equation}
+The cleaned analysis table is the submatrix containing rows in $I_{\text{complete}}$ and columns in $J$.
+
+Imputation replaces missing values with reasonable substitutes.  If $x_{ij}$ is missing, an imputed value is often written as $\widehat{x}_{ij}$, giving
+\begin{equation}
+  x_{ij}^{\text{clean}}=\begin{cases}
+    x_{ij}, & \text{if } x_{ij} \text{ is observed},\\
+    \widehat{x}_{ij}, & \text{if } x_{ij} \text{ is missing}.
+  \end{cases}
+  \label{eq:ch3-imputed-value}
+\end{equation}
+Simple imputation uses only the variable with missingness.  For a numeric variable $X_j$, mean imputation replaces missing values with
+\begin{equation}
+  \widehat{x}_{ij}=\bar{x}_{j,\text{obs}}
+  =\frac{1}{n-M_j}\sum_{i:m_{ij}=0}x_{ij}.
+  \label{eq:ch3-mean-imputation}
+\end{equation}
+Median, mode, constant, or explicit-category imputation may also be used when appropriate.  Conditional imputation uses other variables to make better guesses, such as regression imputation, $k$-nearest-neighbor imputation, predictive mean matching, or other model-based methods.  Multiple imputation creates several plausible completed data sets, analyzes each, and combines the results.
+
+The key caution is that imputation is an assumption, not a fact.  Avoid imputing automatically when ``did not answer'' is itself meaningful, when the variable is not needed, when missingness is too extensive, when imputation would introduce obvious bias, when the missing value represents a choice rather than a failed measurement, or when the data source is too unreliable to support replacement.
+
+\section{Fixing Data Types and Standardizing Variables}
+
+A software data type is how software stores and treats a variable.  A statistical variable type is what the variable means analytically.  Cleaning often requires aligning both.
+
+Common data-type problems include numeric columns stored as strings, categorical variables stored as integers, dates stored as text, binary variables stored as text labels, identifiers stored as numbers, and numbers with commas, units, or symbols stored as text.  The practical cleaning question is:
+\begin{quote}
+  Does the software representation support the analysis we intend to perform?
+\end{quote}
+
+\begin{center}
+\begin{tabular}{p{0.22\textwidth}p{0.33\textwidth}p{0.35\textwidth}}
+\hline
+\textbf{Problem} & \textbf{Examples} & \textbf{Cleaning check} \\
+\hline
+Numeric stored as text & \texttt{1,250}, \texttt{72 in}, \texttt{unknown}, \texttt{--} & Parse valid numbers; decide whether nonnumeric entries are missingness, labels, or errors. \\
+Category stored as integer & Service branch coded 1--6 & Ask whether arithmetic on the codes is meaningful. If not, treat as categorical or ordinal. \\
+Date stored as text & \texttt{04/03/2026}, \texttt{2026-04-03}, \texttt{3 Apr 26} & Parse to date format, then validate impossible dates, unexpected future dates, and time-zone issues. \\
+Identifier stored as number & ID, hull number, survey response number & Preserve identity; do not average or model as a quantitative variable unless explicitly meaningful. \\
+\hline
+\end{tabular}
+\end{center}
+
+Column names are also part of the analysis.  A useful naming convention should be consistent, descriptive, short enough to use in code, free of spaces and special characters, and stable across related data sets.  Including units in the name can prevent later confusion: \texttt{height\_in} and \texttt{height\_cm} are safer than simply \texttt{height}.
+
+Subsetting means selecting only part of a data set.  Let $I\subseteq\{1,2,\ldots,n\}$ be a set of row indices and let $J\subseteq\{1,2,\ldots,p\}$ be a set of column indices.  The submatrix
+\[
+  \mathbf{X}_{I,J}
+\]
+keeps rows in $I$ and columns in $J$.  For example, if $x_{i,\text{age}}$ is the age for observation $i$, then
+\begin{equation}
+  I_{\text{adult}}=\{i:x_{i,\text{age}}\geq 18\}
+  \label{eq:ch3-adult-subset}
+\end{equation}
+keeps adult observations.  Column subsets are usually defined by the analysis purpose, such as keeping the response, the intended predictors, and identifiers needed for traceability.
+
+\paragraph{Math Foundations Connection.}
+Subsetting is a set operation.  The row set $I$ identifies which observations remain.  The column set $J$ identifies which variables remain.  Thinking in sets helps avoid vague language such as ``we removed bad rows.''  A defensible cleaning rule should be expressible as a clear predicate, such as ``remove rows where weight is missing or impossible.''  See the Math Foundations textbook, Chapters 2 and 4.
+
+\section{Outliers and Sanity Checks}
+
+An outlier is an observation that is unusually far from the rest of the data or does not follow the overall pattern.  Outliers matter because they can strongly affect summaries, visualizations, and fitted models.  They should be examined before computing final summaries or fitting final models.
+
+Common visual tools include histograms, boxplots, and scatterplots.  A histogram can reveal extreme values, unusual gaps, skewness, or multiple modes.  A boxplot can reveal observations outside the central bulk of the data.  A scatterplot can reveal points that do not follow a bivariate pattern.
+
+Outliers are not automatically errors.  An outlier may be a data-entry error, a unit-conversion error, a duplicate or merged-record problem, a rare but valid observation, evidence of subgroups, or evidence that the model or summary is too simple.  Removing a valid extreme observation just because it is inconvenient can bias the analysis.
+
+A common numerical rule for outlier flagging uses the interquartile range.  Let $Q_1$ be the first quartile, $Q_3$ be the third quartile, and
+\begin{equation}
+  \operatorname{IQR}=Q_3-Q_1.
+\end{equation}
+Tukey fences flag values outside
+\begin{equation}
+  \left[Q_1-1.5\operatorname{IQR},\; Q_3+1.5\operatorname{IQR}\right].
+  \label{eq:ch3-tukey-fences}
+\end{equation}
+This rule is a flag, not an automatic deletion command.
+
+Sanity checks ask whether the data make sense before we treat them as evidence.  One useful warning is:
+\begin{quote}
+  Be wary of taking data at face value, especially when you do not know how it was generated.
+\end{quote}
+
+At minimum, ask:
+\begin{itemize}
+  \item Are units consistent, or might a variable mix inches with centimeters, miles with kilometers, or dollars with thousands of dollars?
+  \item Are there impossible values, such as negative ages, probabilities outside $[0,1]$, counts below zero, or physically impossible measurements?
+  \item Does the number of rows match the expected row unit: one person, one transaction, one unit, one day, or one person-day?
+  \item Are duplicates expected or suspicious?
+  \item Are categorical levels spelled consistently?
+  \item Do minimums, maximums, histograms, and summary statistics agree with subject-matter expectations?
+\end{itemize}
+
+Impossible values are not always easy to repair.  Sometimes the correct value can be recovered from documentation or another field.  Sometimes the value should be treated as missing.  Sometimes the entire record should be excluded from a specific analysis.  The decision should be documented.
+
+\section{A Trustworthy Variable Checklist}
+
+Before using a variable in a summary, plot, or model, ask the following questions:
+\begin{enumerate}
+  \item \textbf{Definition:} What does the variable measure, and what is the row unit associated with the measurement?
+  \item \textbf{Type:} Is the variable continuous, discrete, ordinal, categorical, date/time, text, or an identifier?  Does the software type match the statistical meaning?
+  \item \textbf{Units and scale:} Are units consistent?  Are values raw, standardized, logged, percentages, or rates?
+  \item \textbf{Missingness:} What values indicate missingness?  Are placeholders such as 0, 999, -1, or blanks being used?  Is missingness itself meaningful?
+  \item \textbf{Validity:} What values are possible, impossible, or unusual but possible?  Are there outliers, duplicates, or inconsistent labels?
+  \item \textbf{Defensibility:} Can the cleaning decision be explained in plain language, implemented in code, and documented in a cleaning log?
+\end{enumerate}
+
+This checklist is intentionally practical.  A variable is not trustworthy merely because it has numbers in a column.  It becomes trustworthy when its meaning and cleaning decisions are clear enough to reproduce and defend.
+
+\section{Realities of Data Cleaning}
+
+Real data-driven studies often involve very large data sets.  In an ideal world, errors would be fixed at the data-entry point.  In practice, analysts often receive data after many upstream choices have already been made.  We fix what we can, document what we cannot fix, and avoid pretending that the data are cleaner than they are.
+
+Some issues are easier to spot than others.  Numerical problems may be visible through summary statistics and visual EDA.  Categorical problems may require careful inspection of labels and codes.  Missingness may require knowledge of how the data were collected.  Credibility issues may require comparing the data against external expectations or subject-matter knowledge.
+
+Errors can also be informative.  If a toy example contains several obvious errors, those errors may be a warning about the credibility of the data source.  The right conclusion may not be ``clean harder.''  It may be ``find a better data set.''
+
+\section{Representative Mini-Examples}
+
+Two common cleaning traps illustrate the chapter's main ideas.
+
+\paragraph{Categorical codes are not quantities.}
+Suppose a survey records service branch using integer codes.  A careless analysis might treat the column as numeric and compute an average branch code.  That summary is meaningless.  The defensible cleaning decision is to recode the integers to meaningful labels and treat the variable as categorical.
+
+\paragraph{Zero may mean different things in different variables.}
+A value of \texttt{sibling\_count = 0} may be a valid true zero.  A value of \texttt{weight\_lb = 0} for an adult is likely missing or invalid.  The same recorded number has different meanings because the variables have different definitions.  Cleaning rules must be variable-specific.
+
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 3 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Data rows and variables as structured vectors & $\mathbb{R}^n$ vector notation, entries, subvectors, and vectors as collections of quantities & Ch02 Secs. 2.1, 2.2, 2.6 \\
+\hline
+Numeric, ordinal, and categorical variable domains & Set membership, complements, set difference, subsets, and common number systems & Ch02 Sec. 2.6; Ch04 Secs. 4.1, 4.2, 4.4 \\
+\hline
+Filtering rows and selecting columns & Subvector/slice notation and matrix submatrix extraction & Ch02 Sec. 2.2; Ch07 Secs. 7.1, 7.2 \\
+\hline
+Cleaning by subsetting observations & Set operations, subset notation, quantified statements, and negation of quantified statements & Ch01 Sec. 1.1; Ch02 Sec. 2.6; Ch04 Secs. 4.1, 4.2, 4.4, 4.7, 4.8 \\
+\hline
+Outlier detection as distance from typical pattern & Euclidean norm, distance between vectors, and angle/orthogonality intuition & Ch05 Secs. 5.5, 5.7, 5.8 \\
+\hline
+Design-matrix readiness after cleaning & Matrix dimensions, sparse matrices, transpose notation, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Chapter Summary}
+
+Data cleaning is the foundation for trustworthy data analysis.  Before modeling, the analyst must understand what each variable means, what type it is, how it is stored, what values are possible, and how missingness is represented.
+
+The main ideas from this chapter are:
+\begin{itemize}
+  \item Exploratory data analysis begins by listening to the data before asking targeted modeling questions.
+  \item Variables may be continuous, discrete, ordinal, or categorical.
+  \item Numeric storage does not guarantee numeric meaning.
+  \item Missing values must be detected, counted, interpreted, and handled deliberately.
+  \item True zeros must be distinguished from placeholder zeros.
+  \item Dropping data is simple but can remove information or introduce bias.
+  \item Imputation can preserve rows but introduces assumptions.
+  \item Data types, column names, row subsets, and outliers must be checked systematically.
+  \item Sanity checks protect the analyst from taking unreliable data at face value.
+  \item Cleaning decisions should be repeatable and defensible.
+\end{itemize}
+
+The next chapter builds on this foundation by using numerical summaries and visual structure to describe cleaned data.  Once variables are trustworthy enough to inspect, we can ask what their distributions, relationships, and patterns reveal.
+}{
+\section{Why Data Quality Comes Before Modeling}
+
+Before modeling, we need to know whether the variables in the data set can be trusted.  Data cleaning is not clerical work before the analysis; it is part of the analysis.  A model can only learn from the variables we give it.  If those variables are mislabeled, inconsistently recorded, stored in the wrong type, or contaminated by impossible values, the model may produce output that looks mathematical but is not analytically defensible.
+
+The core question is:
+\begin{quote}
+  What must be true about our variables before we trust them enough to summarize, visualize, or model them?
+\end{quote}
+A trustworthy variable is one whose meaning, type, units, allowable values, and missing-value behavior are clear enough that another analyst could reproduce and defend the cleaning decision.
+
+\section{Data Tables, Observations, and Variables}
+
+A data set is often organized as a rectangular table: rows are observations and columns are variables.  If all entries are numeric, we can represent the table as
+\begin{equation}
+  \mathbf{X}\in\mathbb{R}^{n\times p},
+  \label{eq:ch3-data-matrix}
+\end{equation}
+where $n$ is the number of observations and $p$ is the number of variables.  The entry $x_{ij}$ is the value of variable $j$ for observation $i$.
+
+\paragraph{Math Foundations Connection.}
+A numeric variable column is a vector of observed values, and a numeric data table is a matrix whose columns are variable vectors.  See the Math Foundations textbook, Chapters 2 and 7.
+
+\section{Variable Types}
+
+The type of a variable determines which summaries, plots, transformations, and models are meaningful.
+\begin{center}
+\begin{tabular}{p{0.22\textwidth}p{0.42\textwidth}p{0.26\textwidth}}
+\toprule
+\textbf{Type} & \textbf{Meaning} & \textbf{Examples} \\
+\midrule
+Continuous numeric & Values vary across a range, not just isolated counts. & age, temperature, time \\
+Discrete numeric & Values are count-like, often integers. & number of missions, defects \\
+Ordinal & Ordered categories; distances may not be meaningful. & enlisted ranks, ratings \\
+Categorical & Unordered labels. & service branch, platform type \\
+\bottomrule
+\end{tabular}
+\end{center}
+A common trap is treating numeric codes as numeric variables.  If service branch is coded Army = 1, Marine Corps = 2, Navy = 3, those numbers are labels, not quantities.  Their average is not a meaningful ``average branch.''
+
+\section{The Data Cleaning Workflow}
+
+The Chapter 3 lecture organized cleaning around six recurring tasks:
+\begin{enumerate}
+  \item identify and handle missing values;
+  \item fix data types;
+  \item rename and standardize columns;
+  \item subset rows and columns;
+  \item detect outliers;
+  \item run basic sanity checks.
+\end{enumerate}
+Each decision should be repeatable and defensible.  Record what you changed, why you changed it, and what assumption the change required.
+
+\section{Missing Values and Imputation}
+
+Missingness is not just a software problem.  It is information about how the data were collected.  First ask whether missing values are encoded consistently.  A zero may be a valid value in one variable and a missing-value placeholder in another: \texttt{sibling count = 0} can be real, but \texttt{weight = 0} is usually not.
+
+Two common strategies are dropping and imputing:
+\begin{center}
+\begin{tabular}{p{0.22\textwidth}p{0.34\textwidth}p{0.34\textwidth}}
+\toprule
+\textbf{Strategy} & \textbf{Use when} & \textbf{Main risk} \\
+\midrule
+Drop rows & Few affected rows; missingness is limited. & Losing data or introducing bias. \\
+Drop columns & Variable is mostly missing or not needed. & Removing useful information. \\
+Simple imputation & Mean, median, mode, or fixed value is defensible. & Distorting distributions. \\
+Conditional imputation & Other variables help predict missing values. & Adding modeling assumptions. \\
+Multiple imputation & Missingness requires uncertainty accounting. & More complexity. \\
+\bottomrule
+\end{tabular}
+\end{center}
+Do not impute automatically.  Sometimes ``did not answer'' is itself meaningful, the variable is not needed, missingness is too extensive, or imputation would create more bias than it removes.
+
+\section{Fixing Data Types and Standardizing Variables}
+
+A variable's software type should match its analytic meaning.  Common problems include numeric columns read as strings, categorical variables stored as integers, and dates stored as text.  Fixing types is necessary because software will summarize, plot, and model variables differently depending on their type.
+
+Column names and units should also be standardized.  Names like \texttt{Miles\_Driven}, \texttt{miles}, and \texttt{distance} should not represent the same idea without documentation.  If units differ, fix or flag them before computing summaries.
+
+Subsetting rows and columns is also a cleaning decision.  Filtering to a population of interest, selecting variables, or creating derived variables should be recorded so the analysis can be reproduced.
+
+\section{Outliers and Sanity Checks}
+
+An outlier is an observation unusually far from the data or inconsistent with the overall pattern.  Outliers may be errors, but they may also be real and important.  Use histograms, boxplots, scatterplots, and domain knowledge before deciding whether to remove anything.
+
+Tukey fences are a common outlier flag:
+\begin{equation}
+  \text{Lower fence}=Q_1-1.5\operatorname{IQR},
+  \qquad
+  \text{Upper fence}=Q_3+1.5\operatorname{IQR}.
+  \label{eq:ch3-tukey-fences}
+\end{equation}
+A flagged value is a reason to investigate, not an automatic deletion order.
+
+Basic sanity checks ask:
+\begin{itemize}
+  \item Are units consistent?
+  \item Are there impossible values?
+  \item Does the row count match expectations?
+  \item Are duplicates present?
+  \item Are date ranges and category labels plausible?
+\end{itemize}
+Prof. Alderson's warning is the right default: be wary of taking data at face value when you do not know how it was generated.
+
+\section{Trustworthy Variable Checklist}
+
+Before using a variable, check:
+\begin{enumerate}
+  \item What does the variable mean, and who defined it?
+  \item What type is it: continuous, discrete, ordinal, or categorical?
+  \item What are the units and valid values?
+  \item How are missing values encoded, and is missingness meaningful?
+  \item Are there impossible values, duplicates, or suspicious outliers?
+  \item Can the cleaning decision be reproduced and defended?
+\end{enumerate}
+
+\section{Realities of Data Cleaning}
+
+Real datasets are often large, inconsistent, and generated by processes the analyst did not control.  Ideally, errors are fixed at the data-entry point.  In practice, we fix what we can, document what we cannot fix, and remain alert to the possibility that a dataset is not credible enough for the intended analysis.
+
+\section{Math Foundations Source Map}
+
+The Core Reader keeps the short Math Foundations connections for data tables as matrices, missingness indicators, and subsetting logic.  The full Math Foundations textbook-location map for this chapter appears in the full reference textbook.
+
+\section{Chapter Summary}
+
+Data quality comes before modeling.  A trustworthy variable has a clear definition, type, unit, missing-value convention, valid range, and defensible cleaning history.  Missing values, incorrect data types, inconsistent labels, outliers, and failed sanity checks can all undermine an analysis.  Cleaning decisions should be repeatable, documented, and defensible.
+}

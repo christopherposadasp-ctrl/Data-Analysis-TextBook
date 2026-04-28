@@ -1,0 +1,677 @@
+% Chapter 6 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, and array.
+\chapter{Simple Linear Regression: Fit Quality, $R^2$, and Hypothesis Testing}
+\label{chap:slr-fit-quality-r2-hypothesis-testing}
+
+\section{The Big Picture}
+
+The previous chapter built the simple linear regression model and derived the least squares line
+\begin{equation}
+  \widehat{y}=\widehat{\beta}_0+\widehat{\beta}_1x.
+\end{equation}
+The next question is not how to find the line.  The next question is:
+\begin{quote}
+  Once we have a fitted line, how good is it, and is there statistical evidence that the predictor is useful?
+\end{quote}
+
+This chapter introduces two related but different ideas.
+\begin{enumerate}
+  \item \textbf{Fit quality:} How much variation in the response does the fitted line explain?  This is measured by $R^2$.
+  \item \textbf{Statistical evidence:} Is the fitted relationship distinguishable from a zero-slope model after accounting for sample size and noise?  This is tested with the $F$-test or, equivalently in simple linear regression, the slope $t$-test.
+\end{enumerate}
+
+The difference matters.  A model can have a high $R^2$ and still be based on too few observations to trust.  A model can have a statistically significant slope but still explain little practical variation.  Good analysis reports both fit quality and inferential evidence.
+
+\section{Review: The Mean-Only Baseline Model}
+
+Before using a predictor, we can always estimate a quantitative response $Y$ by its sample mean:
+\begin{equation}
+  \widehat{y}_i=\bar{y},
+  \qquad
+  \bar{y}=\frac{1}{n}\sum_{i=1}^n y_i.
+\end{equation}
+This is the \emph{mean-only model}.  It ignores all predictor values.
+
+The prediction error for observation $i$ under the mean-only model is
+\begin{equation}
+  y_i-\bar{y}.
+\end{equation}
+The mean squared error of the mean-only model is
+\begin{equation}
+  \frac{1}{n}\sum_{i=1}^n (y_i-\bar{y})^2.
+\end{equation}
+This is the denominator-$n$ version of sample variance.  Thus, for one-dimensional data, evaluating the mean-only estimate by MSE is essentially evaluating variance.
+
+\paragraph{Math Foundations Connection.}
+A response column $(y_1,\ldots,y_n)^T$ is a vector in $\mathbb{R}^n$, and the mean-only fitted vector can be written as $\bar{y}\mathbf{1}$.  The sums of squared deviations below are squared Euclidean norms; see the Math Foundations textbook, Chapters 2, 3, and 5.
+
+\section{Adding a Predictor}
+
+When we observe paired data
+\begin{equation}
+  (x_1,y_1),(x_2,y_2),\ldots,(x_n,y_n),
+\end{equation}
+we can compare two strategies:
+\begin{enumerate}
+  \item predict all responses using $\bar{y}$;
+  \item predict responses using the fitted regression line
+  \begin{equation}
+    \widehat{y}_i=\widehat{\beta}_0+\widehat{\beta}_1x_i.
+  \end{equation}
+\end{enumerate}
+
+If $X$ is useful, then the fitted line should have smaller squared prediction error than the mean-only model.  If $X$ is useless, then the fitted line will look like a horizontal line with slope near zero, and it will not improve much over the mean-only model.
+
+This is the core intuition behind $R^2$ and the $F$-test:
+\begin{quote}
+  Compare the error from the mean-only model to the error from the fitted regression model.
+\end{quote}
+
+\section{Three Sums of Squares}
+
+Let
+\begin{equation}
+  e_i=y_i-\widehat{y}_i
+\end{equation}
+be the residual from the fitted regression line.
+
+\subsection{Total Sum of Squares}
+
+The \emph{total sum of squares} measures how much the response varies around its sample mean:
+\begin{equation}
+  \operatorname{TSS}=\sum_{i=1}^n (y_i-\bar{y})^2.
+  \label{eq:ch6-tss}
+\end{equation}
+This is the squared error from the mean-only model.
+
+\subsection{Residual Sum of Squares}
+
+The \emph{residual sum of squares} measures how much variation remains after fitting the regression line:
+\begin{equation}
+  \operatorname{RSS}=\sum_{i=1}^n (y_i-\widehat{y}_i)^2
+  =\sum_{i=1}^n e_i^2.
+  \label{eq:ch6-rss}
+\end{equation}
+This is the squared error from the fitted regression model.
+
+\subsection{Regression Sum of Squares}
+
+The \emph{regression sum of squares}, sometimes called explained sum of squares, measures how much variation the model explains relative to the mean-only baseline:
+\begin{equation}
+  \operatorname{RegSS}=\operatorname{TSS}-\operatorname{RSS}.
+  \label{eq:ch6-regss}
+\end{equation}
+
+When the regression model includes an intercept, least squares gives the decomposition
+\begin{equation}
+  \boxed{\operatorname{TSS}=\operatorname{RegSS}+\operatorname{RSS}.}
+  \label{eq:ch6-sum-of-squares-decomposition}
+\end{equation}
+
+\paragraph{Math Foundations Connection.}
+The decomposition in~\eqref{eq:ch6-sum-of-squares-decomposition} is a geometry statement.  It relies on the residual vector being orthogonal to the fitted-value direction after centering.  Dot products, norms, and orthogonality are covered in the Math Foundations textbook, Chapters 2, 3, and 5.
+
+\section{$R^2$: Proportion of Variation Explained}
+
+The coefficient of determination is
+\begin{equation}
+  \boxed{R^2=\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{TSS}}
+  =1-\frac{\operatorname{RSS}}{\operatorname{TSS}}.}
+  \label{eq:ch6-r2}
+\end{equation}
+
+The numerator $\operatorname{TSS}-\operatorname{RSS}$ is the reduction in squared error achieved by using the predictor.  The denominator $\operatorname{TSS}$ is the squared error we had before using the predictor.
+
+Thus,
+\begin{quote}
+  $R^2$ is the proportion of the response variation explained by the regression model.
+\end{quote}
+
+If $R^2=0$, then the fitted model does no better than the mean-only model.  If $R^2=1$, then the residuals are all zero and the fitted line passes exactly through every observed point.
+
+For simple linear regression with an intercept,
+\begin{equation}
+  0\leq R^2\leq 1.
+\end{equation}
+This interval property depends on comparing an intercept-containing regression model to the mean-only baseline.  Some nonstandard models, such as no-intercept regressions, can produce different behavior.
+
+\section{Interpreting $R^2$}
+
+Suppose two models are used to predict pediatric weight.
+\begin{itemize}
+  \item Model A uses wrist circumference and has $R^2=0.25$.
+  \item Model B uses height and has $R^2=0.50$.
+\end{itemize}
+Then Model B explains twice as much of the observed weight variation as Model A, at least in the data used to fit the models.
+
+The phrase \emph{explains variation} should be read carefully.  It does not automatically imply causation.  It means that the fitted line reduces squared prediction error relative to the mean-only model.
+
+\CoreCompress{
+\section{$R^2$ and Correlation in Simple Linear Regression}
+
+For simple linear regression with an intercept, $R^2$ is equal to the squared sample correlation between $x$ and $y$:
+\begin{equation}
+  \boxed{R^2=r_{xy}^2.}
+\end{equation}
+
+To see why, define centered values
+\begin{equation}
+  x_i^c=x_i-\bar{x},
+  \qquad
+  y_i^c=y_i-\bar{y}.
+\end{equation}
+Let
+\begin{equation}
+  S_{xx}=\sum_{i=1}^n (x_i^c)^2,
+  \qquad
+  S_{yy}=\sum_{i=1}^n (y_i^c)^2,
+  \qquad
+  S_{xy}=\sum_{i=1}^n x_i^cy_i^c.
+\end{equation}
+The least squares slope is
+\begin{equation}
+  \widehat{\beta}_1=\frac{S_{xy}}{S_{xx}}.
+\end{equation}
+The centered fitted values satisfy
+\begin{equation}
+  \widehat{y}_i-\bar{y}=\widehat{\beta}_1(x_i-\bar{x}).
+\end{equation}
+Therefore, the regression sum of squares is
+\begin{align}
+  \operatorname{RegSS}
+  &=\sum_{i=1}^n (\widehat{y}_i-\bar{y})^2 \\
+  &=\sum_{i=1}^n \widehat{\beta}_1^2(x_i-\bar{x})^2 \\
+  &=\widehat{\beta}_1^2S_{xx} \\
+  &=\left(\frac{S_{xy}}{S_{xx}}\right)^2S_{xx} \\
+  &=\frac{S_{xy}^2}{S_{xx}}.
+\end{align}
+Thus,
+\begin{align}
+  R^2
+  &=\frac{\operatorname{RegSS}}{\operatorname{TSS}} \\
+  &=\frac{S_{xy}^2/S_{xx}}{S_{yy}} \\
+  &=\frac{S_{xy}^2}{S_{xx}S_{yy}} \\
+  &=\left(\frac{S_{xy}}{\sqrt{S_{xx}S_{yy}}}\right)^2 \\
+  &=r_{xy}^2.
+\end{align}
+
+This equality is useful in SLR.  It does not directly generalize to multiple linear regression as a single ordinary correlation between one predictor and the response.
+}{
+\section{$R^2$ and Correlation in Simple Linear Regression}
+
+For simple linear regression with an intercept,
+\begin{equation}
+  R^2=r_{xy}^2.
+\end{equation}
+This is a special one-predictor identity: the proportion of response variation explained by the fitted line equals the squared sample correlation between the predictor and the response.  In multiple regression, there is no single ordinary predictor-response correlation that plays the same role.
+}
+\section{Limitations of $R^2$}
+
+$R^2$ is useful, but it does not tell us everything.
+
+\subsection{A Perfect Fit Can Be Misleading}
+
+With two data points and a line with two parameters, we can fit the data perfectly as long as the two $x$ values are different.  Then
+\begin{equation}
+  \operatorname{RSS}=0
+  \qquad\Rightarrow\qquad
+  R^2=1.
+\end{equation}
+This does not mean the model will predict future data well.  It means only that a line can pass through two points.
+
+\subsection{$R^2$ Does Not Measure Statistical Evidence}
+
+$R^2$ measures in-sample fit.  It does not directly answer:
+\begin{itemize}
+  \item Is the slope distinguishable from zero?
+  \item How much sampling uncertainty is in $\widehat{\beta}_1$?
+  \item How noisy are the observations?
+  \item How many observations were used?
+\end{itemize}
+
+These questions require hypothesis tests, confidence intervals, and residual diagnostics.
+
+\subsection{$R^2$ Does Not Check Model Assumptions}
+
+A high $R^2$ does not prove that the linear model assumptions are valid.  Residual plots may still reveal curvature, nonconstant variance, outliers, or dependence among observations.
+
+\section{From Fit Quality to Hypothesis Testing}
+
+Fit quality asks:
+\begin{quote}
+  How much did the line reduce squared error compared to the mean-only model?
+\end{quote}
+
+Hypothesis testing asks:
+\begin{quote}
+  Is that reduction large enough, relative to residual noise and sample size, to count as statistical evidence that the slope is not zero?
+\end{quote}
+
+For SLR, the inferential question is usually
+\begin{equation}
+  H_0:\beta_1=0
+  \qquad\text{versus}\qquad
+  H_A:\beta_1\neq 0.
+  \label{eq:ch6-slope-hypotheses}
+\end{equation}
+The null hypothesis says that $X$ does not improve the conditional mean of $Y$ through a linear slope.  The alternative says that the slope is nonzero.
+
+\paragraph{Math Foundations Connection.}
+Hypotheses are mathematical statements, and hypothesis testing depends on understanding logical alternatives and negation.  Basic logical statements, negation, and truth-table reasoning are covered in the Math Foundations textbook, Chapter 1.
+
+\section{The $F$-Statistic}
+
+The $F$-statistic compares the mean-only model to the fitted regression model.
+
+For a general nested-model comparison,
+\begin{equation}
+  F=\frac{\left(\operatorname{SS}_{\text{null}}-\operatorname{SS}_{\text{full}}\right)/(p_{\text{full}}-p_{\text{null}})}
+  {\operatorname{SS}_{\text{full}}/(n-p_{\text{full}})},
+  \label{eq:ch6-general-f}
+\end{equation}
+where:
+\begin{itemize}
+  \item $\operatorname{SS}_{\text{null}}$ is the squared error from the simpler model;
+  \item $\operatorname{SS}_{\text{full}}$ is the squared error from the larger model;
+  \item $p_{\text{null}}$ is the number of parameters in the simpler model;
+  \item $p_{\text{full}}$ is the number of parameters in the larger model.
+\end{itemize}
+
+For simple linear regression, the null model is the mean-only model, so
+\begin{equation}
+  p_{\text{null}}=1,
+  \qquad
+  \operatorname{SS}_{\text{null}}=\operatorname{TSS}.
+\end{equation}
+The full model is the fitted line, so
+\begin{equation}
+  p_{\text{full}}=2,
+  \qquad
+  \operatorname{SS}_{\text{full}}=\operatorname{RSS}.
+\end{equation}
+Therefore,
+\begin{align}
+  F
+  &=\frac{(\operatorname{TSS}-\operatorname{RSS})/(2-1)}{\operatorname{RSS}/(n-2)} \\
+  &=\boxed{\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{RSS}/(n-2)}}.
+  \label{eq:ch6-slr-f}
+\end{align}
+
+The numerator is the improvement over the mean-only model.  The denominator is the residual variation per leftover degree of freedom.
+
+\paragraph{Math Foundations Connection.}
+The phrase \emph{leftover degrees of freedom} is a dimension idea.  The residual variation lives in directions left over after fitting the intercept and slope.  Linear independence, bases, and the fact that a linearly independent set of $n$-vectors can have at most $n$ elements are introduced in the Math Foundations textbook, Chapters 2, 5, and 6.
+
+\section{The $F$-Statistic in Terms of $R^2$}
+
+Because
+\begin{equation}
+  R^2=\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{TSS}},
+\end{equation}
+we can rewrite the SLR $F$-statistic as
+\begin{align}
+  F
+  &=\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{RSS}/(n-2)} \\
+  &=\frac{R^2\operatorname{TSS}}{(1-R^2)\operatorname{TSS}/(n-2)} \\
+  &=\boxed{\frac{R^2}{1-R^2}(n-2).}
+  \label{eq:ch6-f-in-terms-r2}
+\end{align}
+
+This formula explains why sample size matters.  If two simple linear regressions have the same $R^2$, the one with more observations will have a larger $F$-statistic.  More data can make the same proportion of explained variation more statistically detectable.
+
+\section{The $F$-Distribution and the p-Value}
+
+Under Assumption 3 from Chapter 5---the Gaussian error model---and the null hypothesis $H_0:\beta_1=0$,
+\begin{equation}
+  F \sim F_{1,n-2}.
+\end{equation}
+The first degree of freedom is the numerator degree of freedom:
+\begin{equation}
+  p_{\text{full}}-p_{\text{null}}=2-1=1.
+\end{equation}
+The second degree of freedom is the residual degree of freedom:
+\begin{equation}
+  n-p_{\text{full}}=n-2.
+\end{equation}
+
+After calculating the observed statistic $F_{\text{obs}}$, the p-value is
+\begin{equation}
+  p\text{-value}=\Pr\left(F_{1,n-2}\geq F_{\text{obs}}\mid H_0\right).
+\end{equation}
+
+A small p-value means that, if the true slope were zero and the model assumptions held, an improvement this large would be unlikely by random sampling variation alone.
+
+\section{Why the Assumptions Matter}
+
+The $F$-test relies on the same three-step regression assumption ladder introduced in Chapter 5.
+
+\begin{enumerate}
+  \item Assumption 1 (mean-zero errors) supports the interpretation of the line as the conditional mean.
+  \item Assumption 2 (constant variance and uncorrelated errors) supports the standard error and variance calculations.
+  \item Assumption 3 (Gaussian errors) supports exact finite-sample $t$ and $F$ distributions.
+\end{enumerate}
+
+If these assumptions are badly violated, the p-value may not have the advertised interpretation.  This is why residual analysis is not optional.
+
+\section{The Slope $t$-Test}
+
+Most software output also reports a $t$-test for the slope.  The slope test is
+\begin{equation}
+  H_0:\beta_1=0
+  \qquad\text{versus}\qquad
+  H_A:\beta_1\neq 0.
+\end{equation}
+
+The residual variance estimator is
+\begin{equation}
+  \widehat{\sigma}^2=\frac{\operatorname{RSS}}{n-2}.
+  \label{eq:ch6-sigmahat}
+\end{equation}
+The standard error of the slope is
+\begin{equation}
+  \operatorname{SE}(\widehat{\beta}_1)
+  =\sqrt{\frac{\widehat{\sigma}^2}{\sum_{i=1}^n (x_i-\bar{x})^2}}
+  =\sqrt{\frac{\widehat{\sigma}^2}{S_{xx}}}.
+  \label{eq:ch6-se-beta1}
+\end{equation}
+The $t$-statistic is
+\begin{equation}
+  t_{\text{obs}}=\frac{\widehat{\beta}_1}{\operatorname{SE}(\widehat{\beta}_1)}.
+  \label{eq:ch6-t-stat}
+\end{equation}
+Under the null hypothesis and Assumption 3 (Gaussian errors),
+\begin{equation}
+  t_{\text{obs}}\sim t_{n-2}.
+\end{equation}
+
+\CoreCompress{
+\section{Why the SLR $F$-Test and Slope $t$-Test Agree}
+
+In simple linear regression with an intercept,
+\begin{equation}
+  \boxed{F=t^2.}
+\end{equation}
+
+To see why, recall that
+\begin{equation}
+  \operatorname{RegSS}=\widehat{\beta}_1^2S_{xx}.
+\end{equation}
+Also,
+\begin{equation}
+  \operatorname{SE}(\widehat{\beta}_1)^2=\frac{\widehat{\sigma}^2}{S_{xx}},
+  \qquad
+  \widehat{\sigma}^2=\frac{\operatorname{RSS}}{n-2}.
+\end{equation}
+Thus,
+\begin{align}
+  t^2
+  &=\frac{\widehat{\beta}_1^2}{\operatorname{SE}(\widehat{\beta}_1)^2} \\
+  &=\frac{\widehat{\beta}_1^2}{\widehat{\sigma}^2/S_{xx}} \\
+  &=\frac{\widehat{\beta}_1^2S_{xx}}{\widehat{\sigma}^2} \\
+  &=\frac{\operatorname{RegSS}}{\operatorname{RSS}/(n-2)} \\
+  &=F.
+\end{align}
+
+Therefore, in SLR, the overall $F$-test for the model and the two-sided $t$-test for the slope produce the same conclusion.  In multiple linear regression, the overall $F$-test and individual coefficient $t$-tests answer different questions.
+}{
+\section{Why the SLR $F$-Test and Slope $t$-Test Agree}
+
+In simple linear regression with an intercept,
+\begin{equation}
+  F=t^2.
+\end{equation}
+Both tests answer the same question: is the slope different from zero?  The $F$-test compares the fitted line to the mean-only model, while the slope $t$-test standardizes $\widehat{\beta}_1$ by its standard error.  In MLR these are no longer the same question: the overall $F$-test asks whether at least one slope is useful, while individual $t$-tests ask about one coefficient at a time.
+}
+\CoreCompress{
+\section{Worked Example}
+
+Consider five observations:
+\begin{center}
+\begin{tabular}{cc}
+\hline
+$x_i$ & $y_i$ \\
+\hline
+1 & 2 \\
+2 & 3 \\
+3 & 5 \\
+4 & 4 \\
+5 & 6 \\
+\hline
+\end{tabular}
+\end{center}
+
+The least squares line is
+\begin{equation}
+  \widehat{y}=1.3+0.9x.
+\end{equation}
+The fitted values and residuals are:
+\begin{center}
+\begin{tabular}{ccccc}
+\hline
+$i$ & $x_i$ & $y_i$ & $\widehat{y}_i$ & $e_i$ \\
+\hline
+1 & 1 & 2 & 2.2 & $-0.2$ \\
+2 & 2 & 3 & 3.1 & $-0.1$ \\
+3 & 3 & 5 & 4.0 & $1.0$ \\
+4 & 4 & 4 & 4.9 & $-0.9$ \\
+5 & 5 & 6 & 5.8 & $0.2$ \\
+\hline
+\end{tabular}
+\end{center}
+
+The sample mean is
+\begin{equation}
+  \bar{y}=4.
+\end{equation}
+The total sum of squares is
+\begin{equation}
+  \operatorname{TSS}=(2-4)^2+(3-4)^2+(5-4)^2+(4-4)^2+(6-4)^2=10.
+\end{equation}
+The residual sum of squares is
+\begin{align}
+  \operatorname{RSS}
+  &=(-0.2)^2+(-0.1)^2+(1.0)^2+(-0.9)^2+(0.2)^2 \\
+  &=1.9.
+\end{align}
+Therefore,
+\begin{equation}
+  R^2=1-\frac{1.9}{10}=0.81.
+\end{equation}
+The model explains $81\%$ of the observed variation in $y$.
+
+The $F$-statistic is
+\begin{align}
+  F
+  &=\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{RSS}/(n-2)} \\
+  &=\frac{10-1.9}{1.9/3} \\
+  &\approx 12.79.
+\end{align}
+Under $H_0:\beta_1=0$, this is compared to an $F_{1,3}$ distribution.  Equivalently, the slope $t$-statistic is
+\begin{equation}
+  t=\sqrt{F}\approx 3.58,
+\end{equation}
+with the sign determined by the sign of $\widehat{\beta}_1$.  Since the slope is positive, $t\approx 3.58$.
+}{
+\section{Worked Example}
+
+For the five observations in the full reference example, the fitted line is
+\begin{equation}
+  \widehat{y}=1.3+0.9x.
+\end{equation}
+The total sum of squares is \(\operatorname{TSS}=10\), the residual sum of squares is \(\operatorname{RSS}=1.9\), and therefore
+\begin{equation}
+  R^2=1-\frac{1.9}{10}=0.81.
+\end{equation}
+The model explains \(81\%\) of the observed variation in \(y\).  The corresponding $F$-statistic is about \(12.79\), compared to an \(F_{1,3}\) distribution under \(H_0:\beta_1=0\).  The full reference text shows the residual table and arithmetic details.
+}
+\section{How to Read Software Output}
+
+Regression software usually reports both fit-quality and hypothesis-testing information.
+
+\subsection{Fit Quality Fields}
+
+Common fields include:
+\begin{itemize}
+  \item \textbf{R-squared:} the $R^2$ value;
+  \item \textbf{Residual standard error} or \textbf{scale}: an estimate of residual noise;
+  \item \textbf{F-statistic:} the model-versus-null comparison;
+  \item \textbf{Prob(F-statistic):} the p-value for the $F$-test.
+\end{itemize}
+
+\subsection{Coefficient Table Fields}
+
+For the predictor row, common fields include:
+\begin{itemize}
+  \item \textbf{coef:} $\widehat{\beta}_1$;
+  \item \textbf{std err:} $\operatorname{SE}(\widehat{\beta}_1)$;
+  \item \textbf{t:} the slope $t$-statistic;
+  \item \textbf{P>|t|:} the two-sided p-value for $H_0:\beta_1=0$;
+  \item \textbf{confidence interval:} an interval estimate for the slope.
+\end{itemize}
+
+In SLR, the p-value in the predictor row and the p-value for the model $F$-statistic correspond to the same slope question.
+
+\CoreCompress{
+\section{Decision Template for SLR Fit and Significance}
+
+When reporting a simple linear regression, use the following template.
+
+\begin{enumerate}
+  \item \textbf{State the fitted model:}
+  \begin{equation}
+    \widehat{y}=\widehat{\beta}_0+\widehat{\beta}_1x.
+  \end{equation}
+  \item \textbf{Interpret the slope with units.}
+  \item \textbf{Report $R^2$:} say what proportion of response variation is explained by the predictor.
+  \item \textbf{State the hypothesis test:}
+  \begin{equation}
+    H_0:\beta_1=0
+    \qquad\text{versus}\qquad
+    H_A:\beta_1\neq 0.
+  \end{equation}
+  \item \textbf{Report the test statistic and p-value.}
+  \item \textbf{Translate the conclusion into context.}
+  \item \textbf{Check residuals before overclaiming.}
+  \item \textbf{Avoid causal language unless the design supports causation.}
+\end{enumerate}
+}{
+\section{Decision Template for SLR Fit and Significance}
+
+When reporting a simple linear regression, keep the distinction between fit quality and statistical evidence clear:
+\begin{enumerate}
+  \item state the fitted model \(\widehat{y}=\widehat{\beta}_0+\widehat{\beta}_1x\);
+  \item interpret the slope with units;
+  \item report \(R^2\) as an in-sample fit measure;
+  \item state the slope hypothesis test \(H_0:\beta_1=0\) versus \(H_A:\beta_1\neq 0\);
+  \item report the test statistic and p-value;
+  \item check residuals before making final claims.
+\end{enumerate}
+}
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for computing \(R^2\), \(F\)-statistics, p-values, and related output have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the conceptual guidance for reading software output.
+
+\section{Common Mistakes}
+
+\begin{enumerate}
+  \item \textbf{Treating high $R^2$ as proof of causation.}  $R^2$ is about explained variation, not causal mechanism.
+  \item \textbf{Treating high $R^2$ as proof of validity.}  A model can have high $R^2$ and still violate assumptions.
+  \item \textbf{Ignoring sample size.}  The same $R^2$ can produce different statistical evidence depending on $n$.
+  \item \textbf{Confusing residual variance with response variance.}  $\operatorname{TSS}$ measures response variation before the model; $\operatorname{RSS}$ measures variation left after the model.
+  \item \textbf{Forgetting degrees of freedom.}  In SLR, residual variance uses denominator $n-2$ because two parameters are estimated.
+  \item \textbf{Thinking $R^2=1$ always means a useful model.}  Two points can give a perfect line, but not a reliable model.
+  \item \textbf{Reading p-values without context.}  A small p-value does not tell you effect size, practical importance, or model adequacy.
+\end{enumerate}
+
+\CoreCompress{
+\section{Chapter Summary}
+
+The mean-only model predicts every response using $\bar{y}$.  Its squared error is the total sum of squares,
+\begin{equation}
+  \operatorname{TSS}=\sum_{i=1}^n (y_i-\bar{y})^2.
+\end{equation}
+The fitted regression model predicts each response with
+\begin{equation}
+  \widehat{y}_i=\widehat{\beta}_0+\widehat{\beta}_1x_i.
+\end{equation}
+Its squared error is the residual sum of squares,
+\begin{equation}
+  \operatorname{RSS}=\sum_{i=1}^n (y_i-\widehat{y}_i)^2.
+\end{equation}
+The coefficient of determination is
+\begin{equation}
+  R^2=1-\frac{\operatorname{RSS}}{\operatorname{TSS}}.
+\end{equation}
+It measures the proportion of observed response variation explained by the fitted line.
+
+The $F$-test compares the fitted line to the mean-only model:
+\begin{equation}
+  F=\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{RSS}/(n-2)}.
+\end{equation}
+Under $H_0:\beta_1=0$ and Assumption 3 (Gaussian errors),
+\begin{equation}
+  F\sim F_{1,n-2}.
+\end{equation}
+In simple linear regression with an intercept, the slope $t$-test and model $F$-test are equivalent:
+\begin{equation}
+  F=t^2.
+\end{equation}
+
+The central distinction is this:
+\begin{quote}
+  $R^2$ measures how much the model fits the observed data; the $F$-test and $t$-test measure whether the observed improvement is statistically distinguishable from a zero-slope model under the same regression assumption ladder.
+\end{quote}
+
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 6 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Mean-only fitted vector & $\mathbb{R}^n$ vector notation and the ones vector $\mathbf{1}$ & Ch02 Secs. 2.1, 2.4 \\
+\hline
+TSS and RSS as squared lengths & Dot products, $\mathbf{a}^T\mathbf{a}=\sum_i a_i^2$, and Euclidean norm $\|\mathbf{x}\|=\sqrt{\mathbf{x}^T\mathbf{x}}$ & Ch05 Secs. 5.1, 5.3, 5.5 \\
+\hline
+Sum-of-squares decomposition & Dot products, norms, and orthogonality of fitted and residual components & Ch02 Sec. 2.6; Ch05 Secs. 5.1, 5.3, 5.5, 5.8; Ch12 Sec. 12.12 \\
+\hline
+Residual degrees of freedom & Linear independence, basis size, and leftover dimension intuition & Ch02 Sec. 2.6; Ch06 Secs. 6.3, 6.4, 6.5 \\
+\hline
+Hypothesis statements & Logic statements, negation, and truth-table reasoning as the foundation for null-versus-alternative statements & Ch01 Sec. 1.1 \\
+\hline
+Software/design-matrix bridge & Matrix notation, transpose notation, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after analyzing fit quality and statistical evidence.
+
+\begin{enumerate}
+  \item Can you identify the mean-only baseline and compute \(\operatorname{TSS}\)?
+  \item Can you compute residuals, \(\operatorname{RSS}\), and \(R^2=1-\operatorname{RSS}/\operatorname{TSS}\)?
+  \item Can you explain \(R^2\) as fit quality, not as proof that the model is useful or causal?
+  \item Can you state the slope test hypotheses \(H_0:\beta_1=0\) and \(H_A:\beta_1\neq 0\)?
+  \item Can you connect the model \(F\)-test to the slope \(t\)-test in SLR through \(F=t^2\)?
+  \item Can you conclude in context while separating fit, statistical evidence, and residual diagnostics?
+\end{enumerate}
+}{
+\section{Chapter Summary}
+
+The mean-only model predicts every response by \(\bar{y}\).  Its squared error is \(\operatorname{TSS}\).  The regression model predicts each response by \(\widehat{y}_i=\widehat{\beta}_0+\widehat{\beta}_1x_i\).  Its remaining squared error is \(\operatorname{RSS}\).  The key fit measure is
+\begin{equation}
+  R^2=1-\frac{\operatorname{RSS}}{\operatorname{TSS}},
+\end{equation}
+which is the proportion of observed response variation explained by the fitted line.
+
+The $F$-test compares the fitted line to the mean-only model.  Under \(H_0:\beta_1=0\) and the Gaussian-error rung of the regression assumption ladder,
+\begin{equation}
+  F=\frac{\operatorname{TSS}-\operatorname{RSS}}{\operatorname{RSS}/(n-2)}\sim F_{1,n-2}.
+\end{equation}
+In SLR with an intercept, the slope $t$-test and model $F$-test agree because \(F=t^2\).
+
+\paragraph{Can you do this?}
+You should be able to compute TSS, RSS, \(R^2\), and the SLR $F$-statistic; explain the difference between fit and statistical evidence; and read the slope row and model $F$-test from software output.  The full reference text contains the complete Math Foundations source map and reusable study template.
+}

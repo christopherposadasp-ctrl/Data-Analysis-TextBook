@@ -1,0 +1,811 @@
+
+\chapter{Orthogonal Bases, Gram-Schmidt, and QR}
+\label{mf:ch09-orthogonal-bases-gram-schmidt-qr}
+
+Chapter 6 introduced bases as linearly independent collections that represent directions in a space. Chapter 8 showed that structured systems are easier to solve when a matrix has a helpful shape. This chapter connects those ideas: the \emph{Gram-Schmidt algorithm} turns a useful but non-orthogonal set of directions into an orthonormal set spanning the same directions. Applied to the columns of a matrix, the same idea produces a \emph{QR factorization}
+\[
+    A = QR,
+\]
+where the columns of \(Q\) are orthonormal and \(R\) is upper triangular.
+
+This chapter focuses on construction and interpretation. Matrix inverses, rank, pseudoinverses, column spaces, null spaces, and least-squares theory are deferred to later chapters. The key question is:
+
+\begin{quote}
+How can we replace a useful but non-orthogonal set of vectors by an orthonormal set that spans the same directions?
+\end{quote}
+
+\section{Orthogonal and Orthonormal Sets}
+\label{mf:orthogonal-bases}
+
+Two nonzero vectors \(\mathbf{u},\mathbf{v}\in\mathbb{R}^n\) are \emph{orthogonal} when
+\[
+    \mathbf{u}^T\mathbf{v}=0.
+\]
+Geometrically, orthogonal vectors meet at a right angle. Algebraically, orthogonality means that the dot product sees no component of one vector in the direction of the other.
+
+A collection of vectors
+\[
+    \mathbf{q}_1,\mathbf{q}_2,\ldots,\mathbf{q}_k
+\]
+is an \emph{orthogonal set} if
+\[
+    \mathbf{q}_i^T\mathbf{q}_j=0
+    \qquad \text{whenever } i\neq j.
+\]
+The set is \emph{orthonormal} if it is orthogonal and each vector has length one:
+\[
+    \|\mathbf{q}_i\|=1,
+    \qquad i=1,2,\ldots,k.
+\]
+Equivalently,
+\[
+    \mathbf{q}_i^T\mathbf{q}_j=\begin{cases}
+        1, & i=j,\\
+        0, & i\neq j.
+    \end{cases}
+\]
+
+An \emph{orthonormal basis} is a basis whose vectors are orthonormal. The standard basis vectors
+\[
+    \mathbf{e}_1,\mathbf{e}_2,\ldots,\mathbf{e}_n
+\]
+are the simplest example. They are mutually orthogonal, each has length one, and together they form a basis for \(\mathbb{R}^n\).
+
+The advantage of an orthonormal basis is computational clarity. If
+\[
+    \mathbf{x}=c_1\mathbf{q}_1+c_2\mathbf{q}_2+\cdots+c_k\mathbf{q}_k
+\]
+and the \(\mathbf{q}_i\)'s are orthonormal, then multiplying by \(\mathbf{q}_j^T\) isolates the \(j\)th coefficient:
+\[
+    \mathbf{q}_j^T\mathbf{x}=c_j.
+\]
+The inner product acts like a coordinate extractor because all cross terms vanish.
+
+
+\section{The Goal of Gram-Schmidt}
+\label{mf:gram-schmidt-goal}
+
+Suppose we are given vectors
+\[
+    \mathbf{a}_1,\mathbf{a}_2,\ldots,\mathbf{a}_k\in\mathbb{R}^n.
+\]
+If they are linearly independent, they form a basis for the directions they span, but they may be inconvenient because they need not be orthogonal or have length one. Gram-Schmidt produces vectors
+\[
+    \mathbf{q}_1,\mathbf{q}_2,\ldots,\mathbf{q}_k
+\]
+that are orthonormal and preserve the same growing spans:
+\[
+    \operatorname{span}\{\mathbf{q}_1,\ldots,\mathbf{q}_i\}
+    =
+    \operatorname{span}\{\mathbf{a}_1,\ldots,\mathbf{a}_i\},
+    \qquad i=1,\ldots,k.
+\]
+If the input vectors are linearly dependent, the algorithm detects this: at some step, the part of the new vector not already explained by previous directions becomes \(\mathbf{0}\), so no new direction has been added.
+
+\section{Removing Previously Used Directions}
+\label{mf:gram-schmidt}
+
+Assume that \(\mathbf{q}_1,\ldots,\mathbf{q}_{i-1}\) have already been constructed and are orthonormal. The next input vector is \(\mathbf{a}_i\). To make a new orthogonal direction, remove from \(\mathbf{a}_i\) all components lying in the directions already accounted for by \(\mathbf{q}_1,\ldots,\mathbf{q}_{i-1}\).
+
+For an orthonormal vector \(\mathbf{q}_j\), the amount of \(\mathbf{a}_i\) in the \(\mathbf{q}_j\) direction is
+\[
+    \mathbf{q}_j^T\mathbf{a}_i.
+\]
+Therefore the component of \(\mathbf{a}_i\) in the \(\mathbf{q}_j\) direction is
+\[
+    (\mathbf{q}_j^T\mathbf{a}_i)\mathbf{q}_j.
+\]
+Subtracting all previous components gives
+\[
+    \widetilde{\mathbf{q}}_i
+    =
+    \mathbf{a}_i
+    -
+    \sum_{j=1}^{i-1}(\mathbf{q}_j^T\mathbf{a}_i)\mathbf{q}_j.
+\]
+For \(i=1\), there are no previous directions, so
+\[
+    \widetilde{\mathbf{q}}_1=\mathbf{a}_1.
+\]
+
+The vector \(\widetilde{\mathbf{q}}_i\) is the part of \(\mathbf{a}_i\) that remains after subtracting all previously constructed orthonormal directions. If
+\[
+    \widetilde{\mathbf{q}}_i=\mathbf{0},
+\]
+then \(\mathbf{a}_i\) was already a linear combination of the earlier vectors. The algorithm stops because the input set is linearly dependent.
+
+If \(\widetilde{\mathbf{q}}_i\neq\mathbf{0}\), normalize it:
+\[
+    \mathbf{q}_i=\frac{\widetilde{\mathbf{q}}_i}{\|\widetilde{\mathbf{q}}_i\|}.
+\]
+This gives a unit vector in the new direction.
+
+\section{The Gram-Schmidt Algorithm}
+\label{mf:classical-gram-schmidt-algorithm}
+
+The full algorithm can be written as follows.
+
+\begin{enumerate}
+    \item Start with input vectors \(\mathbf{a}_1,\ldots,\mathbf{a}_k\in\mathbb{R}^n\).
+    \item For \(i=1,2,\ldots,k\), compute
+    \[
+        \widetilde{\mathbf{q}}_i
+        =
+        \mathbf{a}_i
+        -
+        \sum_{j=1}^{i-1}(\mathbf{q}_j^T\mathbf{a}_i)\mathbf{q}_j.
+    \]
+    \item If \(\widetilde{\mathbf{q}}_i=\mathbf{0}\), stop. The input vectors are linearly dependent.
+    \item Otherwise set
+    \[
+        \mathbf{q}_i=\frac{\widetilde{\mathbf{q}}_i}{\|\widetilde{\mathbf{q}}_i\|}.
+    \]
+\end{enumerate}
+
+The practical interpretation is direct: Gram-Schmidt returns orthonormal vectors built from the original vectors. It also detects linear dependence when no new direction remains.
+
+\paragraph{Numerical note.}
+In exact arithmetic, the dependence test is \(\widetilde{\mathbf{q}}_i=\mathbf{0}\). In numerical software, roundoff error means we usually check whether \(\|\widetilde{\mathbf{q}}_i\|\) is small relative to the scale of the problem. A very small norm means the new vector contributes essentially no new independent direction.
+
+The computational work for classical Gram-Schmidt is on the order of
+\[
+    2nk^2
+\]
+floating-point operations for \(k\) input vectors in \(\mathbb{R}^n\). The exact count depends on implementation details, but the key message is that the cost grows with the ambient dimension \(n\) and roughly quadratically with the number of input vectors \(k\).
+
+\section{Why the New Vector Is Orthogonal to the Old Ones}
+\label{mf:gram-schmidt-orthogonality-check}
+
+The subtraction step was designed to make \(\widetilde{\mathbf{q}}_i\) orthogonal to all previous \(\mathbf{q}_j\)'s. To see why, fix \(j<i\). Then
+\[
+    \widetilde{\mathbf{q}}_i
+    =
+    \mathbf{a}_i
+    -
+    \sum_{\ell=1}^{i-1}(\mathbf{q}_\ell^T\mathbf{a}_i)\mathbf{q}_\ell.
+\]
+Take the dot product with \(\mathbf{q}_j\):
+\[
+    \mathbf{q}_j^T\widetilde{\mathbf{q}}_i
+    =
+    \mathbf{q}_j^T\mathbf{a}_i
+    -
+    \sum_{\ell=1}^{i-1}(\mathbf{q}_\ell^T\mathbf{a}_i)(\mathbf{q}_j^T\mathbf{q}_\ell).
+\]
+Because the previous vectors are orthonormal,
+\[
+    \mathbf{q}_j^T\mathbf{q}_\ell
+    =
+    \begin{cases}
+        1, & \ell=j,\\
+        0, & \ell\neq j.
+    \end{cases}
+\]
+All terms in the sum vanish except the one with \(\ell=j\). Thus
+\[
+    \mathbf{q}_j^T\widetilde{\mathbf{q}}_i
+    =
+    \mathbf{q}_j^T\mathbf{a}_i
+    -
+    (\mathbf{q}_j^T\mathbf{a}_i)
+    =0.
+\]
+So \(\widetilde{\mathbf{q}}_i\) is orthogonal to every previous \(\mathbf{q}_j\). Normalizing it changes its length, but not its direction, so \(\mathbf{q}_i\) remains orthogonal to the previous vectors.
+
+\section{A Two-Vector Example}
+\label{mf:gram-schmidt-example-two-vectors}
+
+Consider the vectors
+\[
+    \mathbf{a}_1=\begin{bmatrix}1\\1\end{bmatrix},
+    \qquad
+    \mathbf{a}_2=\begin{bmatrix}1\\0\end{bmatrix}.
+\]
+They are linearly independent, but not orthogonal, since
+\[
+    \mathbf{a}_1^T\mathbf{a}_2=1.
+\]
+
+The first Gram-Schmidt vector is
+\[
+    \widetilde{\mathbf{q}}_1=\mathbf{a}_1,
+    \qquad
+    \mathbf{q}_1=\frac{\mathbf{a}_1}{\|\mathbf{a}_1\|}
+    =\frac{1}{\sqrt{2}}
+    \begin{bmatrix}1\\1\end{bmatrix}.
+\]
+For the second vector, remove the component of \(\mathbf{a}_2\) in the \(\mathbf{q}_1\) direction:
+\[
+    \widetilde{\mathbf{q}}_2
+    =
+    \mathbf{a}_2-(\mathbf{q}_1^T\mathbf{a}_2)\mathbf{q}_1.
+\]
+Since
+\[
+    \mathbf{q}_1^T\mathbf{a}_2
+    =\frac{1}{\sqrt{2}},
+\]
+we get
+\[
+    \widetilde{\mathbf{q}}_2
+    =
+    \begin{bmatrix}1\\0\end{bmatrix}
+    -
+    \frac{1}{\sqrt{2}}
+    \left(\frac{1}{\sqrt{2}}\begin{bmatrix}1\\1\end{bmatrix}\right)
+    =
+    \begin{bmatrix}1/2\\-1/2\end{bmatrix}.
+\]
+The norm of this vector is
+\[
+    \left\|\widetilde{\mathbf{q}}_2\right\|
+    =
+    \sqrt{\left(\frac12\right)^2+\left(-\frac12\right)^2}
+    =
+    \frac{1}{\sqrt{2}}.
+\]
+Therefore
+\[
+    \mathbf{q}_2
+    =
+    \frac{\widetilde{\mathbf{q}}_2}{\|\widetilde{\mathbf{q}}_2\|}
+    =
+    \frac{1}{\sqrt{2}}\begin{bmatrix}1\\-1\end{bmatrix}.
+\]
+Now
+\[
+    \mathbf{q}_1^T\mathbf{q}_2=0,
+    \qquad
+    \|\mathbf{q}_1\|=\|\mathbf{q}_2\|=1.
+\]
+Thus Gram-Schmidt has replaced the original non-orthogonal pair by an orthonormal pair spanning the same plane.
+
+\section{Matrices with Orthonormal Columns}
+\label{mf:orthonormal-columns}
+\label{mf:qtq-identity}
+
+Place the orthonormal vectors into a matrix:
+\[
+    Q=\begin{bmatrix}
+        \mathbf{q}_1 & \mathbf{q}_2 & \cdots & \mathbf{q}_k
+    \end{bmatrix}\in\mathbb{R}^{n\times k}.
+\]
+The entries of \(Q^TQ\) are dot products of the columns of \(Q\):
+\[
+    (Q^TQ)_{ij}=\mathbf{q}_i^T\mathbf{q}_j.
+\]
+Because the columns are orthonormal,
+\[
+    Q^TQ=I_k.
+\]
+
+If \(Q\) is square and has orthonormal columns, then \(Q\) is called an \emph{orthogonal matrix}. In that special square case,
+\[
+    Q^TQ=I
+    \qquad \text{and} \qquad
+    QQ^T=I.
+\]
+When \(Q\in\mathbb{R}^{n\times k}\) is rectangular with \(k<n\), the columns can still be orthonormal and still satisfy \(Q^TQ=I_k\), but \(QQ^T\) is not the identity matrix on all of \(\mathbb{R}^n\). This distinction will matter later when we discuss subspaces and projections.
+
+\section{Tall or Square Matrices with Independent Columns}
+\label{mf:tall-or-square-independent-columns}
+
+Suppose
+\[
+    A\in\mathbb{R}^{n\times k}
+\]
+has linearly independent columns. Then \(k\leq n\). In words, a matrix with linearly independent columns must be tall or square.
+
+The reason is the dimension bound from Chapter 6: a linearly independent set of vectors in \(\mathbb{R}^n\) can have at most \(n\) elements. The columns of \(A\) are \(k\) vectors in \(\mathbb{R}^n\). If \(k>n\), then there are too many vectors for all of them to be linearly independent.
+
+This does not yet use the formal language of rank. Rank comes later. For now, the important conclusion is simple:
+\[
+    \text{independent columns} \quad \Rightarrow \quad \text{not more columns than rows.}
+\]
+
+\section{From Gram-Schmidt to QR Factorization}
+\label{mf:qr-factorization}
+
+Now let
+\[
+    A=\begin{bmatrix}
+        \mathbf{a}_1 & \mathbf{a}_2 & \cdots & \mathbf{a}_k
+    \end{bmatrix}
+    \in\mathbb{R}^{n\times k}
+\]
+have linearly independent columns. Apply Gram-Schmidt to the columns of \(A\). The result is an orthonormal collection
+\[
+    \mathbf{q}_1,\mathbf{q}_2,\ldots,\mathbf{q}_k.
+\]
+Let
+\[
+    Q=\begin{bmatrix}
+        \mathbf{q}_1 & \mathbf{q}_2 & \cdots & \mathbf{q}_k
+    \end{bmatrix}.
+\]
+During the Gram-Schmidt construction, each original column \(\mathbf{a}_i\) can be reconstructed from the first \(i\) orthonormal columns:
+\[
+    \mathbf{a}_i
+    =
+    R_{1i}\mathbf{q}_1+R_{2i}\mathbf{q}_2+\cdots+R_{ii}\mathbf{q}_i.
+\]
+The coefficients are
+\[
+    R_{ji}=\mathbf{q}_j^T\mathbf{a}_i \quad \text{for } j<i,
+    \qquad
+    R_{ii}=\|\widetilde{\mathbf{q}}_i\|.
+\]
+There are no components of \(\mathbf{a}_i\) in \(\mathbf{q}_{i+1},\ldots,\mathbf{q}_k\), so
+\[
+    R_{ji}=0 \qquad \text{for } j>i.
+\]
+Thus the matrix of coefficients
+\[
+    R=\begin{bmatrix}
+        R_{11} & R_{12} & R_{13} & \cdots & R_{1k}\\
+        0      & R_{22} & R_{23} & \cdots & R_{2k}\\
+        0      & 0      & R_{33} & \cdots & R_{3k}\\
+        \vdots & \vdots & \vdots & \ddots & \vdots\\
+        0      & 0      & 0      & \cdots & R_{kk}
+    \end{bmatrix}
+\]
+is upper triangular. Stacking the column equations gives
+\[
+    A=QR.
+\]
+This is the \emph{QR factorization}. In the common ``thin QR'' case,
+\[
+    Q\in\mathbb{R}^{n\times k},
+    \qquad
+    R\in\mathbb{R}^{k\times k},
+    \qquad
+    Q^TQ=I_k.
+\]
+
+The factorization separates two jobs. The matrix \(Q\) stores orthonormal directions. The matrix \(R\) stores the coefficients needed to rebuild the original columns of \(A\) from those directions.
+
+\subsection[Worked Example: A Full 3x3 QR Factorization]{Worked Example: A Full \(3\times 3\) QR Factorization}
+\label{mf:qr-factorization-worked-example}
+
+The two-vector example above shows the mechanics of Gram-Schmidt, but it does not yet show a complete matrix factorization. We now carry out the full process on a square matrix so that the entries of both \(Q\) and \(R\) are visible.
+
+Let
+\[
+    A=
+    \begin{bmatrix}
+        1 & 1 & 0\\
+        1 & 0 & 1\\
+        0 & 1 & 2
+    \end{bmatrix}.
+\]
+The entry \(2\) keeps the example from being only zeros and ones, while the arithmetic remains manageable. Write the columns of \(A\) as
+\[
+    \mathbf{a}_1=
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix},
+    \qquad
+    \mathbf{a}_2=
+    \begin{bmatrix}
+        1\\0\\1
+    \end{bmatrix},
+    \qquad
+    \mathbf{a}_3=
+    \begin{bmatrix}
+        0\\1\\2
+    \end{bmatrix}.
+\]
+We apply Gram-Schmidt to these three columns. This will produce orthonormal vectors \(\mathbf{q}_1,\mathbf{q}_2,\mathbf{q}_3\), which become the columns of \(Q\), and upper-triangular coefficients \(r_{ij}\), which become the entries of \(R\).
+
+\paragraph{Step 1: Construct \(\mathbf{q}_1\).}
+
+There are no previous directions to remove from \(\mathbf{a}_1\), so
+\[
+    \widetilde{\mathbf{q}}_1=\mathbf{a}_1=
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix}.
+\]
+Its norm is
+\[
+    r_{11}
+    =\left\|\widetilde{\mathbf{q}}_1\right\|
+    =\sqrt{1^2+1^2+0^2}
+    =\sqrt{2}.
+\]
+Therefore
+\[
+    \mathbf{q}_1
+    =\frac{\widetilde{\mathbf{q}}_1}{r_{11}}
+    =\frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix}.
+\]
+This also gives the first diagonal entry of \(R\):
+\[
+    r_{11}=\sqrt{2}.
+\]
+
+\paragraph{Step 2: Remove the \(\mathbf{q}_1\) direction from \(\mathbf{a}_2\).}
+
+First compute the amount of \(\mathbf{a}_2\) in the \(\mathbf{q}_1\) direction:
+\[
+    r_{12}
+    =\mathbf{q}_1^T\mathbf{a}_2
+    =\frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1 & 1 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        1\\0\\1
+    \end{bmatrix}
+    =\frac{1}{\sqrt{2}}.
+\]
+Now subtract that component:
+\[
+    \widetilde{\mathbf{q}}_2
+    =\mathbf{a}_2-r_{12}\mathbf{q}_1.
+\]
+Since
+\[
+    r_{12}\mathbf{q}_1
+    =\frac{1}{\sqrt{2}}\cdot\frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix}
+    =\frac12
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix},
+\]
+we get
+\[
+    \widetilde{\mathbf{q}}_2
+    =
+    \begin{bmatrix}
+        1\\0\\1
+    \end{bmatrix}
+    -
+    \begin{bmatrix}
+        1/2\\1/2\\0
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        1/2\\-1/2\\1
+    \end{bmatrix}.
+\]
+Its norm is
+\[
+    r_{22}
+    =\left\|\widetilde{\mathbf{q}}_2\right\|
+    =\sqrt{\left(\frac12\right)^2+\left(-\frac12\right)^2+1^2}
+    =\sqrt{\frac32}
+    =\frac{\sqrt{6}}{2}.
+\]
+Thus
+\[
+    \mathbf{q}_2
+    =\frac{\widetilde{\mathbf{q}}_2}{r_{22}}
+    =\frac{1}{\sqrt{6}}
+    \begin{bmatrix}
+        1\\-1\\2
+    \end{bmatrix}.
+\]
+At this point, the first two columns of \(A\) can be reconstructed as
+\[
+    \mathbf{a}_1=r_{11}\mathbf{q}_1,
+    \qquad
+    \mathbf{a}_2=r_{12}\mathbf{q}_1+r_{22}\mathbf{q}_2.
+\]
+The coefficients used in those reconstructions occupy the first two columns of \(R\).
+
+\paragraph{Step 3: Remove the \(\mathbf{q}_1\) and \(\mathbf{q}_2\) directions from \(\mathbf{a}_3\).}
+
+First compute the \(\mathbf{q}_1\) coefficient:
+\[
+    r_{13}
+    =\mathbf{q}_1^T\mathbf{a}_3
+    =\frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1 & 1 & 0
+    \end{bmatrix}
+    \begin{bmatrix}
+        0\\1\\2
+    \end{bmatrix}
+    =\frac{1}{\sqrt{2}}.
+\]
+Next compute the \(\mathbf{q}_2\) coefficient:
+\[
+    r_{23}
+    =\mathbf{q}_2^T\mathbf{a}_3
+    =\frac{1}{\sqrt{6}}
+    \begin{bmatrix}
+        1 & -1 & 2
+    \end{bmatrix}
+    \begin{bmatrix}
+        0\\1\\2
+    \end{bmatrix}
+    =\frac{-1+4}{\sqrt{6}}
+    =\frac{3}{\sqrt{6}}
+    =\frac{\sqrt{6}}{2}.
+\]
+Now subtract both previously used directions:
+\[
+    \widetilde{\mathbf{q}}_3
+    =\mathbf{a}_3-r_{13}\mathbf{q}_1-r_{23}\mathbf{q}_2.
+\]
+The two removed pieces are
+\[
+    r_{13}\mathbf{q}_1
+    =\frac{1}{\sqrt{2}}\cdot\frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        1/2\\1/2\\0
+    \end{bmatrix},
+\]
+and
+\[
+    r_{23}\mathbf{q}_2
+    =\frac{\sqrt{6}}{2}\cdot\frac{1}{\sqrt{6}}
+    \begin{bmatrix}
+        1\\-1\\2
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        1/2\\-1/2\\1
+    \end{bmatrix}.
+\]
+Therefore
+\[
+    \widetilde{\mathbf{q}}_3
+    =
+    \begin{bmatrix}
+        0\\1\\2
+    \end{bmatrix}
+    -
+    \begin{bmatrix}
+        1/2\\1/2\\0
+    \end{bmatrix}
+    -
+    \begin{bmatrix}
+        1/2\\-1/2\\1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        -1\\1\\1
+    \end{bmatrix}.
+\]
+Its norm is
+\[
+    r_{33}
+    =\left\|\widetilde{\mathbf{q}}_3\right\|
+    =\sqrt{(-1)^2+1^2+1^2}
+    =\sqrt{3}.
+\]
+Thus
+\[
+    \mathbf{q}_3
+    =\frac{\widetilde{\mathbf{q}}_3}{r_{33}}
+    =\frac{1}{\sqrt{3}}
+    \begin{bmatrix}
+        -1\\1\\1
+    \end{bmatrix}.
+\]
+This completes the Gram-Schmidt process. The diagonal entries \(r_{11}, r_{22}, r_{33}\) are all positive because we chose each \(\mathbf{q}_i\) by normalizing \(\widetilde{\mathbf{q}}_i\) without flipping its sign. Other sign conventions are possible, but this one is standard for hand computation.
+
+\paragraph{Assemble \(Q\) and \(R\).}
+
+Place the orthonormal vectors into the columns of \(Q\):
+\[
+    Q=
+    \begin{bmatrix}
+        \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{6}} & -\frac{1}{\sqrt{3}}\\[4pt]
+        \frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{6}} & \frac{1}{\sqrt{3}}\\[4pt]
+        0 & \frac{2}{\sqrt{6}} & \frac{1}{\sqrt{3}}
+    \end{bmatrix}.
+\]
+The columns are orthonormal, so
+\[
+    Q^TQ=I.
+\]
+Because \(Q\) is square in this example, \(QQ^T=I\) as well.
+
+The upper-triangular coefficient matrix is
+\[
+    R=
+    \begin{bmatrix}
+        r_{11} & r_{12} & r_{13}\\
+        0 & r_{22} & r_{23}\\
+        0 & 0 & r_{33}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \sqrt{2} & \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}}\\[4pt]
+        0 & \frac{\sqrt{6}}{2} & \frac{\sqrt{6}}{2}\\[4pt]
+        0 & 0 & \sqrt{3}
+    \end{bmatrix}.
+\]
+Thus the QR factorization is
+\[
+    \begin{bmatrix}
+        1 & 1 & 0\\
+        1 & 0 & 1\\
+        0 & 1 & 2
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{6}} & -\frac{1}{\sqrt{3}}\\[4pt]
+        \frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{6}} & \frac{1}{\sqrt{3}}\\[4pt]
+        0 & \frac{2}{\sqrt{6}} & \frac{1}{\sqrt{3}}
+    \end{bmatrix}
+    \begin{bmatrix}
+        \sqrt{2} & \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}}\\[4pt]
+        0 & \frac{\sqrt{6}}{2} & \frac{\sqrt{6}}{2}\\[4pt]
+        0 & 0 & \sqrt{3}
+    \end{bmatrix}.
+\]
+
+\paragraph{Verify the reconstruction column by column.}
+
+The first column is
+\[
+    r_{11}\mathbf{q}_1
+    =\sqrt{2}\left(\frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix}\right)
+    =
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix}
+    =\mathbf{a}_1.
+\]
+The second column is
+\[
+\begin{aligned}
+    r_{12}\mathbf{q}_1+r_{22}\mathbf{q}_2
+    &=
+    \frac{1}{\sqrt{2}}\left(\frac{1}{\sqrt{2}}
+    \begin{bmatrix}
+        1\\1\\0
+    \end{bmatrix}\right)
+    +
+    \frac{\sqrt{6}}{2}\left(\frac{1}{\sqrt{6}}
+    \begin{bmatrix}
+        1\\-1\\2
+    \end{bmatrix}\right)\\
+    &=
+    \begin{bmatrix}
+        1/2\\1/2\\0
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+        1/2\\-1/2\\1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        1\\0\\1
+    \end{bmatrix}
+    =\mathbf{a}_2.
+\end{aligned}
+\]
+The third column is
+\[
+\begin{aligned}
+    r_{13}\mathbf{q}_1+r_{23}\mathbf{q}_2+r_{33}\mathbf{q}_3
+    &=
+    \begin{bmatrix}
+        1/2\\1/2\\0
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+        1/2\\-1/2\\1
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+        -1\\1\\1
+    \end{bmatrix}\\
+    &=
+    \begin{bmatrix}
+        0\\1\\2
+    \end{bmatrix}
+    =\mathbf{a}_3.
+\end{aligned}
+\]
+Therefore the product \(QR\) rebuilds the columns of \(A\) exactly:
+\[
+    QR=
+    \begin{bmatrix}
+        \mathbf{a}_1 & \mathbf{a}_2 & \mathbf{a}_3
+    \end{bmatrix}
+    =A.
+\]
+
+The important lesson is that \(R\) is not mysterious. Its entries are the reconstruction coefficients produced during Gram-Schmidt. The matrix \(Q\) contains the cleaned-up orthonormal directions, and \(R\) records how to rebuild the original columns from those directions.
+
+\section{Using QR to Solve a Linear System}
+\label{mf:qr-triangular-solve}
+
+Chapter 8 showed that upper triangular systems can be solved by back substitution. QR connects a general matrix equation to that easier triangular form.
+
+Suppose \(A\in\mathbb{R}^{n\times k}\) has independent columns and the exact system
+\[
+    A\mathbf{x}=\mathbf{b}
+\]
+is consistent. Using the QR factorization
+\[
+    A=QR.
+\]
+Then
+\[
+    QR\mathbf{x}=\mathbf{b}.
+\]
+Multiplying both sides by \(Q^T\) gives
+\[
+    Q^TQR\mathbf{x}=Q^T\mathbf{b}.
+\]
+Since \(Q^TQ=I\), this becomes
+\[
+    R\mathbf{x}=Q^T\mathbf{b}.
+\]
+Now the coefficient matrix is upper triangular, so \(\mathbf{x}\) can be found by back substitution.
+
+This is the same workflow previewed in Chapter 8:
+\[
+    A\mathbf{x}=\mathbf{b}
+    \quad\longrightarrow\quad
+    QR\mathbf{x}=\mathbf{b}
+    \quad\longrightarrow\quad
+    R\mathbf{x}=Q^T\mathbf{b}.
+\]
+The full least-squares version of this idea, where the system may not have an exact solution, is deferred to Chapter 12. For now, QR should be understood as a way to convert a difficult-looking system into a triangular solve after constructing orthonormal columns.
+
+\section{Orthogonal-Polynomial Intuition}
+\label{mf:orthogonal-polynomials}
+
+Chapter 8 introduced polynomial interpolation through columns such as
+\[
+    1,
+    \quad x,
+    \quad x^2,
+    \quad \ldots,
+    \quad x^{d}.
+\]
+When these columns are evaluated at observed input values, they form columns of a matrix. These columns are usually not orthogonal. In fact, polynomial columns can be strongly related to each other, especially when powers of \(x\) grow large.
+
+Gram-Schmidt gives a way to build new columns from the old ones so that the new columns are orthonormal while preserving the same span. This is the basic intuition behind \emph{orthogonal polynomial} features. Instead of using raw polynomial columns directly, one can replace them with orthogonalized columns built from the same polynomial information.
+
+The point here is not to develop a full theory of orthogonal polynomials. The point is the construction principle:
+\[
+    \text{raw polynomial columns}
+    \quad\xrightarrow{\text{Gram-Schmidt}}\quad
+    \text{orthonormal polynomial-like columns}.
+\]
+Later, in regression, this matters because changing the columns of a design matrix changes the coordinates used for computation without necessarily changing the set of fitted patterns that the columns can represent.
+
+\section{Data Analysis Bridge}
+\label{mf:ch09-data-analysis-bridge}
+
+The Data Analysis textbook uses this chapter mainly in three ways.
+
+First, orthonormal columns explain why dot products can behave like coordinate selectors. This supports the geometric interpretation of fitted values, residuals, and transformed feature columns.
+
+Second, Gram-Schmidt explains how a non-orthogonal set of useful columns can be converted into an orthonormal set without throwing away the directions those columns represent. This is the mathematical background for orthogonalized features and orthogonal-polynomial intuition.
+
+Third, QR factorization explains why numerical linear algebra often avoids inverse formulas. It uses orthogonal transformations and triangular solves instead. Later chapters revisit this idea when discussing inverses, rank, subspaces, and least squares.
+
+\section{Chapter Summary}
+\label{mf:orthogonal-bases-qr-summary}
+
+Carry forward these orthogonalization ideas:
+\begin{itemize}
+    \item Orthogonal vectors have dot product zero; orthonormal vectors are orthogonal and have length one.
+    \item If \(Q\) has orthonormal columns, then \(Q^TQ=I\).
+    \item Gram-Schmidt converts linearly independent input vectors into orthonormal vectors spanning the same directions, and detects dependence when a residualized vector becomes \(\mathbf{0}\).
+    \item Applying Gram-Schmidt to the columns of a matrix gives the QR factorization \(A=QR\), with \(Q\) orthonormal and \(R\) upper triangular.
+    \item QR turns many computations into triangular solves; orthogonal polynomial features use the same idea to stabilize raw polynomial columns.
+\end{itemize}

@@ -1,0 +1,809 @@
+% Chapter 11 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, and hyperref.
+\chapter[Linear Models Beyond Straight Lines]{Linear Models Beyond Straight Lines: Transformations and Linear-in-Parameters Models}
+\label{chap:linear-models-beyond-straight-lines}
+
+\section{The Big Picture}
+
+The previous chapters built multiple linear regression from two viewpoints:
+\begin{enumerate}
+  \item Algebraically, the fitted values are produced by a design matrix and a coefficient vector.
+  \item Geometrically, the fitted response vector is the projection of \(\mathbf{y}\) onto the column space of the design matrix.
+\end{enumerate}
+
+This chapter makes an important expansion.  Earlier chapters used "linear" mainly through the geometric picture of lines, planes, and hyperplanes in the displayed predictors.  That picture was useful, but incomplete:
+\begin{quote}
+  A linear model does not require the response to be a straight-line function of the original predictor values.  It only requires the model to be linear in the unknown coefficients.
+\end{quote}
+
+That distinction is easy to miss.  The model
+\begin{equation}
+  Y=\beta_0+\beta_1x+\beta_2x^2+\epsilon
+\end{equation}
+is curved as a function of \(x\), but it is still a linear model in the parameters \(\beta_0,\beta_1,\beta_2\).  Once we create the transformed predictor column \(x^2\), ordinary least squares can be used exactly as before.
+
+The central question is therefore not, ``Is the graph a straight line?''  The better question is:
+\begin{quote}
+  Can the model be written as a design matrix times a coefficient vector, plus error?
+\end{quote}
+
+If the answer is yes, then the linear regression machinery still applies.
+
+We also return to the sample-level notation of Chapters~\ref{chap:linear-regression-projection-design-matrix-hat-matrix} and \ref{chap:mlr-in-practice-predictors-hyperplanes-advertising}: \(\mathbf{y}\) is the observed response vector from the data set being fit.
+
+\paragraph{Math Foundations Connection.}
+This chapter uses the Math Foundations ideas of vectors, linear combinations, bases, matrix-vector multiplication, submatrices, linear independence, Gram-Schmidt orthogonalization, solving linear systems, and full-column-rank inverse-like formulas.  In particular, transformed regression is just a new way of building columns for the design matrix.  Those columns form candidate directions in \(\mathbb{R}^n\), and least squares chooses the best linear combination of those directions.  See the Math Foundations textbook, Chapters~2, 3, 5, 6, 7, 8, 9, 10, and~12.
+
+\section{What ``Linear'' Means Here}
+
+A model is linear in parameters when it can be written as
+\begin{equation}
+  m(x;\boldsymbol{\theta})
+  =\theta_0 g_0(x)+\theta_1 g_1(x)+\cdots+\theta_q g_q(x),
+  \label{eq:ch11-linear-in-parameters}
+\end{equation}
+where the functions \(g_0,g_1,\ldots,g_q\) are known functions of the input values, and the unknowns are the coefficients \(\theta_0,\theta_1,\ldots,\theta_q\).  Usually \(g_0(x)=1\), which gives the intercept column.
+
+The key is that the unknown parameters appear only as coefficients multiplying known columns.  They are not multiplied by each other, raised to powers, placed inside nonlinear functions, or used as exponents.
+
+For observations \(i=1,\ldots,n\), define
+\begin{equation}
+  z_{ij}=g_j(x_i),\qquad j=0,1,\ldots,q.
+\end{equation}
+Then the model becomes
+\begin{equation}
+  Y_i=\theta_0z_{i0}+\theta_1z_{i1}+\cdots+\theta_qz_{iq}+\epsilon_i.
+\end{equation}
+Stacking the observations gives
+\begin{equation}
+  \mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon},
+  \label{eq:ch11-z-model}
+\end{equation}
+where
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+    z_{10} & z_{11} & \cdots & z_{1q} \\
+    z_{20} & z_{21} & \cdots & z_{2q} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    z_{n0} & z_{n1} & \cdots & z_{nq}
+  \end{bmatrix},
+  \qquad
+  \boldsymbol{\theta}=\begin{bmatrix}
+    \theta_0\\ \theta_1\\ \vdots\\ \theta_q
+  \end{bmatrix}.
+\end{equation}
+
+This is the same matrix form as ordinary multiple linear regression.  The only difference is that the design matrix may contain transformed versions of the original variables.
+
+\subsection*{Original predictor space versus feature space}
+
+It is helpful to distinguish two spaces:
+\begin{enumerate}
+  \item \textbf{Original predictor space:} the variables as measured, such as \(x\), \(x_1\), \(x_2\), temperature, distance, or time.
+  \item \textbf{Feature space:} the columns actually used in the design matrix, such as \(x\), \(x^2\), \(\log x\), \(\sin x\), \(x_1x_2\), or category indicators.
+\end{enumerate}
+
+Linear regression is linear in the columns of the design matrix.  Those columns can be created from nonlinear transformations of the original predictors.
+
+\section{The Least Squares Problem with Transformed Columns}
+
+Once the transformed design matrix \(\mathbf{Z}\) is built, the least squares objective is
+\begin{equation}
+  \min_{\mathbf{b}\in\mathbb{R}^{q+1}}
+  \left\|\mathbf{y}-\mathbf{Z}\mathbf{b}\right\|^2.
+\end{equation}
+The normal equations are
+\begin{equation}
+  \mathbf{Z}^T\mathbf{Z}\widehat{\boldsymbol{\theta}}
+  =\mathbf{Z}^T\mathbf{y}.
+\end{equation}
+If \(\mathbf{Z}\) has full column rank, then
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\theta}}
+  = (\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\mathbf{y}.
+  }
+  \label{eq:ch11-theta-hat}
+\end{equation}
+
+The fitted values are
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{Z}\widehat{\boldsymbol{\theta}}.
+\end{equation}
+The hat matrix for the transformed model is
+\begin{equation}
+  \mathbf{H}_{\mathbf{Z}}
+  =\mathbf{Z}(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T,
+\end{equation}
+and therefore
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{H}_{\mathbf{Z}}\mathbf{y},
+  \qquad
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H}_{\mathbf{Z}})\mathbf{y}.
+\end{equation}
+
+Thus the geometry from Chapter 7 and the residual theory from Chapter 10 still apply.  The projection subspace has changed because the design matrix columns changed, but the projection logic is the same.
+
+\CoreCompress{
+\section{A Dimension Check}
+
+Let \(q+1\) be the number of columns in the transformed design matrix \(\mathbf{Z}\).  Then:
+\begin{center}
+\begin{tabular}{llc}
+\toprule
+Object & Meaning & Dimension \\
+\midrule
+\(\mathbf{y}\) & response vector & \(n\times 1\) \\
+\(\mathbf{Z}\) & transformed design matrix & \(n\times(q+1)\) \\
+\(\boldsymbol{\theta}\) & coefficient vector for transformed columns & \((q+1)\times 1\) \\
+\(\widehat{\boldsymbol{\theta}}\) & least squares estimate & \((q+1)\times 1\) \\
+\(\widehat{\mathbf{y}}\) & fitted response vector & \(n\times 1\) \\
+\(\mathbf{e}\) & residual vector & \(n\times 1\) \\
+\(\mathbf{H}_{\mathbf{Z}}\) & hat matrix for transformed model & \(n\times n\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The model is valid as a least squares linear model if the columns of \(\mathbf{Z}\) are well-defined and have enough independent information to identify \(\boldsymbol{\theta}\).  If \(\mathbf{Z}^T\mathbf{Z}\) is singular, then the coefficient vector is not uniquely identified.
+}{
+\section{A Dimension Check}
+
+If the transformed design matrix has \(q+1\) columns, then
+\begin{equation}
+  \mathbf{Z}\in\mathbb{R}^{n\times(q+1)},
+  \qquad
+  \boldsymbol{\theta}\in\mathbb{R}^{q+1}.
+\end{equation}
+The transformed model is identifiable when the columns of \(\mathbf{Z}\) contain enough independent information to estimate \(\boldsymbol{\theta}\) uniquely.
+}
+\CoreCompress{
+\section{Mayer's Moon Motion Problem}
+
+The motivating example in the source slides is the Moon motion problem.  The Moon is tidally locked to Earth, but not perfectly.  Its apparent motion includes libration in longitude, latitude, and diurnal effects.  Because of this wobble, observers can see more than exactly half of the Moon's near side over time.
+
+Tobias Mayer collected measurements to describe this apparent wobbling motion, called libration.  The important statistical point is that the response did not need to be modeled as a straight line in the original physical angle.  Instead, Mayer's equation used transformed predictors:
+\begin{equation}
+  Y = \beta + \alpha x_1 + \gamma x_2 + \epsilon,
+  \label{eq:ch11-mayer-equation}
+\end{equation}
+where
+\begin{equation}
+  Y=\text{arc/libration measurement},\qquad
+  x_1=\sin(\text{angle}),\qquad
+  x_2=\cos(\text{angle}).
+\end{equation}
+
+For observation \(i\), write
+\begin{equation}
+  Y_i=\beta+\alpha\sin(\theta_i)+\gamma\cos(\phi_i)+\epsilon_i.
+\end{equation}
+The design matrix is
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+    1 & \sin(\theta_1) & \cos(\phi_1) \\
+    1 & \sin(\theta_2) & \cos(\phi_2) \\
+    \vdots & \vdots & \vdots \\
+    1 & \sin(\theta_n) & \cos(\phi_n)
+  \end{bmatrix},
+  \qquad
+  \boldsymbol{\theta}=\begin{bmatrix}
+    \beta\\ \alpha\\ \gamma
+  \end{bmatrix}.
+\end{equation}
+Then the model is simply
+\begin{equation}
+  \mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}.
+\end{equation}
+
+This is a linear model because \(\beta\), \(\alpha\), and \(\gamma\) enter linearly.  The sine and cosine transformations are part of the known design matrix, not unknown parameters.
+
+\paragraph{Why the plot may not look linear.}
+If we plot the response against the raw angles, the shape may look curved or oscillatory.  But once the columns \(\sin(\theta)\) and \(\cos(\phi)\) are created, the fitted response vector is a linear combination of those columns and the intercept column.  In the transformed feature space, the fit is a plane.
+}{
+\section{Mayer's Moon Motion Problem}
+
+Tobias Mayer's Moon-motion example motivates the chapter's central idea.  The model used sine and cosine terms as predictors:
+\begin{equation}
+  Y=\beta+\alpha x_1+\gamma x_2+\epsilon.
+\end{equation}
+Even though \(x_1\) and \(x_2\) came from trigonometric transformations, the unknown coefficients still enter linearly.  The model is therefore a linear model in the parameters.  The full reference text gives the historical setup and geometry in more detail.
+}
+\section{Basis Functions}
+
+A basis function is a known function used to build a column of the design matrix.  In the notation from \eqref{eq:ch11-linear-in-parameters}, the functions
+\begin{equation}
+  g_0(x),g_1(x),\ldots,g_q(x)
+\end{equation}
+are basis functions.
+
+A model using basis functions has the form
+\begin{equation}
+  f(x)=\theta_0g_0(x)+\theta_1g_1(x)+\cdots+\theta_qg_q(x).
+\end{equation}
+This is a linear combination of known functions.  The coefficients determine how much of each basis direction is used.
+
+Common basis choices include:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Basis type & Example columns & Useful for \\
+\midrule
+Polynomial & \(1,x,x^2,x^3\) & smooth curvature \\
+Interaction & \(1,x_1,x_2,x_1x_2\) & combined predictor effects \\
+Trigonometric & \(1,\sin x,\cos x\) & cyclic or angular behavior \\
+Logarithmic & \(1,\log x\) & diminishing returns and scale effects \\
+Indicator/step & \(I(x<c), I(x\ge c)\) & piecewise constant effects \\
+Spline & piecewise polynomial basis columns & flexible smooth curves \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The design choice is not automatic.  The analyst chooses basis functions based on domain knowledge, EDA, residual behavior, predictive performance, and interpretability.
+
+\section{Polynomial Regression}
+
+A polynomial regression model of degree \(d\) is
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_i+\beta_2x_i^2+\cdots+\beta_dx_i^d+\epsilon_i.
+  \label{eq:ch11-polynomial-regression}
+\end{equation}
+Although this model is nonlinear in \(x\), it is linear in the coefficients \(\beta_0,\beta_1,\ldots,\beta_d\).
+
+The design matrix is
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+    1 & x_1 & x_1^2 & \cdots & x_1^d \\
+    1 & x_2 & x_2^2 & \cdots & x_2^d \\
+    \vdots & \vdots & \vdots & \ddots & \vdots \\
+    1 & x_n & x_n^2 & \cdots & x_n^d
+  \end{bmatrix}.
+  \label{eq:ch11-polynomial-design}
+\end{equation}
+This is a Vandermonde-style design matrix.  The Math Foundations textbook uses a square Vandermonde matrix to fit an interpolating polynomial through \(n\) points; see Ch08 Sec. 8.7.  In data analysis, we usually do something more modest: choose a small degree \(d\), keep \(d+1\ll n\), and solve a least squares problem instead of forcing the curve through every point.
+
+\subsection*{Interpolation versus regression}
+
+Polynomial interpolation and polynomial regression can look similar algebraically, but their goals differ.
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Task & Matrix shape & Goal \\
+\midrule
+Interpolation & usually square \(n\times n\) & pass exactly through all points \\
+Regression & usually tall \(n\times(d+1)\) & find a stable trend with residual error \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Interpolation can be useful in numerical methods, but in noisy data analysis it often overfits.  Regression accepts residuals because the data include noise and because the goal is usually inference, prediction, or explanation rather than exact passage through every observed point.
+
+\subsection*{Degree choice}
+
+A degree-one polynomial is the ordinary straight-line model.  A degree-two polynomial allows one bend.  A degree-three polynomial allows more shape.  But high-degree polynomials can behave badly, especially near the edges of the observed data range.
+
+A practical rule:
+\begin{quote}
+  Use the lowest-degree polynomial that addresses the visible pattern and is defensible for the problem.
+\end{quote}
+
+Residual plots and test error help decide whether the added flexibility is helping or merely fitting noise.
+
+\section{Interactions as Transformed Columns}
+
+Interactions are another example of linear-in-parameters modeling.  With two predictors, the model
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i1}x_{i2}+\epsilon_i
+  \label{eq:ch11-interaction-model}
+\end{equation}
+is linear in the coefficients.  The interaction column is simply
+\begin{equation}
+  z_{i3}=x_{i1}x_{i2}.
+\end{equation}
+The design matrix is
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+    1 & x_{11} & x_{12} & x_{11}x_{12} \\
+    1 & x_{21} & x_{22} & x_{21}x_{22} \\
+    \vdots & \vdots & \vdots & \vdots \\
+    1 & x_{n1} & x_{n2} & x_{n1}x_{n2}
+  \end{bmatrix}.
+\end{equation}
+
+The model can be rewritten as
+\begin{equation}
+  Y_i=\beta_0+\left(\beta_1+\beta_3x_{i2}\right)x_{i1}+\beta_2x_{i2}+\epsilon_i.
+\end{equation}
+Thus the slope with respect to \(x_1\) depends on \(x_2\).  This is why interactions are useful: they allow one predictor's effect to change depending on the value of another predictor, while preserving a linear-in-parameters model.
+
+\paragraph{Hierarchy principle.}
+If a model includes \(x_1x_2\), it is usually good practice to include \(x_1\) and \(x_2\) as well.  This makes interpretation more stable and avoids treating the combined effect as meaningful while excluding its component directions.
+
+\section{Transforming the Response}
+
+So far, the transformations have been applied to predictors.  Sometimes the response is transformed instead.  Examples include
+\begin{equation}
+  \log(Y_i)=\beta_0+\beta_1x_i+\epsilon_i,
+\end{equation}
+or
+\begin{equation}
+  \sqrt{Y_i}=\beta_0+\beta_1x_i+\epsilon_i.
+\end{equation}
+
+A response transformation changes the scale on which the model is linear.  For example, if
+\begin{equation}
+  \log(Y_i)=\beta_0+\beta_1x_i+\epsilon_i,
+\end{equation}
+then the model says that the conditional mean structure is simpler on a log scale than on the original scale.  This can help when residual spread grows with the fitted values or when effects are multiplicative rather than additive.
+
+\paragraph{Important caution.}
+A transformed-response model is not the same as an untransformed-response model.  If we fit \(\log(Y)\), then predictions are naturally produced on the log scale.  Transforming back with \(\exp(\cdot)\) gives a prediction on the original scale, but uncertainty and bias require care because
+\begin{equation}
+  \mathbb{E}[\exp(W)] \ne \exp(\mathbb{E}[W])
+\end{equation}
+in general.
+
+\section{Classifying Models: Linear or Not Linear?}
+
+The quickest check is to ask whether the model can be written as \(\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}\) for a design matrix \(\mathbf{Z}\) that can be computed from the observed data without knowing the parameters.
+
+\begin{center}
+\begin{tabular}{p{0.34\textwidth}p{0.12\textwidth}p{0.40\textwidth}}
+\toprule
+Model expression & Linear model? & Why \\
+\midrule
+\(\beta_0+\beta_1x\) & Yes & coefficients multiply known columns \\
+\(\beta_0+\beta_1x+\beta_2x^2+\beta_3x^3\) & Yes & polynomial columns are known \\
+\(\beta_0x^{\beta_1}\) & No & parameter appears as exponent \\
+\(\beta_0+\beta_1x_1+\beta_0\beta_1x_1^2\) & No & parameters are multiplied together \\
+\(1/(\beta_0+\beta_1x)\) & No & parameters are inside reciprocal transformation \\
+\(\beta_1\sin x+\beta_2\cos x+\beta_3\sin x\cos x\) & Yes & transformed columns are known \\
+\(\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_1x_2\) & Yes & interaction column is known \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The logistic regression mean function
+\begin{equation}
+  p(x)=\frac{e^{\beta_0+\beta_1x}}{1+e^{\beta_0+\beta_1x}}
+\end{equation}
+is not a linear regression model for \(p(x)\).  It is, however, linear in the logit scale:
+\begin{equation}
+  \log\left(\frac{p(x)}{1-p(x)}\right)=\beta_0+\beta_1x.
+\end{equation}
+That is why logistic regression belongs to the generalized linear model family rather than ordinary least squares linear regression.
+
+\section{Projection Geometry Still Works}
+
+A transformed design matrix changes the subspace, not the projection rule.  In ordinary MLR, fitted values live in \(\operatorname{Col}(\mathbf{X})\).  In this chapter, fitted values live in
+\begin{equation}
+  \operatorname{Col}(\mathbf{Z}).
+\end{equation}
+Least squares chooses
+\begin{equation}
+  \widehat{\mathbf{y}}\in\operatorname{Col}(\mathbf{Z})
+\end{equation}
+so that
+\begin{equation}
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}
+\end{equation}
+is orthogonal to every column of \(\mathbf{Z}\).  Therefore,
+\begin{equation}
+  \mathbf{Z}^T\mathbf{e}=\mathbf{0}.
+\end{equation}
+This is the transformed-model version of the normal equations.
+
+\paragraph{Residual interpretation.}
+If a residual plot shows curvature after fitting a straight-line model, we can add a transformed column that represents the missing shape.  If the new transformed model is appropriate, the residual pattern should weaken or disappear.  This does not prove the model is true, but it provides evidence that the new basis is capturing structure the old basis missed.
+
+\section{Truth Plus Error with Transformed Designs}
+
+All of the estimator behavior from the previous chapter carries over with \(\mathbf{X}\) replaced by \(\mathbf{Z}\).  For the theoretical expectation and variance calculations, treat the response vector as random.  If
+\begin{equation}
+  \mathbf{Y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon},
+\end{equation}
+then
+\begin{align}
+  \widehat{\boldsymbol{\theta}}
+  &=(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\mathbf{Y} \\
+  &=(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T(\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}) \\
+  &=\boldsymbol{\theta}+(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\boldsymbol{\epsilon}.
+\end{align}
+Thus,
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\theta}}
+  =\boldsymbol{\theta}+(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\boldsymbol{\epsilon}.
+  }
+\end{equation}
+
+For the realized data set, we compute the coefficient estimate using the observed response vector:
+\begin{equation}
+  \widehat{\boldsymbol{\theta}}
+  =(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\mathbf{y}.
+\end{equation}
+The truth-plus-error expression above is used to study the estimator's behavior; it is not a computational formula because \(\boldsymbol{\theta}\) and \(\boldsymbol{\epsilon}\) are unknown.
+
+If \(\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{Z}]=\mathbf{0}\), then
+\begin{equation}
+  \mathbb{E}[\widehat{\boldsymbol{\theta}}\mid\mathbf{Z}]=\boldsymbol{\theta}.
+\end{equation}
+If \(\operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{Z})=\sigma^2\mathbf{I}_n\), then
+\begin{equation}
+  \operatorname{Var}(\widehat{\boldsymbol{\theta}}\mid\mathbf{Z})
+  =\sigma^2(\mathbf{Z}^T\mathbf{Z})^{-1}.
+\end{equation}
+
+This matters because transformed columns do not exempt us from regression assumptions.  They only change the systematic part of the model.
+
+\section{Model Comparison for Transformations}
+
+When comparing candidate transformations, avoid relying on a single number or a single test in isolation.  Useful evidence includes:
+\begin{enumerate}
+  \item residual plots,
+  \item test MSE or cross-validation error,
+  \item adjusted \(R^2\), AIC, or BIC,
+  \item nested-model \(F\)-tests when the models are nested,
+  \item coefficient interpretability,
+  \item domain plausibility.
+\end{enumerate}
+
+\subsection*{Nested transformed models}
+
+Suppose a reduced model has residual sum of squares \(RSS_R\) and degrees of freedom \(df_R\), and a full model has residual sum of squares \(RSS_F\) and degrees of freedom \(df_F\).  If the reduced model is nested inside the full model, the usual comparison statistic is
+\begin{equation}
+  F=\frac{(RSS_R-RSS_F)/(df_R-df_F)}{RSS_F/df_F}.
+\end{equation}
+For example, the straight-line model
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_i+\epsilon_i
+\end{equation}
+is nested inside the quadratic model
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_i+\beta_2x_i^2+\epsilon_i.
+\end{equation}
+The nested test asks whether the added \(x^2\) column explains enough additional variation to justify the extra parameter.
+
+\subsection*{Prediction-focused comparison}
+
+For prediction, a transformation that improves training RSS may not improve performance on new data.  Use a train/test split or cross-validation when the modeling goal is predictive accuracy.  This connects directly to the bias-variance ideas from earlier chapters: more basis columns increase flexibility, which can reduce bias but increase variance.
+
+\section{Practical Transformation Patterns}
+
+\subsection*{Polynomial terms}
+
+Use polynomial terms when residual plots suggest smooth curvature.  Example:
+\begin{equation}
+  Y=\beta_0+\beta_1x+\beta_2x^2+\epsilon.
+\end{equation}
+Interpretation is about the whole curve, not just one coefficient in isolation.
+
+\subsection*{Log predictor}
+
+Use \(\log x\) when the effect of \(x\) appears to show diminishing returns or when \(x\) spans orders of magnitude:
+\begin{equation}
+  Y=\beta_0+\beta_1\log(x)+\epsilon.
+\end{equation}
+This requires \(x>0\).
+
+\subsection*{Log response}
+
+Use \(\log Y\) when the response is positive and variability grows with the mean:
+\begin{equation}
+  \log(Y)=\beta_0+\beta_1x+\epsilon.
+\end{equation}
+This requires \(Y>0\).
+
+\subsection*{Square-root response}
+
+Use \(\sqrt{Y}\) for nonnegative responses, especially count-like responses where variance grows with the mean:
+\begin{equation}
+  \sqrt{Y}=\beta_0+\beta_1x+\epsilon.
+\end{equation}
+This requires \(Y\ge 0\).
+
+\subsection*{Trigonometric terms}
+
+Use sine and cosine terms for cyclic predictors such as time of day, heading, angle, season, or orbital position:
+\begin{equation}
+  Y=\beta_0+\beta_1\sin(t)+\beta_2\cos(t)+\epsilon.
+\end{equation}
+For a period \(P\), use
+\begin{equation}
+  \sin\left(\frac{2\pi t}{P}\right),
+  \qquad
+  \cos\left(\frac{2\pi t}{P}\right).
+\end{equation}
+
+\subsection*{Interactions}
+
+Use interactions when the effect of one predictor plausibly depends on another:
+\begin{equation}
+  Y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_1x_2+\epsilon.
+\end{equation}
+
+\CoreCompress{
+\section{Numerical Stability and Identifiability}
+
+Transformed columns can create numerical problems.  For example, if \(x\) is large, then \(x^2\), \(x^3\), and \(x^4\) may have very different scales.  This can make \(\mathbf{Z}^T\mathbf{Z}\) ill-conditioned.
+
+\subsection*{Centering before powers}
+
+A common fix is to center before creating powers:
+\begin{equation}
+  u_i=x_i-\bar{x},
+\end{equation}
+and then fit
+\begin{equation}
+  Y_i=\beta_0+\beta_1u_i+\beta_2u_i^2+\epsilon_i.
+\end{equation}
+Centering often improves interpretability and numerical stability.
+
+\subsection*{Orthogonal polynomial columns}
+
+Another fix is to use orthogonal polynomial basis columns.  This is a computational version of the Gram-Schmidt idea from Math Foundations: transform a set of related columns into a better-conditioned set of orthogonal directions; see the Math Foundations textbook, Ch09 Secs. 9.1, 9.3, and 9.11.  The fitted values can represent the same polynomial space, but the coefficient estimation is more stable.
+
+\subsection*{Full column rank}
+
+The transformed design matrix must still have full column rank for the usual inverse formula to apply.  Problems occur when columns are exact linear combinations of each other.  Examples include:
+\begin{enumerate}
+  \item including duplicate columns,
+  \item creating indicators that sum to the intercept column without dropping a reference category,
+  \item including high-degree terms with too few distinct predictor values,
+  \item creating transformations that are constant in the observed data.
+\end{enumerate}
+
+The regression problem is not saved by calling a column ``transformed.''  If the resulting columns are linearly dependent, the model is still not identified.
+}{
+\section{Numerical Stability and Identifiability}
+
+Transformations can create useful model flexibility, but they can also create columns that are redundant or nearly redundant.  The two core checks are:
+\begin{enumerate}
+  \item Does the transformed design matrix have full column rank?
+  \item Are some transformed columns nearly linear combinations of others?
+\end{enumerate}
+Centering before creating powers can improve numerical stability, and orthogonal polynomial bases can reduce dependence among polynomial columns.  The full reference text develops these ideas in more detail.
+}
+\section{Interpretation After Transformations}
+
+Transformations improve flexibility, but they change interpretation.
+
+\subsection*{Polynomial coefficient interpretation}
+
+In
+\begin{equation}
+  Y=\beta_0+\beta_1x+\beta_2x^2+\epsilon,
+\end{equation}
+the coefficient \(\beta_1\) is not simply the global slope.  The instantaneous slope of the fitted mean is
+\begin{equation}
+  \frac{d}{dx}\left(\beta_0+\beta_1x+\beta_2x^2\right)
+  =\beta_1+2\beta_2x.
+\end{equation}
+Thus the effect of changing \(x\) depends on where you are on the curve.
+
+\subsection*{Interaction coefficient interpretation}
+
+In
+\begin{equation}
+  Y=\beta_0+\beta_1x_1+\beta_2x_2+\beta_3x_1x_2+\epsilon,
+\end{equation}
+the slope with respect to \(x_1\) is
+\begin{equation}
+  \frac{\partial}{\partial x_1}\mathbb{E}[Y\mid x_1,x_2]
+  =\beta_1+\beta_3x_2.
+\end{equation}
+The coefficient \(\beta_3\) tells us how the slope in \(x_1\) changes as \(x_2\) increases.
+
+\subsection*{Log predictor interpretation}
+
+In
+\begin{equation}
+  Y=\beta_0+\beta_1\log(x)+\epsilon,
+\end{equation}
+small percentage changes in \(x\) correspond approximately to additive changes in \(Y\).  The exact change from \(x\) to \(cx\) is
+\begin{equation}
+  \Delta \widehat{Y}=\beta_1\log(c).
+\end{equation}
+
+\subsection*{Log response interpretation}
+
+In
+\begin{equation}
+  \log(Y)=\beta_0+\beta_1x+\epsilon,
+\end{equation}
+a one-unit increase in \(x\) changes the fitted log-response by \(\beta_1\).  On the original scale, this corresponds approximately to multiplying the response by \(e^{\beta_1}\), before accounting for retransformation issues.
+
+\CoreCompress{
+\section{Worked Example: Building a Polynomial Design Matrix}
+
+Suppose we observe four data points \((x_i,y_i)\) and want to fit a quadratic model:
+\begin{equation}
+  y_i=\beta_0+\beta_1x_i+\beta_2x_i^2+\epsilon_i.
+\end{equation}
+Let
+\begin{equation}
+  x=\begin{bmatrix}
+    -1\\0\\1\\2
+  \end{bmatrix},
+  \qquad
+  y=\begin{bmatrix}
+    2\\1\\2\\5
+  \end{bmatrix}.
+\end{equation}
+The design matrix is
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+    1 & -1 & 1 \\
+    1 & 0 & 0 \\
+    1 & 1 & 1 \\
+    1 & 2 & 4
+  \end{bmatrix}.
+\end{equation}
+The model is
+\begin{equation}
+  \mathbf{y}=\mathbf{Z}\boldsymbol{\beta}+\boldsymbol{\epsilon}.
+\end{equation}
+Here \(\boldsymbol{\beta}\) is the coefficient vector for this quadratic transformed design; it plays the same role as \(\boldsymbol{\theta}\) above.  The least squares estimate is
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\mathbf{y}.
+\end{equation}
+The fitted curve is then
+\begin{equation}
+  \widehat{y}=\widehat{\beta}_0+\widehat{\beta}_1x+\widehat{\beta}_2x^2.
+\end{equation}
+Although the graph is a parabola, the computation is ordinary least squares.
+
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for polynomial terms, interactions, response transformations, and prediction grids have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the linear-in-parameters logic and interpretation guidance.
+}{
+\section{Worked Example: Building a Polynomial Design Matrix}
+
+For a quadratic model,
+\begin{equation}
+  y_i=\theta_0+\theta_1x_i+\theta_2x_i^2+\epsilon_i,
+\end{equation}
+we build the transformed design matrix by adding a column of squared predictor values:
+\begin{equation}
+  \mathbf{Z}=\begin{bmatrix}
+  1 & x_1 & x_1^2\\
+  1 & x_2 & x_2^2\\
+  \vdots & \vdots & \vdots\\
+  1 & x_n & x_n^2
+  \end{bmatrix}.
+\end{equation}
+Once \(\mathbf{Z}\) is built, least squares proceeds exactly as before:
+\begin{equation}
+  \widehat{\boldsymbol{\theta}}=(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\mathbf{y},
+\end{equation}
+provided \(\mathbf{Z}\) has full column rank.
+}
+\CoreCompress{
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Thinking curved means not linear}
+
+A polynomial curve can be a linear model.  Linearity refers to the unknown coefficients, not the visual shape of the fitted curve in the original predictor.
+
+\subsection*{Mistake 2: Transforming after the split incorrectly}
+
+For prediction workflows, transformations that learn quantities from the data, such as centering and scaling, should be learned on the training set and then applied to the test set.  Otherwise, information leaks from test data into the training process.
+
+\subsection*{Mistake 3: Ignoring domain restrictions}
+
+Log transformations require positive values.  Square-root transformations require nonnegative values.  A transformation that silently drops rows can change the analysis population.
+
+\subsection*{Mistake 4: Overinterpreting individual polynomial coefficients}
+
+In polynomial models, the individual coefficients depend heavily on the chosen basis and scaling.  Interpret the fitted curve and its derivative, not just isolated coefficient signs.
+
+\subsection*{Mistake 5: Adding flexibility without checking test performance}
+
+More columns usually improve training fit.  That does not guarantee better prediction on new observations.  Use residual plots and validation.
+
+\subsection*{Mistake 6: Creating rank-deficient transformed designs}
+
+A transformed design matrix can still be singular.  Check for duplicate columns, redundant indicators, too many polynomial terms, and variables with too few distinct values.
+
+\section{Operational Briefing Checklist}
+
+When briefing a transformed linear model, answer the following:
+\begin{enumerate}
+  \item What is the response variable?
+  \item What original predictors were measured?
+  \item What transformed columns were created?
+  \item Can the model be written as \(\mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}\)?
+  \item Why are these transformations operationally or scientifically plausible?
+  \item Does the transformed design matrix have full column rank?
+  \item What residual pattern motivated the transformation?
+  \item Did residual behavior improve after the transformation?
+  \item Was model comparison based on residuals, test MSE, adjusted \(R^2\), AIC/BIC, nested tests, or a combination?
+  \item How does the transformation change interpretation for the customer or commander?
+\end{enumerate}
+
+\section{Chapter Summary}
+
+The core idea is:
+\begin{equation}
+  \boxed{
+  \text{linear model} = \text{linear in unknown coefficients, not necessarily linear in original predictors.}
+  }
+\end{equation}
+
+If we can create a transformed design matrix \(\mathbf{Z}\) such that
+\begin{equation}
+  \mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon},
+\end{equation}
+then, if \(\mathbf{Z}\) has full column rank, ordinary least squares uses the inverse form:
+\begin{equation}
+  \widehat{\boldsymbol{\theta}}
+  =(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^T\mathbf{y}.
+\end{equation}
+If \(\mathbf{Z}^T\mathbf{Z}\) is singular, the fitted values may still be defined, but the coefficient vector is not uniquely identified.
+The fitted values are still a projection:
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{H}_{\mathbf{Z}}\mathbf{y}.
+\end{equation}
+The residuals are still orthogonal to the model columns:
+\begin{equation}
+  \mathbf{Z}^T\mathbf{e}=\mathbf{0}.
+\end{equation}
+
+Transformations let us fit more realistic structure while keeping the interpretability and inference tools of linear regression.  Polynomial terms, interactions, sine/cosine terms, log terms, and indicator columns are all ways to build richer design matrices.  The cost is that interpretation, rank, and overfitting must be handled carefully.
+
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 11 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Transformed columns as candidate directions & Vector notation in \(\mathbb{R}^n\), scalar-vector multiplication, and linear combinations & Ch02 Sec. 2.1; Ch03 Secs. 3.4, 3.5 \\
+\hline
+Basis and spanning viewpoint & Bases, linear independence, and unique linear-combination representations & Ch06 Secs. 6.1, 6.3, 6.5 \\
+\hline
+Design-matrix mechanics & Matrix notation, submatrices, transposes, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
+\hline
+Solving transformed systems & QR decomposition, triangular systems, and solving linear systems & Ch08 Sec. 8.1; Ch09 Sec. 9.9 \\
+\hline
+Vandermonde / polynomial design & Vandermonde matrices for polynomial systems and interpolation & Ch08 Sec. 8.7 \\
+\hline
+Orthogonal polynomial intuition & Gram-Schmidt orthogonalization and orthonormal directions & Ch05 Secs. 5.5, 5.8; Ch08 Sec. 8.7; Ch09 Secs. 9.1, 9.3, 9.11 \\
+\hline
+Full column rank requirement & Left inverses, rank, and full-column-rank conditions & Ch10 Secs. 10.1, 10.3, 10.5 \\
+\hline
+Computational matrix operations & Python/NumPy arrays, shapes, transposes, and matrix multiplication & Ch07 Secs. 7.1, 7.4, 7.7 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after proposing a transformed linear model.
+
+\begin{enumerate}
+  \item Can you state the difference between original predictors and created features?
+  \item Can you write the transformed design matrix \(\mathbf{Z}\)?
+  \item Can you express the model as \(\mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}\)?
+  \item Can you explain why the model is linear in the coefficients even if it is curved in the original variables?
+  \item Can you check whether the transformed columns create rank or identifiability problems?
+  \item Can you compare residual behavior before and after the transformation?
+  \item Can you interpret the transformed model in language that remains useful to the customer?
+\end{enumerate}
+}{
+\section{Chapter Summary}
+
+A model can be curved in the original predictor values and still be a linear model.  The key requirement is linearity in the unknown coefficients.  After building transformed columns, the model has the same design-matrix form:
+\begin{equation}
+  \mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}.
+\end{equation}
+Polynomial terms, interactions, log terms, square-root terms, trigonometric terms, and indicator columns are all ways to build richer design matrices.  The least-squares machinery still works as long as the transformed columns are well-defined and the design matrix has enough independent information.
+
+The cost of transformations is interpretation and overfitting risk.  A more flexible design can fit more patterns, but it can also chase noise, create unstable coefficients, or violate domain constraints.
+
+\paragraph{Can you do this?}
+You should be able to decide whether a model is linear in parameters, construct a transformed design matrix, interpret coefficients after transformations cautiously, and compare transformed models using residual behavior and validation performance.  The full reference text contains the common-mistakes list, operational briefing checklist, complete Math Foundations source map, and reusable study template.
+}

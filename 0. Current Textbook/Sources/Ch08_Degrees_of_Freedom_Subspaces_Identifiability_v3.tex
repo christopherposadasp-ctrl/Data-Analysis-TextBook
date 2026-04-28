@@ -1,0 +1,705 @@
+% Chapter 8 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, and booktabs.
+\chapter{Degrees of Freedom, Subspaces, and Identifiability}
+\label{chap:degrees-of-freedom-subspaces-identifiability}
+
+\section{The Big Picture}
+
+The previous chapter showed that linear regression is an orthogonal projection.  The response vector \(\mathbf{y}\in\mathbb{R}^n\) is projected onto the column space of the design matrix \(\mathbf{X}\).  The fitted values live in one subspace, and the residuals live in the orthogonal complement.
+
+This chapter uses that geometry to explain three ideas that appear repeatedly in regression:
+\begin{enumerate}
+  \item \textbf{Degrees of freedom}: how many independent dimensions remain after we estimate model parameters.
+  \item \textbf{Subspaces}: where fitted values, residuals, coefficient information, and non-identifiable directions live.
+  \item \textbf{Identifiability}: when regression coefficients are uniquely determined by the data, and when many coefficient vectors produce the same fitted values.
+\end{enumerate}
+
+The central message is:
+\begin{quote}
+  Degrees of freedom are leftover dimensions.  Identifiability fails when the design matrix has a nonzero null space.
+\end{quote}
+
+For a full-rank multiple linear regression model with \(p\) predictors and an intercept,
+\begin{equation}
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)},
+  \qquad
+  \operatorname{rank}(\mathbf{X})=p+1,
+\end{equation}
+and the residual degrees of freedom are
+\begin{equation}
+  \boxed{n-p-1.}
+\end{equation}
+This is why the denominator of the residual variance estimator and the denominator degrees of freedom in the overall regression \(F\)-test use \(n-p-1\).
+
+\paragraph{Math Foundations Connection.}
+This chapter uses vector notation, the ones vector, dot products, orthogonality, matrix dimensions, matrix transposes, linear independence, bases, matrix-vector multiplication, left-inverse intuition, and null-space/subspace ideas.  These are covered in the Math Foundations textbook, Chapters~2, 5, 6, 7, 10, and~11.
+
+\section{A First Definition: Degrees of Freedom as Independent Movement}
+
+In data analysis, degrees of freedom are often introduced as a formula to memorize.  For example:
+\begin{equation}
+  s^2 = \frac{1}{n-1}\sum_{i=1}^n (y_i-\bar{y})^2.
+\end{equation}
+The natural question is: why \(n-1\)?
+
+The geometric answer is that \(n\) observations define a vector in \(\mathbb{R}^n\).  Before estimating anything, the vector \(\mathbf{y}\) has \(n\) independent coordinates:
+\begin{equation}
+  \mathbf{y}=\begin{bmatrix}y_1\\y_2\\\vdots\\y_n\end{bmatrix}\in\mathbb{R}^n.
+\end{equation}
+Once we estimate the mean \(\bar{y}\), the residual deviations must satisfy one linear constraint:
+\begin{equation}
+  \sum_{i=1}^n (y_i-\bar{y}) = 0.
+\end{equation}
+One independent constraint removes one dimension.  Therefore, the residual variation around the sample mean has \(n-1\) degrees of freedom.
+
+\paragraph{Reusable intuition.}
+Each independently estimated parameter usually consumes one dimension.  The leftover dimensions are available for residual variation.
+
+\section{Decomposing a Data Vector Around the Sample Mean}
+
+The simplest projection problem is the sample mean.  Let
+\begin{equation}
+  \mathbf{1}=\begin{bmatrix}1\\1\\\vdots\\1\end{bmatrix}\in\mathbb{R}^n.
+\end{equation}
+The sample mean vector is
+\begin{equation}
+  \bar{y}\mathbf{1}.
+\end{equation}
+The residual vector around the sample mean is
+\begin{equation}
+  \mathbf{r}=\mathbf{y}-\bar{y}\mathbf{1}.
+\end{equation}
+Therefore,
+\begin{equation}
+  \boxed{\mathbf{y}=\bar{y}\mathbf{1}+\left(\mathbf{y}-\bar{y}\mathbf{1}\right).}
+  \label{eq:ch8-mean-decomposition}
+\end{equation}
+This is a decomposition of the data vector into two orthogonal pieces:
+\begin{enumerate}
+  \item \(\bar{y}\mathbf{1}\), the projection onto the one-dimensional subspace \(\operatorname{span}\{\mathbf{1}\}\), and
+  \item \(\mathbf{r}=\mathbf{y}-\bar{y}\mathbf{1}\), the residual vector in the orthogonal complement.
+\end{enumerate}
+
+To verify orthogonality, compute
+\begin{align}
+  \mathbf{1}^T\mathbf{r}
+  &=\mathbf{1}^T(\mathbf{y}-\bar{y}\mathbf{1}) \\
+  &=\sum_{i=1}^n y_i-\bar{y}\sum_{i=1}^n 1 \\
+  &=n\bar{y}-n\bar{y} \\
+  &=0.
+\end{align}
+Thus,
+\begin{equation}
+  \mathbf{r}\in \operatorname{span}\{\mathbf{1}\}^{\perp}.
+\end{equation}
+Since \(\operatorname{span}\{\mathbf{1}\}\) has dimension \(1\), its orthogonal complement in \(\mathbb{R}^n\) has dimension
+\begin{equation}
+  n-1.
+\end{equation}
+This is the geometric reason for the \(n-1\) denominator in sample variance.
+
+\CoreCompress{
+\section{Worked Example: Mean Decomposition with Three Observations}
+
+Suppose
+\begin{equation}
+  \mathbf{y}=\begin{bmatrix}2\\5\\8\end{bmatrix}.
+\end{equation}
+The sample mean is
+\begin{equation}
+  \bar{y}=\frac{2+5+8}{3}=5.
+\end{equation}
+Then
+\begin{equation}
+  \bar{y}\mathbf{1}=5\begin{bmatrix}1\\1\\1\end{bmatrix}
+  =\begin{bmatrix}5\\5\\5\end{bmatrix},
+\end{equation}
+and
+\begin{equation}
+  \mathbf{r}=\mathbf{y}-\bar{y}\mathbf{1}
+  =\begin{bmatrix}2\\5\\8\end{bmatrix}-\begin{bmatrix}5\\5\\5\end{bmatrix}
+  =\begin{bmatrix}-3\\0\\3\end{bmatrix}.
+\end{equation}
+Check the residual constraint:
+\begin{equation}
+  \mathbf{1}^T\mathbf{r}=(-3)+0+3=0.
+\end{equation}
+The residual vector lives on the plane
+\begin{equation}
+  \left\{\mathbf{v}\in\mathbb{R}^3: \mathbf{1}^T\mathbf{v}=0\right\}.
+\end{equation}
+That plane has dimension \(2\), which equals \(n-1=3-1\).
+}{
+\section{Worked Example: Mean Decomposition with Three Observations}
+
+For \(\mathbf{y}=(2,5,8)^T\), the sample mean is \(\bar{y}=5\).  Therefore
+\begin{equation}
+  \bar{y}\mathbf{1}=\begin{bmatrix}5\\5\\5\end{bmatrix},
+  \qquad
+  \mathbf{r}=\mathbf{y}-\bar{y}\mathbf{1}=\begin{bmatrix}-3\\0\\3\end{bmatrix}.
+\end{equation}
+The residuals sum to zero, so they satisfy one linear constraint.  With three observations, that leaves \(3-1=2\) residual degrees of freedom.
+}
+\CoreCompress{
+\section{The Mean Projection Matrix}
+
+The sample mean is itself a projection.  Define
+\begin{equation}
+  \mathbf{H}_0=\frac{1}{n}\mathbf{1}\mathbf{1}^T.
+\end{equation}
+Then
+\begin{equation}
+  \mathbf{H}_0\mathbf{y}
+  =\frac{1}{n}\mathbf{1}\mathbf{1}^T\mathbf{y}
+  =\frac{1}{n}\mathbf{1}\sum_{i=1}^n y_i
+  =\bar{y}\mathbf{1}.
+\end{equation}
+The residual-maker matrix for the mean-only model is
+\begin{equation}
+  \mathbf{M}_0=\mathbf{I}-\mathbf{H}_0.
+\end{equation}
+Then
+\begin{equation}
+  \mathbf{M}_0\mathbf{y}=\mathbf{y}-\bar{y}\mathbf{1}.
+\end{equation}
+
+The matrix \(\mathbf{H}_0\) is symmetric and idempotent, so it is an orthogonal projection matrix.  Its rank and trace are both \(1\):
+\begin{equation}
+  \operatorname{rank}(\mathbf{H}_0)=\operatorname{tr}(\mathbf{H}_0)=1.
+\end{equation}
+Likewise,
+\begin{equation}
+  \operatorname{rank}(\mathbf{M}_0)=\operatorname{tr}(\mathbf{M}_0)=n-1.
+\end{equation}
+This trace perspective becomes useful in regression because the hat matrix for linear regression is also a symmetric idempotent projection matrix.
+}{
+\section{The Mean Projection Matrix}
+
+The mean-only fit can also be written as a projection:
+\begin{equation}
+  \widehat{\mathbf{y}}_0=\bar{y}\mathbf{1}=\mathbf{H}_0\mathbf{y},
+  \qquad
+  \mathbf{H}_0=\frac{1}{n}\mathbf{1}\mathbf{1}^T.
+\end{equation}
+This is the one-dimensional version of the hat-matrix idea.  The full reference text develops the symmetry, idempotence, rank, and trace details.
+}
+\section{Regression Decomposes \texorpdfstring{\(\mathbb{R}^n\)}{R^n} Into Two Orthogonal Pieces}
+
+For multiple linear regression with an intercept and \(p\) predictors, write
+\begin{equation}
+  \mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+  \qquad
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)}.
+\end{equation}
+The fitted values are
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+  \qquad
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T,
+\end{equation}
+when \(\mathbf{X}\) has full column rank.
+
+The residuals are
+\begin{equation}
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}=(\mathbf{I}-\mathbf{H})\mathbf{y}=\mathbf{M}\mathbf{y}.
+\end{equation}
+Regression decomposes the observation space as
+\begin{equation}
+  \boxed{\mathbb{R}^n=\operatorname{Col}(\mathbf{X})\oplus \operatorname{Null}(\mathbf{X}^T).}
+  \label{eq:ch8-column-leftnull-decomposition}
+\end{equation}
+Here \(\oplus\) means a direct sum: every vector in \(\mathbb{R}^n\) can be written uniquely as a piece in \(\operatorname{Col}(\mathbf{X})\) plus a piece in \(\operatorname{Null}(\mathbf{X}^T)\).  These two pieces are orthogonal.
+
+In regression terms:
+\begin{align}
+  \widehat{\mathbf{y}} &\in \operatorname{Col}(\mathbf{X}), \\
+  \mathbf{e} &\in \operatorname{Null}(\mathbf{X}^T), \\
+  \widehat{\mathbf{y}}^T\mathbf{e} &=0.
+\end{align}
+The fitted values live in the column space.  The residuals live in the left null space.
+
+\section{Residual Degrees of Freedom}
+
+Assume \(\mathbf{X}\) has full column rank.  Then
+\begin{equation}
+  \operatorname{rank}(\mathbf{X})=p+1.
+\end{equation}
+Therefore,
+\begin{equation}
+  \dim \operatorname{Col}(\mathbf{X})=p+1.
+\end{equation}
+The column space consumes \(p+1\) dimensions of the original \(n\)-dimensional observation space.  The leftover dimensions are the residual degrees of freedom:
+\begin{equation}
+  \boxed{\operatorname{df}_{\text{resid}}=n-(p+1)=n-p-1.}
+\end{equation}
+
+This explains the residual variance estimator:
+\begin{equation}
+  \widehat{\sigma}^2
+  =\frac{\text{RSS}}{n-p-1}
+  =\frac{\mathbf{e}^T\mathbf{e}}{n-p-1}.
+\end{equation}
+It also explains the denominator degrees of freedom in the overall \(F\)-test for MLR.
+
+\paragraph{Special cases.}
+\begin{center}
+\begin{tabular}{|p{0.31\textwidth}|p{0.28\textwidth}|p{0.24\textwidth}|}
+\hline
+\textbf{Model} & \textbf{Fitted subspace dimension} & \textbf{Residual df} \\
+\hline
+Mean-only model & \(1\) & \(n-1\) \\
+\hline
+SLR with intercept & \(2\) & \(n-2\) \\
+\hline
+MLR with intercept and \(p\) predictors & \(p+1\) & \(n-p-1\) \\
+\hline
+Full rank model with design rank \(r\) & \(r\) & \(n-r\) \\
+\hline
+\end{tabular}
+\end{center}
+
+\CoreCompress{
+\section{A Subtle Point: Model Degrees of Freedom Versus Fitted-Subspace Dimension}
+
+There are two closely related uses of degrees of freedom in regression:
+\begin{enumerate}
+  \item \textbf{Fitted-subspace dimension}: with an intercept and \(p\) predictors, \(\operatorname{Col}(\mathbf{X})\) has dimension \(p+1\).
+  \item \textbf{Model improvement degrees of freedom}: when comparing the full model to the intercept-only model, the predictors add \(p\) dimensions beyond the mean direction.
+\end{enumerate}
+
+That is why an ANOVA-style regression decomposition often uses
+\begin{equation}
+  \text{Total df}=n-1,
+  \qquad
+  \text{Regression df}=p,
+  \qquad
+  \text{Residual df}=n-p-1.
+\end{equation}
+The \(n-1\) total degrees of freedom already subtract the mean direction.  The regression degrees of freedom \(p\) count the additional fitted directions beyond the intercept-only model.
+}{
+\section{A Subtle Point: Model Degrees of Freedom Versus Fitted-Subspace Dimension}
+
+Two counts appear in regression.  The fitted subspace has dimension \(p+1\) when the model has an intercept and \(p\) predictors.  But the overall regression \(F\)-test compares the full model to the intercept-only model, so its numerator degrees of freedom are \(p\), not \(p+1\).  The residual degrees of freedom are \(n-p-1\).
+}
+\CoreCompress{
+\section{Trace of the Hat Matrix}
+
+For a full-rank linear regression model, the hat matrix is
+\begin{equation}
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+\end{equation}
+It is symmetric and idempotent.  For symmetric idempotent matrices, the trace equals the rank.  Therefore,
+\begin{equation}
+  \boxed{\operatorname{tr}(\mathbf{H})=\operatorname{rank}(\mathbf{H})=\operatorname{rank}(\mathbf{X}).}
+\end{equation}
+If \(\mathbf{X}\) has full column rank, this becomes
+\begin{equation}
+  \operatorname{tr}(\mathbf{H})=p+1.
+\end{equation}
+The residual-maker matrix is \(\mathbf{M}=\mathbf{I}-\mathbf{H}\), so
+\begin{align}
+  \operatorname{tr}(\mathbf{M})
+  &=\operatorname{tr}(\mathbf{I})-\operatorname{tr}(\mathbf{H}) \\
+  &=n-(p+1) \\
+  &=n-p-1.
+\end{align}
+This is another way to see residual degrees of freedom.
+
+\paragraph{Connection to leverage.}
+The diagonal entries of \(\mathbf{H}\), denoted \(h_{ii}\), are leverages.  Since the trace is the sum of diagonal entries,
+\begin{equation}
+  \sum_{i=1}^n h_{ii}=p+1.
+\end{equation}
+The average leverage is therefore
+\begin{equation}
+  \bar{h}=\frac{p+1}{n}.
+\end{equation}
+Large leverage means an observation is using more than its average share of the fitted-subspace degrees of freedom.
+}{
+\section{Trace of the Hat Matrix}
+
+For a full-rank design matrix, the hat matrix projects onto \(\operatorname{Col}(\mathbf{X})\).  Its trace equals the fitted-subspace dimension:
+\begin{equation}
+  \operatorname{tr}(\mathbf{H})=\operatorname{rank}(\mathbf{H})=p+1.
+\end{equation}
+Thus the average leverage is \((p+1)/n\), and the residual-maker matrix has trace \(n-p-1\), matching the residual degrees of freedom.
+}
+\section{The Big Four Subspaces of the Design Matrix}
+
+Let
+\begin{equation}
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)}
+\end{equation}
+with rank \(r\).  Linear algebra associates four fundamental subspaces with \(\mathbf{X}\).  In regression, these subspaces have direct meanings.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.26\textwidth}|p{0.20\textwidth}|p{0.16\textwidth}|}
+\hline
+\textbf{Subspace} & \textbf{Where it lives} & \textbf{Regression meaning} & \textbf{Dimension} \\
+\hline
+\(\operatorname{Col}(\mathbf{X})\) & \(\mathbb{R}^n\) & Fitted values \(\widehat{\mathbf{y}}\) & \(r\) \\
+\hline
+\(\operatorname{Null}(\mathbf{X}^T)\) & \(\mathbb{R}^n\) & Residual vectors \(\mathbf{e}\) & \(n-r\) \\
+\hline
+\(\operatorname{Row}(\mathbf{X})=\operatorname{Col}(\mathbf{X}^T)\) & \(\mathbb{R}^{p+1}\) & Identifiable coefficient directions & \(r\) \\
+\hline
+\(\operatorname{Null}(\mathbf{X})\) & \(\mathbb{R}^{p+1}\) & Non-identifiable coefficient directions & \((p+1)-r\) \\
+\hline
+\end{tabular}
+\end{center}
+
+The first two subspaces live in observation space \(\mathbb{R}^n\).  The last two live in coefficient space \(\mathbb{R}^{p+1}\).  This distinction prevents a common mistake: residuals and fitted values are vectors with \(n\) entries, while coefficient directions have \(p+1\) entries.
+
+\section{Column Space and Left Null Space}
+
+The fitted values satisfy
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}}.
+\end{equation}
+Therefore, \(\widehat{\mathbf{y}}\) is a linear combination of the columns of \(\mathbf{X}\):
+\begin{equation}
+  \widehat{\mathbf{y}}\in\operatorname{Col}(\mathbf{X}).
+\end{equation}
+The residual vector satisfies the normal equations:
+\begin{equation}
+  \mathbf{X}^T\mathbf{e}=\mathbf{0}.
+\end{equation}
+Therefore,
+\begin{equation}
+  \mathbf{e}\in\operatorname{Null}(\mathbf{X}^T).
+\end{equation}
+Since \(\operatorname{Null}(\mathbf{X}^T)\) is the orthogonal complement of \(\operatorname{Col}(\mathbf{X})\), every residual vector is orthogonal to every fitted-value direction.
+
+This is the geometric core of regression diagnostics:
+\begin{equation}
+  \mathbf{y}=\widehat{\mathbf{y}}+\mathbf{e},
+  \qquad
+  \widehat{\mathbf{y}}\perp \mathbf{e}.
+\end{equation}
+
+\section{Row Space and Null Space}
+
+The row space and null space of \(\mathbf{X}\) live in coefficient space.  They answer a different question:
+\begin{quote}
+  Which coefficient directions change fitted values, and which coefficient directions are invisible to the data?
+\end{quote}
+
+A vector \(\mathbf{v}\in\mathbb{R}^{p+1}\) is in the null space of \(\mathbf{X}\) if
+\begin{equation}
+  \mathbf{X}\mathbf{v}=\mathbf{0}.
+\end{equation}
+If \(\mathbf{v}\ne\mathbf{0}\), then changing the coefficient vector in the direction \(\mathbf{v}\) does not change fitted values:
+\begin{equation}
+  \mathbf{X}(\boldsymbol{\beta}+c\mathbf{v})
+  =\mathbf{X}\boldsymbol{\beta}+c\mathbf{X}\mathbf{v}
+  =\mathbf{X}\boldsymbol{\beta}
+\end{equation}
+for any scalar \(c\).  Therefore, \(\mathbf{v}\) is a non-identifiable direction.
+
+The row space contains coefficient directions that the data can see.  The null space contains coefficient directions that the data cannot see.
+
+\section{Identifiability}
+
+A parameter is identifiable when different parameter values imply different observable behavior.  In linear regression, the coefficient vector \(\boldsymbol{\beta}\) is identifiable when the mapping
+\begin{equation}
+  \boldsymbol{\beta}\mapsto \mathbf{X}\boldsymbol{\beta}
+\end{equation}
+is one-to-one.
+
+This happens exactly when
+\begin{equation}
+  \operatorname{Null}(\mathbf{X})=\{\mathbf{0}\}.
+\end{equation}
+Equivalently, the columns of \(\mathbf{X}\) must be linearly independent.
+
+For \(\mathbf{X}\in\mathbb{R}^{n\times(p+1)}\), the following statements are equivalent:
+\begin{enumerate}
+  \item \(\boldsymbol{\beta}\) is identifiable.
+  \item \(\operatorname{Null}(\mathbf{X})=\{\mathbf{0}\}\).
+  \item The columns of \(\mathbf{X}\) are linearly independent.
+  \item \(\operatorname{rank}(\mathbf{X})=p+1\).
+  \item \(\mathbf{X}^T\mathbf{X}\) is invertible.
+  \item The least squares coefficient vector
+  \begin{equation}
+    \widehat{\boldsymbol{\beta}}=(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}
+  \end{equation}
+  is unique.
+\end{enumerate}
+
+\paragraph{Why \(\mathbf{X}^T\mathbf{X}\) matters.}
+For any \(\mathbf{v}\),
+\begin{equation}
+  \mathbf{v}^T\mathbf{X}^T\mathbf{X}\mathbf{v}=\|\mathbf{X}\mathbf{v}\|^2.
+\end{equation}
+If \(\mathbf{X}\mathbf{v}=\mathbf{0}\) for some nonzero \(\mathbf{v}\), then \(\mathbf{X}^T\mathbf{X}\) cannot be invertible.  Conversely, if \(\mathbf{X}^T\mathbf{X}\) is singular, then there is a nonzero \(\mathbf{v}\) such that \(\mathbf{X}\mathbf{v}=\mathbf{0}\).  Thus, \(\mathbf{X}^T\mathbf{X}\) is invertible exactly when \(\mathbf{X}\) has no nonzero null directions.
+
+\section{What Fails When the Model Is Not Identified?}
+
+When \(\operatorname{Null}(\mathbf{X})\ne\{\mathbf{0}\}\), there are infinitely many coefficient vectors that produce the same fitted values.  If \(\mathbf{v}\in\operatorname{Null}(\mathbf{X})\), then
+\begin{equation}
+  \mathbf{X}\widehat{\boldsymbol{\beta}}
+  =\mathbf{X}(\widehat{\boldsymbol{\beta}}+c\mathbf{v})
+\end{equation}
+for every scalar \(c\).  The data cannot distinguish \(\widehat{\boldsymbol{\beta}}\) from \(\widehat{\boldsymbol{\beta}}+c\mathbf{v}\).
+
+Two important consequences follow:
+\begin{enumerate}
+  \item The coefficient vector is not unique.
+  \item The fitted values may still be unique, because the projection of \(\mathbf{y}\) onto \(\operatorname{Col}(\mathbf{X})\) is unique.
+\end{enumerate}
+
+Thus, non-identifiability is primarily a coefficient problem.  The model may still make fitted predictions, but the individual coefficients cannot be interpreted uniquely.
+
+\CoreCompress{
+\section{Non-Identifiability Example: Celsius and Fahrenheit}
+
+Suppose a model includes an intercept, temperature measured in Celsius, and temperature measured in Fahrenheit:
+\begin{equation}
+  y_i=\beta_0+\beta_C C_i+\beta_F F_i+\epsilon_i.
+\end{equation}
+The two temperature predictors are exactly related:
+\begin{equation}
+  F_i=\frac{9}{5}C_i+32.
+\end{equation}
+The design matrix is
+\begin{equation}
+  \mathbf{X}=\begin{bmatrix}
+    1 & C_1 & F_1 \\
+    1 & C_2 & F_2 \\
+    \vdots & \vdots & \vdots \\
+    1 & C_n & F_n
+  \end{bmatrix}.
+\end{equation}
+The columns are linearly dependent because
+\begin{equation}
+  \mathbf{x}_F-\frac{9}{5}\mathbf{x}_C-32\mathbf{1}=\mathbf{0}.
+\end{equation}
+Equivalently,
+\begin{equation}
+  \mathbf{X}\begin{bmatrix}-32\\-9/5\\1\end{bmatrix}=\mathbf{0}.
+\end{equation}
+Therefore,
+\begin{equation}
+  \begin{bmatrix}-32\\-9/5\\1\end{bmatrix}\in\operatorname{Null}(\mathbf{X}).
+\end{equation}
+This means that coefficient vectors can move in this direction without changing predictions.
+
+For example, the coefficient vector
+\begin{equation}
+  \boldsymbol{\beta}=\begin{bmatrix}10\\2\\0\end{bmatrix}
+\end{equation}
+gives
+\begin{equation}
+  \widehat{y}=10+2C.
+\end{equation}
+But adding the null-space vector gives
+\begin{equation}
+  \boldsymbol{\beta}^{\star}
+  =\begin{bmatrix}10\\2\\0\end{bmatrix}
+  +\begin{bmatrix}-32\\-9/5\\1\end{bmatrix}
+  =\begin{bmatrix}-22\\1/5\\1\end{bmatrix}.
+\end{equation}
+This gives
+\begin{align}
+  \widehat{y}^{\star}
+  &=-22+\frac{1}{5}C+F \\
+  &=-22+\frac{1}{5}C+\left(\frac{9}{5}C+32\right) \\
+  &=10+2C.
+\end{align}
+The predictions are identical, but the coefficient interpretations are different.  Therefore, the individual Celsius and Fahrenheit coefficients are not identified.
+}{
+\section{Non-Identifiability Example: Celsius and Fahrenheit}
+
+If a model includes an intercept, Celsius, and Fahrenheit, then one column is an exact affine transformation of another:
+\begin{equation}
+  F_i = 1.8C_i+32.
+\end{equation}
+In column form,
+\begin{equation}
+  \mathbf{f}=1.8\mathbf{c}+32\mathbf{1}.
+\end{equation}
+Thus the columns \(\mathbf{1}\), \(\mathbf{c}\), and \(\mathbf{f}\) are linearly dependent.  The fitted values may still be unique, but the individual Celsius and Fahrenheit coefficients are not.
+}
+\section{Common Sources of Non-Identifiability}
+
+Exact non-identifiability usually comes from exact linear dependence among columns of the design matrix.  Common examples include:
+\begin{enumerate}
+  \item \textbf{Duplicate variables}: including the same predictor twice.
+  \item \textbf{Unit conversions}: including meters and feet, or Celsius and Fahrenheit, in a model with an intercept.
+  \item \textbf{The dummy variable trap}: including an intercept and all category indicator columns.
+  \item \textbf{Derived totals}: including all component variables and their exact sum.
+  \item \textbf{Too many predictors}: if \(p+1>n\), then \(\mathbf{X}\) cannot have full column rank.
+\end{enumerate}
+
+\paragraph{Dummy variable trap.}
+Suppose a categorical variable has three levels: Army, Navy, and Marine Corps.  Let \(\mathbf{d}_A,\mathbf{d}_N,\mathbf{d}_M\) be the three indicator columns.  For every row,
+\begin{equation}
+  d_{iA}+d_{iN}+d_{iM}=1.
+\end{equation}
+Thus,
+\begin{equation}
+  \mathbf{d}_A+\mathbf{d}_N+\mathbf{d}_M=\mathbf{1}.
+\end{equation}
+If the design matrix includes \(\mathbf{1}\), \(\mathbf{d}_A\), \(\mathbf{d}_N\), and \(\mathbf{d}_M\), then its columns are linearly dependent.  The usual repair is to include the intercept and drop one category indicator as the reference group.
+
+\section{Near Non-Identifiability: Multicollinearity}
+
+Exact linear dependence causes exact non-identifiability.  Near linear dependence causes instability.  This is multicollinearity.
+
+If one column of \(\mathbf{X}\) is almost a linear combination of other columns, then \(\mathbf{X}^T\mathbf{X}\) may still be invertible, but it is close to singular.  The least squares coefficients exist, but small changes in the data can produce large changes in the coefficient estimates.
+
+This matters because:
+\begin{enumerate}
+  \item coefficient standard errors become large,
+  \item signs and magnitudes can be unstable,
+  \item individual coefficient interpretations become fragile, and
+  \item predictions may remain reasonable even while coefficients are hard to interpret.
+\end{enumerate}
+
+\paragraph{Operational distinction.}
+\begin{center}
+\begin{tabular}{|p{0.30\textwidth}|p{0.34\textwidth}|p{0.24\textwidth}|}
+\hline
+\textbf{Condition} & \textbf{Design-matrix geometry} & \textbf{Consequence} \\
+\hline
+Exact dependence & Nonzero \(\operatorname{Null}(\mathbf{X})\) & Coefficients not unique \\
+\hline
+Near dependence & Columns nearly dependent & Coefficients unstable \\
+\hline
+Full rank and well-conditioned & Columns independent and not nearly redundant & Coefficients more stable \\
+\hline
+\end{tabular}
+\end{center}
+
+\CoreCompress{
+\section{Worked Example: Counting Regression Degrees of Freedom}
+
+Suppose we have \(n=40\) observations and fit an MLR model with an intercept and \(p=5\) predictors.  If the design matrix has full column rank, then
+\begin{equation}
+  \mathbf{X}\in\mathbb{R}^{40\times 6},
+  \qquad
+  \operatorname{rank}(\mathbf{X})=6.
+\end{equation}
+The fitted values live in a \(6\)-dimensional subspace:
+\begin{equation}
+  \dim\operatorname{Col}(\mathbf{X})=6.
+\end{equation}
+The residuals live in the orthogonal complement:
+\begin{equation}
+  \dim\operatorname{Null}(\mathbf{X}^T)=40-6=34.
+\end{equation}
+Therefore,
+\begin{equation}
+  \boxed{\operatorname{df}_{\text{resid}}=34.}
+\end{equation}
+
+For the overall \(F\)-test comparing the full model to the intercept-only model,
+\begin{equation}
+  \text{numerator df}=5,
+  \qquad
+  \text{denominator df}=34.
+\end{equation}
+The numerator has \(5\) degrees of freedom because the full model adds five predictor directions beyond the mean-only model.
+}{
+\section{Worked Example: Counting Regression Degrees of Freedom}
+
+If \(n=40\) and we fit an MLR model with an intercept and \(p=5\) predictors, then the full-rank design matrix has \(p+1=6\) columns.  The fitted values live in a 6-dimensional subspace, and the residuals have
+\begin{equation}
+  40-6=34
+\end{equation}
+residual degrees of freedom.  The overall \(F\)-test has numerator degrees of freedom \(5\) and denominator degrees of freedom \(34\).
+}
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for checking rank, residual degrees of freedom, and non-identifiability have been moved to the separate Coding and Software Cookbook companion.  The main chapter keeps the degrees-of-freedom and subspace interpretation.
+
+\section{Common Mistakes}
+
+\begin{enumerate}
+  \item \textbf{Forgetting the intercept.}  With an intercept and \(p\) predictors, the design matrix has \(p+1\) columns, not \(p\).
+  \item \textbf{Mixing up fitted-space dimension and regression \(F\)-test numerator df.}  The fitted subspace has dimension \(p+1\), but the overall \(F\)-test numerator df is \(p\) when comparing to the intercept-only model.
+  \item \textbf{Thinking residuals live in predictor space.}  Residuals are \(n\)-vectors.  They live in \(\mathbb{R}^n\), not in \(\mathbb{R}^p\).
+  \item \textbf{Thinking coefficient null-space directions are residual directions.}  \(\operatorname{Null}(\mathbf{X})\) lives in coefficient space, while \(\operatorname{Null}(\mathbf{X}^T)\) lives in observation space.
+  \item \textbf{Using \((\mathbf{X}^T\mathbf{X})^{-1}\) when \(\mathbf{X}\) is rank deficient.}  If columns are dependent, the inverse does not exist.
+  \item \textbf{Assuming fitted values are not unique when coefficients are not unique.}  Coefficients may be non-unique while the projection \(\widehat{\mathbf{y}}\) is still unique.
+  \item \textbf{Checking only pairwise correlations for identifiability.}  A column can be a combination of several others even if no single pair looks perfectly correlated.
+  \item \textbf{Including every dummy variable plus an intercept.}  This creates exact linear dependence.
+  \item \textbf{Treating multicollinearity as a prediction failure only.}  Multicollinearity often harms coefficient interpretation before it visibly harms prediction.
+\end{enumerate}
+
+\CoreCompress{
+\section{Chapter Summary}
+
+Degrees of freedom are best understood as dimensions.  An \(n\)-vector of observations begins with \(n\) dimensions.  Estimating the sample mean projects \(\mathbf{y}\) onto \(\operatorname{span}\{\mathbf{1}\}\), leaving residual variation in an \((n-1)\)-dimensional orthogonal complement.
+
+Regression generalizes the same idea.  The design matrix \(\mathbf{X}\) defines the fitted-value subspace.  If \(\mathbf{X}\in\mathbb{R}^{n\times(p+1)}\) has full column rank, then fitted values live in a \((p+1)\)-dimensional column space, and residuals live in an \((n-p-1)\)-dimensional orthogonal complement.  Thus,
+\begin{equation}
+  \operatorname{df}_{\text{resid}}=n-p-1.
+\end{equation}
+
+The four fundamental subspaces of \(\mathbf{X}\) organize the regression geometry:
+\begin{align}
+  \operatorname{Col}(\mathbf{X}) &\quad \text{contains fitted values}, \\
+  \operatorname{Null}(\mathbf{X}^T) &\quad \text{contains residuals}, \\
+  \operatorname{Row}(\mathbf{X}) &\quad \text{contains identifiable coefficient directions}, \\
+  \operatorname{Null}(\mathbf{X}) &\quad \text{contains non-identifiable coefficient directions}.
+\end{align}
+
+Identifiability requires \(\operatorname{Null}(\mathbf{X})=\{\mathbf{0}\}\).  If the design matrix has linearly dependent columns, then infinitely many coefficient vectors can produce the same fitted values.  The Celsius/Fahrenheit example shows this directly: including an intercept, Celsius, and Fahrenheit creates exact linear dependence because Fahrenheit is an affine transformation of Celsius.
+
+\section{Math Foundations Source Map}
+
+This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
+
+\begin{center}
+\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
+\hline
+\textbf{Chapter 8 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
+\hline
+Data vectors and mean vectors & Vector notation in \(\mathbb{R}^n\), coordinates, and the ones vector \(\mathbf{1}\) & Ch02 Secs. 2.1, 2.2, 2.4, 2.6; Ch06 Sec. 6.5 \\
+\hline
+Mean and residual decomposition & Dot products, \(\mathbf{1}^T\mathbf{a}=\sum a_i\), and sample-mean notation & Ch02 Secs. 2.4, 2.6; Ch05 Secs. 5.1, 5.3 \\
+\hline
+Orthogonal complements & Euclidean norms, distances, angles, and the condition \(\mathbf{a}^T\mathbf{b}=0\) for orthogonality & Ch04 Secs. 4.1, 4.2, 4.4; Ch05 Secs. 5.5, 5.7, 5.8 \\
+\hline
+Column space and fitted values & Matrix-vector multiplication as row inner products and as a linear combination of columns & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3; Ch07 Secs. 7.1, 7.6.1, 7.6.2; Ch11 Sec. 11.2 \\
+\hline
+Rank, basis, and full column rank intuition & Linear independence, bases, and unique linear-combination representations & Ch06 Secs. 6.3, 6.5; Ch10 Sec. 10.5 \\
+\hline
+Matrix dimensions and transpose notation & Matrix sizes, tall/wide matrices, identity matrices, transposes, and symmetry & Ch07 Secs. 7.1, 7.3, 7.4 \\
+\hline
+Left-inverse and identifiability bridge & Left inverse, linearly independent columns, the trivial-solution criterion, and the equivalence between full column rank and invertibility of \(\mathbf{A}^T\mathbf{A}\) & Ch06 Sec. 6.3; Ch10 Secs. 10.1, 10.3, 10.5, 10.6; Ch11 Sec. 11.4 \\
+\hline
+Computational check & Python/NumPy matrix operations, matrix shapes, and transposes & Ch07 Secs. 7.1, 7.4, 7.7 \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after a degrees-of-freedom or identifiability problem.
+
+\begin{enumerate}
+  \item Can you identify \(n\), \(p\), and the dimensions of \(\mathbf{X}\)?
+  \item Can you determine \(r=\operatorname{rank}(\mathbf{X})\)?
+  \item Can you state fitted-space degrees of freedom \(r\) and residual degrees of freedom \(n-r\)?
+  \item In the full-rank intercept model, can you simplify residual degrees of freedom to \(n-p-1\)?
+  \item Can you explain why identifiability requires \(\operatorname{Null}(\mathbf{X})=\{\mathbf{0}\}\)?
+  \item Can you recognize exact dependence, such as redundant columns or the dummy-variable trap?
+  \item Can you distinguish exact non-identifiability from near dependence or multicollinearity?
+\end{enumerate}
+}{
+\section{Chapter Summary}
+
+Degrees of freedom are leftover dimensions.  An \(n\)-vector of observations begins with \(n\) independent coordinates.  Estimating the mean consumes one dimension, leaving \(n-1\) dimensions for residual variation.
+
+Regression generalizes the same idea.  For a full-rank design matrix with an intercept and \(p\) predictors,
+\begin{equation}
+  \operatorname{df}_{\text{resid}}=n-p-1.
+\end{equation}
+The fitted values live in \(\operatorname{Col}(\mathbf{X})\), and the residuals live in \(\operatorname{Null}(\mathbf{X}^T)\).
+
+Identifiability requires \(\operatorname{Null}(\mathbf{X})=\{\mathbf{0}\}\).  If the design matrix has dependent columns, multiple coefficient vectors can produce the same fitted values.  Exact dependence creates non-identifiability; near dependence creates unstable coefficient estimates.
+
+\paragraph{Can you do this?}
+You should be able to count residual degrees of freedom, distinguish fitted-space dimension from regression-test numerator degrees of freedom, identify the four subspaces in regression language, and recognize common non-identifiability patterns such as duplicated variables, unit conversions, and the dummy-variable trap.  The full reference text contains the complete Math Foundations source map and reusable study template.
+}

@@ -1,0 +1,281 @@
+% Front matter notation guide for the OA3103 Data Analysis textbook.
+% Intended placement: before Chapter 1, after the table of contents if desired.
+\chapter*{Notation Guide}
+\addcontentsline{toc}{chapter}{Notation Guide}
+\label{chap:notation-guide}
+
+\CoreCompress{
+This guide collects the notation used across the regression portion of the text.  It is not a replacement for the chapter explanations; it is a quick reference for keeping the object types straight.
+\CoreOnly{
+
+This Core Reader version keeps only the notation needed to stay oriented through the main regression arc.  The full reference build keeps fuller notation detail and the chapter-by-chapter Math Foundations source maps; package-specific code lives in the separate Coding and Software Cookbook companion.
+}
+
+\section*{Object Types}
+
+\CoreCompress{
+\begin{center}
+\begin{tabular}{p{0.20\textwidth}p{0.28\textwidth}p{0.42\textwidth}}
+\toprule
+\textbf{Notation} & \textbf{Object type} & \textbf{How to read it} \\
+\midrule
+$x$, $y$, $b$, $p$, $n$ & scalars & Single numerical values or indices. \\
+$X$, $Y$, $\epsilon$ & random variables & Population-level or model-level random quantities. \\
+$\mathbf{x}$, $\mathbf{y}$, $\mathbf{e}$ & vectors & Observed sample-level vectors, usually in $\mathbb{R}^n$. \\
+$\mathbf{X}$, $\mathbf{H}$, $\mathbf{I}_n$ & matrices & Data, projection, or identity matrices. \\
+$\boldsymbol{\beta}$, $\boldsymbol{\epsilon}$ & parameter/error vectors & Coefficient and error vectors in regression models. \\
+$\widehat{\phantom{a}}$ & estimate or fitted quantity & A hat marks something estimated from data or predicted by a fitted model. \\
+\bottomrule
+\end{tabular}
+\end{center}
+}{
+\begin{center}
+\begin{tabular}{p{0.24\textwidth}p{0.24\textwidth}p{0.40\textwidth}}
+\toprule
+\textbf{Notation} & \textbf{Object type} & \textbf{Core meaning} \\
+\midrule
+$x$, $y$, $b$, $n$, $p$ & scalars & Single values, counts, or indices. \\
+$X$, $Y$, $\epsilon$ & random quantities & Population-level random variables in the model. \\
+$\mathbf{x}$, $\mathbf{y}$, $\mathbf{e}$ & observed vectors & Sample-level predictor, response, and residual vectors. \\
+$\mathbf{X}$, $\mathbf{H}$, $\mathbf{I}_n$ & matrices & Design, projection, and identity matrices. \\
+$\widehat{\boldsymbol{\beta}}$, $\widehat{\mathbf{y}}$ & fitted quantities & Estimated coefficients and fitted values. \\
+\bottomrule
+\end{tabular}
+\end{center}
+}
+
+\section*{Data and Statistical Learning Notation}
+
+\CoreCompress{
+For a single observation, $\mathbf{x}=(x_1,\ldots,x_p)^T$ is the vector of $p$ input values and $Y$ is the response.  The general supervised-learning model is
+\[
+  Y=f(\mathbf{X})+\epsilon,
+\]
+where $f$ is the systematic relationship and $\epsilon$ is the unexplained error.
+
+For a data set with $n$ observations, $i$ indexes observations and $j$ indexes variables:
+\[
+  x_{ij}=\text{value of predictor }j\text{ for observation }i.
+\]
+The observed response vector is
+\[
+  \mathbf{y}=(y_1,\ldots,y_n)^T.
+\]
+The notation $\mathbf{x}_j$ means the full observed column of predictor $j$.  The notation $\mathbf{x}_i^T$ means the row of predictors for observation $i$.
+}{
+For a single observation, $\mathbf{x}=(x_1,\ldots,x_p)^T$ is the predictor vector and $Y$ is the response.  The general supervised-learning model is
+\[
+  Y=f(\mathbf{X})+\epsilon,
+\]
+where $f$ is the systematic part of the relationship and $\epsilon$ is the unexplained error.
+
+For a sample of size $n$, the observed response vector is
+\[
+  \mathbf{y}=(y_1,\ldots,y_n)^T,
+\]
+and the design matrix \(\mathbf{X}\) collects the observed predictor columns.  The notation $x_{ij}$ means predictor $j$ for observation $i$.
+}
+
+\section*{Regression Notation}
+
+\CoreCompress{
+In the regression chapters, the design matrix $\mathbf{X}$ includes an intercept column unless stated otherwise.  With $p$ predictors and an intercept,
+\[
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)},
+  \qquad
+  \boldsymbol{\beta}\in\mathbb{R}^{p+1}.
+\]
+The fitted values and residuals are
+\[
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}},
+  \qquad
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}.
+\]
+The true error vector is $\boldsymbol{\epsilon}$; the residual vector is $\mathbf{e}$.  Errors are part of the data-generating model and are not observed.  Residuals are computed after fitting a model.
+
+The ordinary least squares estimator is
+\[
+  \widehat{\boldsymbol{\beta}}
+  = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y},
+\]
+when $\mathbf{X}$ has full column rank.  The hat matrix is
+\[
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T,
+  \qquad
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}.
+\]
+The residual-maker matrix is $\mathbf{I}_n-\mathbf{H}$.
+}{
+In the regression chapters, the design matrix $\mathbf{X}$ includes an intercept column unless stated otherwise.  With $p$ predictors and an intercept,
+\[
+  \mathbf{X}\in\mathbb{R}^{n\times(p+1)},
+  \qquad
+  \boldsymbol{\beta}\in\mathbb{R}^{p+1}.
+\]
+The fitted values and residuals are
+\[
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}},
+  \qquad
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}.
+\]
+When \(\mathbf{X}\) has full column rank, ordinary least squares gives
+\[
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y},
+  \qquad
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+  \qquad
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+\]
+}
+
+\section*{Observed Vector Versus Random Vector}
+
+\CoreCompress{
+Most chapters use $\mathbf{y}$ for the observed response vector from the data set in hand.  Chapter~\ref{chap:truth-error-estimator-behavior-residual-geometry} temporarily uses $\mathbf{Y}$ because it studies the fixed-design theoretical model
+\[
+  \mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+\]
+where $\mathbf{X}$ is treated as fixed and $\mathbf{Y}$ varies randomly through $\boldsymbol{\epsilon}$.  After that theory chapter, the text returns to $\mathbf{y}$ when discussing a realized fitted model.
+}{
+Most chapters use $\mathbf{y}$ for the observed response vector from the data set in hand.  Chapter~\ref{chap:truth-error-estimator-behavior-residual-geometry} temporarily uses $\mathbf{Y}$ because it studies the fixed-design theoretical model
+\[
+  \mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+\]
+where the design matrix is fixed and the response vector is random through \(\boldsymbol{\epsilon}\).
+}
+
+\section*{Fit, Testing, and Diagnostics}
+
+\CoreCompress{
+\begin{center}
+\begin{tabular}{p{0.20\textwidth}p{0.72\textwidth}}
+\toprule
+\textbf{Notation} & \textbf{Meaning} \\
+\midrule
+RSS & Residual sum of squares, $\sum_i (y_i-\widehat{y}_i)^2=\|\mathbf{e}\|^2$. \\
+TSS & Total sum of squares, $\sum_i (y_i-\bar{y})^2$. \\
+RegSS & Regression or explained sum of squares, often $\mathrm{TSS}-\mathrm{RSS}$ when an intercept is included. \\
+$R^2$ & Proportion of response variation explained relative to the mean-only baseline. \\
+RSE & Residual standard error, the estimated residual standard deviation. \\
+$h_{ii}$ & Leverage of observation $i$, the $i$th diagonal entry of $\mathbf{H}$. \\
+\bottomrule
+\end{tabular}
+\end{center}
+}{
+\begin{center}
+\begin{tabular}{p{0.20\textwidth}p{0.72\textwidth}}
+\toprule
+\textbf{Notation} & \textbf{Meaning} \\
+\midrule
+RSS & Residual sum of squares, \(\sum_i (y_i-\widehat{y}_i)^2=\|\mathbf{e}\|^2\). \\
+TSS & Total sum of squares relative to the mean-only baseline. \\
+$R^2$ & Fraction of response variation explained relative to that baseline. \\
+RSE & Estimated residual standard deviation. \\
+$h_{ii}$ & Leverage of observation \(i\), the \(i\)th diagonal entry of \(\mathbf{H}\). \\
+\bottomrule
+\end{tabular}
+\end{center}
+}
+
+\section*{The Big Three Regression Assumptions}
+
+The regression chapters use a common three-step assumption ladder:
+\begin{enumerate}
+  \item \textbf{Mean-zero errors:} the model is centered correctly, e.g. $\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{X}]=\mathbf{0}$.
+  \item \textbf{Constant variance and uncorrelated errors:} $\operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}_n$.
+  \item \textbf{Gaussian errors:} $\boldsymbol{\epsilon}\mid\mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n)$.
+\end{enumerate}
+The stronger assumptions support stronger inferential claims, but they are not all needed for every modeling task.
+
+\section*{Linear Models}
+
+\CoreCompress{
+Early chapters use ``linear'' in the familiar geometric sense: a line, plane, or hyperplane in the displayed predictors.  Chapter~\ref{chap:linear-models-beyond-straight-lines} sharpens the definition: for least squares, the key requirement is that the model be linear in the unknown coefficients.  Curved functions of the original predictors can still be linear models if they can be written as a design matrix times a coefficient vector plus error.
+}{
+Early chapters use ``linear'' in the familiar geometric sense: a line, plane, or hyperplane in the displayed predictors.  Chapter~\ref{chap:linear-models-beyond-straight-lines} sharpens the definition: for least squares, the key requirement is linearity in the unknown coefficients, not straightness in the original variables.
+}
+}{
+This guide is a compact reference for the symbols used across the regression portion of the Core Reader.  The full reference build contains additional notation detail and Math Foundations source-map tables; package-specific code lives in the separate Coding and Software Cookbook companion.
+
+\section*{Object Types}
+
+\begin{center}
+\begin{tabular}{p{0.22\textwidth}p{0.25\textwidth}p{0.43\textwidth}}
+\toprule
+\textbf{Notation} & \textbf{Object type} & \textbf{Core meaning} \\
+\midrule
+$x$, $y$, $n$, $p$ & scalars & Single values, counts, or indices. \\
+$X$, $Y$, $\epsilon$ & random quantities & Population/model-level random variables. \\
+$\mathbf{x}$, $\mathbf{y}$, $\mathbf{e}$ & observed vectors & Sample-level predictor, response, and residual vectors. \\
+$\mathbf{X}$, $\mathbf{H}$, $\mathbf{I}_n$ & matrices & Design, projection, and identity matrices. \\
+$\boldsymbol{\beta}$, $\widehat{\boldsymbol{\beta}}$ & coefficient vectors & True and estimated regression coefficients. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Data and Regression Objects}
+
+For one observation, $\mathbf{x}=(x_1,\ldots,x_p)^T$ is the predictor vector and $Y$ is the response.  The general supervised-learning model is
+\[
+  Y=f(\mathbf{X})+\epsilon,
+\]
+where $f$ is the systematic relationship and $\epsilon$ is unexplained error.
+
+For a sample of size $n$, the observed response vector is
+\[
+  \mathbf{y}=(y_1,\ldots,y_n)^T.
+\]
+In regression, the design matrix $\mathbf{X}\in\mathbb{R}^{n\times(p+1)}$ usually includes an intercept column, and
+\[
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}},
+  \qquad
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}.
+\]
+When $\mathbf{X}$ has full column rank,
+\[
+  \widehat{\boldsymbol{\beta}}
+  =(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y},
+  \qquad
+  \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y},
+  \qquad
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T.
+\]
+The matrix $\mathbf{H}$ is the \emph{hat matrix}.  It turns observed responses into fitted responses.
+
+\section*{Errors, Residuals, and Assumptions}
+
+The error vector $\boldsymbol{\epsilon}$ belongs to the data-generating model and is not observed.  The residual vector $\mathbf{e}$ is computed after fitting the model.  In Chapter~\ref{chap:truth-error-estimator-behavior-residual-geometry}, the text temporarily writes $\mathbf{Y}$ for the random response vector under the fixed-design model
+\[
+  \mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}.
+\]
+Most other chapters use $\mathbf{y}$ for the observed response vector from the data set in hand.
+
+The regression chapters use the same three-step assumption ladder:
+\begin{enumerate}
+  \item \textbf{Mean-zero errors:} $\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{X}]=\mathbf{0}$.
+  \item \textbf{Constant variance and uncorrelated errors:} $\operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X})=\sigma^2\mathbf{I}_n$.
+  \item \textbf{Gaussian errors:} $\boldsymbol{\epsilon}\mid\mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n)$.
+\end{enumerate}
+Stronger assumptions support stronger inferential claims.
+
+\section*{Fit and Diagnostic Quantities}
+
+\begin{center}
+\begin{tabular}{p{0.18\textwidth}p{0.74\textwidth}}
+\toprule
+\textbf{Notation} & \textbf{Meaning} \\
+\midrule
+RSS & Residual sum of squares, $\sum_i (y_i-\widehat{y}_i)^2=\|\mathbf{e}\|^2$. \\
+TSS & Total sum of squares relative to the mean-only baseline. \\
+$R^2$ & Fraction of response variation explained relative to that baseline. \\
+RSE & Estimated residual standard deviation. \\
+$h_{ii}$ & Leverage of observation $i$, the $i$th diagonal entry of $\mathbf{H}$. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Linear Models}
+
+Early chapters use ``linear'' in the familiar geometric sense: a line, plane, or hyperplane in the displayed predictors.  Chapter~\ref{chap:linear-models-beyond-straight-lines} sharpens the definition: for least squares, the key requirement is linearity in the unknown coefficients, not straightness in the original variables.
+}

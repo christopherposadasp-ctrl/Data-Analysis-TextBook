@@ -1,0 +1,276 @@
+\chapter{Sets, Set Operations, and Quantifiers}
+\label{mf:ch04-sets-set-operations-quantifiers}
+
+The previous chapters introduced vectors and vector operations. We now return to set theory, which gives precise language for membership, exclusion, filtering, and collections of objects. In operations research and data analysis, set notation appears whenever we describe feasible choices, valid values, selected observations, selected variables, or assumptions that must hold over a collection.
+
+The main idea is simple: a set is a collection of objects, and a membership statement such as \(x\in S\) is either true or false. We can therefore combine set notation with the logical connectives from Chapter 1.
+
+\section{Sets and Membership}
+\label{mf:set-membership}
+
+If \(S\) is a set, then
+\[
+    x\in S
+\]
+means that \(x\) is an element of \(S\), while
+\[
+    x\notin S
+\]
+means that \(x\) is not an element of \(S\). A set may be described by listing its elements, such as
+\[
+    A=\{2,4,6,8,10\},
+\]
+or by giving a membership rule, such as
+\[
+    S=\{x\in\mathbb{R}:0\leq x\leq 1\}.
+\]
+Here the universe is \(\mathbb{R}\), and the rule says that a real number belongs to \(S\) exactly when it lies between 0 and 1, inclusive.
+
+The complement of \(S\), written \(S^c\), is the set of objects in the relevant universe that do not belong to \(S\):
+\[
+    S^c=\{x:x\notin S\}.
+\]
+For the interval above,
+\[
+    S^c=\{x\in\mathbb{R}:x<0\text{ or }x>1\}.
+\]
+This follows by negating the membership condition:
+\[
+    x\notin S
+    \quad\Longleftrightarrow\quad
+    \neg(x\geq 0\text{ and }x\leq 1)
+    \quad\Longleftrightarrow\quad
+    x<0\text{ or }x>1.
+\]
+
+\section{Set Operations}
+\label{mf:set-operations}
+\label{mf:set-union-intersection}
+\label{mf:set-complement}
+
+Let \(R\) and \(S\) be sets. Their \emph{union} is
+\[
+    R\cup S=\{x:x\in R\text{ or }x\in S\},
+\]
+and their \emph{intersection} is
+\[
+    R\cap S=\{x:x\in R\text{ and }x\in S\}.
+\]
+The ``or'' in the union is inclusive: if \(x\) belongs to both sets, then \(x\in R\cup S\).
+
+Two other operations are especially useful. The \emph{set difference} is
+\[
+    R\setminus S=\{x:x\in R\text{ and }x\notin S\}=R\cap S^c.
+\]
+It keeps the part of \(R\) that is not in \(S\). The \emph{symmetric difference} is
+\[
+    R\triangle S=(R\setminus S)\cup(S\setminus R)
+    =(R\cap S^c)\cup(S\cap R^c).
+\]
+It keeps the objects that belong to exactly one of the two sets.
+\label{mf:set-difference}
+\label{mf:set-symmetric-difference}
+
+A useful way to remember these operations is through membership equivalences:
+\[
+\begin{aligned}
+    x\in A\cup B &\Longleftrightarrow (x\in A)\lor(x\in B),\\
+    x\in A\cap B &\Longleftrightarrow (x\in A)\land(x\in B),\\
+    x\in A^c &\Longleftrightarrow \neg(x\in A),\\
+    x\in A\setminus B &\Longleftrightarrow (x\in A)\land\neg(x\in B),\\
+    x\in A\triangle B &\Longleftrightarrow \bigl((x\in A)\land\neg(x\in B)\bigr)\lor\bigl((x\in B)\land\neg(x\in A)\bigr).
+\end{aligned}
+\]
+
+\section{De Morgan's Laws for Sets}
+\label{mf:set-demorgan}
+
+The De Morgan laws from logic have exact set versions:
+\[
+    (A\cap B)^c=A^c\cup B^c,
+    \qquad
+    (A\cup B)^c=A^c\cap B^c.
+\]
+The first law says that not being in both \(A\) and \(B\) is the same as being outside \(A\) or outside \(B\). The second says that not being in either \(A\) or \(B\) is the same as being outside both.
+
+These laws are just logical equivalences applied to membership statements. For example,
+\[
+\begin{aligned}
+    x\in(A\cap B)^c
+    &\Longleftrightarrow \neg(x\in A\cap B)\\
+    &\Longleftrightarrow \neg\bigl((x\in A)\land(x\in B)\bigr)\\
+    &\Longleftrightarrow \neg(x\in A)\lor\neg(x\in B)\\
+    &\Longleftrightarrow x\in A^c\cup B^c.
+\end{aligned}
+\]
+In data-cleaning language, the negation of ``valid height and valid weight'' is ``invalid height or invalid weight.''
+
+\section{Subsets, Equality, and Special Sets}
+\label{mf:subsets}
+\label{mf:set-equality}
+\label{mf:special-sets}
+
+A set \(B\) is a \emph{subset} of \(A\), written \(B\subseteq A\), if every element of \(B\) is also an element of \(A\):
+\[
+    B\subseteq A
+    \quad\Longleftrightarrow\quad
+    \forall x\,(x\in B\Rightarrow x\in A).
+\]
+Two sets are equal when they contain exactly the same elements:
+\[
+    A=B
+    \quad\Longleftrightarrow\quad
+    \forall x\,(x\in A\Leftrightarrow x\in B).
+\]
+A common way to prove \(A=B\) is to show both \(A\subseteq B\) and \(B\subseteq A\).
+
+Some special sets occur frequently:
+\begin{itemize}
+    \item \(\emptyset\) is the empty set, containing no elements.
+    \item A singleton is a set with exactly one element, such as \(\{5\}\).
+    \item The power set \(\mathcal{P}(A)\), also written \(2^A\), is the set of all subsets of \(A\).
+\end{itemize}
+\label{mf:power-set}
+For example, if \(A=\{1,2\}\), then
+\[
+    \mathcal{P}(A)=\{\emptyset,\{1\},\{2\},\{1,2\}\}.
+\]
+
+\section{Families of Sets and a Finite Example}
+\label{mf:set-families}
+\label{mf:indexed-unions-intersections}
+
+A collection of sets is called a \emph{family of sets}. If \(\mathcal{F}=\{A,B,C\}\), then
+\[
+    \bigcap_{S\in\mathcal{F}}S
+    \quad\text{and}\quad
+    \bigcup_{S\in\mathcal{F}}S
+\]
+mean the intersection and union over all sets in the family. Membership is defined by
+\[
+    x\in\bigcap_{S\in\mathcal{F}}S
+    \Longleftrightarrow x\in S\text{ for every }S\in\mathcal{F},
+\]
+and
+\[
+    x\in\bigcup_{S\in\mathcal{F}}S
+    \Longleftrightarrow x\in S\text{ for at least one }S\in\mathcal{F}.
+\]
+
+As a finite example, let
+\[
+    U=\{1,2,3,4,5,6,7,8,9,10\},
+\]
+\[
+    A=\{2,4,6,8,10\},\qquad B=\{3,6,9\},\qquad C=\{4,8\}.
+\]
+Then
+\[
+    A\cup C=A,\qquad A\cap C=C,\qquad C\subseteq A,
+\]
+and
+\[
+    A\setminus B=\{2,4,8,10\}.
+\]
+We can also sum over sets:
+\[
+    \sum_{x\in A}x=30,
+    \qquad
+    \sum_{x\in A\cap B}x=6,
+    \qquad
+    \sum_{x\in A\setminus B}x=24.
+\]
+This notation appears whenever a calculation is restricted to selected elements.
+\label{mf:finite-universe-example}
+\label{mf:set-sums}
+
+\section{Common Number Systems}
+\label{mf:common-number-systems}
+
+The notes use several standard number systems:
+\[
+\begin{aligned}
+    \mathbb{N} &= \{1,2,3,\ldots\},\\
+    \mathbb{Z} &= \{\ldots,-2,-1,0,1,2,\ldots\},\\
+    \mathbb{Q} &= \left\{\frac{a}{b}:a,b\in\mathbb{Z},\ b\neq 0\right\},\\
+    \mathbb{R} &= \text{the real numbers},\\
+    \mathbb{C} &= \text{the complex numbers}.
+\end{aligned}
+\]
+The set difference \(\mathbb{R}\setminus\mathbb{Q}\) is the set of irrational real numbers.
+
+\section{Quantified Statements}
+\label{mf:quantifiers}
+
+Quantifiers allow us to write statements about many objects at once. The universal quantifier \(\forall\) means ``for all,'' and the existential quantifier \(\exists\) means ``there exists.'' For example, ``every multiple of 6 is divisible by 3'' can be written as
+\[
+    \forall x\in\mathbb{Z},\quad 6\mid x\Rightarrow 3\mid x.
+\]
+Here \(6\mid x\) means ``6 divides \(x\).''
+
+\label{mf:quantifier-order}
+Quantifier order matters. The statement
+\[
+    \exists x\in\mathbb{Z}\ \text{such that}\ \forall y\in\mathbb{R},\ xy=-1
+\]
+is false because no single integer \(x\) can make \(xy=-1\) for every real number \(y\). The statement
+\[
+    \forall y\in\mathbb{R}\ \exists x\in\mathbb{Z}\ \text{such that}\ xy=-1
+\]
+is also false; for example, if \(y=2\), the required value would be \(x=-1/2\notin\mathbb{Z}\).
+
+The following examples illustrate the same point:
+\begin{itemize}
+    \item \(\exists y\in\mathbb{Z}\) such that \(\forall x\in\mathbb{Z},\ xy\geq 0\) is true; choose \(y=0\).
+    \item \(\forall x\in\mathbb{Z}\), \(\exists y\in\mathbb{Z}\) such that \(xy>0\) is false; \(x=0\) is a counterexample.
+    \item If the intended statement is ``for every nonzero integer \(x\), there exists an integer \(y\) such that \(xy>0\),'' then it is true; choose \(y=x\).
+\end{itemize}
+
+\section{Negating Quantified Statements}
+\label{mf:quantifier-negation}
+
+The two basic rules for negating quantified statements are
+\[
+    \neg\bigl(\exists x\ \text{such that}\ P(x)\bigr)
+    \Longleftrightarrow
+    \forall x,\ \neg P(x),
+\]
+and
+\[
+    \neg\bigl(\forall x,\ P(x)\bigr)
+    \Longleftrightarrow
+    \exists x\ \text{such that}\ \neg P(x).
+\]
+In words: to disprove an existential statement, show that no object works; to disprove a universal statement, give one counterexample.
+
+For example, the statement
+\[
+    \forall x\in\mathbb{Z},\quad x>0
+\]
+is false because its negation is
+\[
+    \exists x\in\mathbb{Z}\ \text{such that}\ x\leq 0,
+\]
+and \(x=0\) is a counterexample.
+
+\section{Data Analysis Bridge}
+\label{mf:ch04-data-analysis-bridge}
+
+Set notation is one of the cleanest ways to describe data-cleaning decisions. If \(I\) is the set of row indices in a data table and \(B\subseteq I\) is the set of rows with invalid weights, then \(I\setminus B\) is the set of rows retained after removing invalid cases. If \(J\) is the set of variable names and \(K\subseteq J\) is the set of variables selected for a model, then \(K\) is a subset of the available columns.
+
+Quantifiers make cleaning rules defensible. Instead of saying ``remove bad rows,'' an analyst should be able to state a predicate such as ``remove row \(i\) if \(\texttt{weight}_i\) is missing or \(\texttt{weight}_i\leq 0\).'' That predicate identifies a set of rows by a rule, and the cleaned data set is obtained by set difference.
+
+\section{Chapter Summary}
+\label{mf:ch04-summary}
+\label{mf:set-operations-summary}
+
+Carry forward these set-theory tools:
+\begin{itemize}
+    \item Set notation records membership, nonmembership, subsets, equality, empty sets, singletons, power sets, and families of sets.
+    \item Union, intersection, complement, difference, and symmetric difference can all be translated into membership statements.
+    \item De Morgan's laws describe complements of unions and intersections.
+    \item Quantifiers \(\forall\) and \(\exists\) formalize ``for every'' and ``there exists.'' Negation switches quantifier type.
+    \item In data analysis, filtering, subsetting, and cleaning rules are often set-membership rules written in operational language.
+\end{itemize}
+
+The next chapter returns to geometry: dot products, norms, distance, angles, and orthogonality.

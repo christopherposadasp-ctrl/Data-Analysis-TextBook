@@ -1,0 +1,307 @@
+\chapter{Subspaces: Column Space, Row Space, and Null Space}
+\label{mf:ch11-subspaces-column-row-null}
+
+Chapter 10 introduced rank, full rank, and inverse-like behavior. This chapter gives the geometric language behind those facts. Instead of asking only whether a matrix has independent rows or columns, we ask where the outputs of the matrix can live, which coefficient directions are invisible to the matrix, and how these spaces fit together.
+
+For a matrix \(A\in\mathbb{R}^{m\times n}\), there are three spaces that matter immediately:
+\[
+    \operatorname{Col}(A),\qquad
+    \operatorname{Row}(A),\qquad
+    \operatorname{Null}(A).
+\]
+The column space describes what right-hand sides can be reached by multiplying by \(A\). The row space describes the independent coefficient directions that the rows can detect. The null space describes the directions that \(A\) sends to zero. These ideas are especially important when a linear system is underdetermined or when a regression design matrix fails to identify a unique coefficient vector.
+
+\section{Subspaces}
+\label{mf:subspaces}
+
+A \emph{subspace} is a subset of a vector space that is itself a vector space. In this course, the most important vector spaces are \(\mathbb{R}^n\) and \(\mathbb{R}^m\). A subset \(S\subseteq \mathbb{R}^n\) is a subspace if it is nonempty and closed under linear combinations: whenever \(\mathbf{x},\mathbf{y}\in S\) and \(\alpha,\beta\in\mathbb{R}\),
+\[
+    \alpha\mathbf{x}+\beta\mathbf{y}\in S.
+\]
+
+This one closure rule includes both addition and scalar multiplication. For example, if \(S\) is a subspace, then taking \(\alpha=1\) and \(\beta=1\) shows that \(\mathbf{x}+\mathbf{y}\in S\), while taking \(\beta=0\) shows that \(\alpha\mathbf{x}\in S\). Because \(S\) is nonempty, it contains at least one vector \(\mathbf{x}\); then \(0\mathbf{x}=\mathbf{0}\), so the zero vector belongs to every subspace.
+
+A span is the basic source of subspaces. If \(\mathbf{v}_1,\ldots,\mathbf{v}_k\in\mathbb{R}^n\), then
+\[
+    \operatorname{span}\{\mathbf{v}_1,
+    \ldots,\mathbf{v}_k\}
+    =\{\beta_1\mathbf{v}_1+\cdots+\beta_k\mathbf{v}_k:
+    \beta_1,
+    \ldots,\beta_k\in\mathbb{R}\}
+\]
+is a subspace of \(\mathbb{R}^n\). It contains every vector reachable by taking linear combinations of the given vectors.
+
+\section{Column Space}
+\label{mf:column-space}
+
+Let
+\[
+    A=\begin{bmatrix}
+        \mathbf{a}_1 & \mathbf{a}_2 & \cdots & \mathbf{a}_n
+    \end{bmatrix}
+    \in\mathbb{R}^{m\times n},
+\]
+where \(\mathbf{a}_1,\ldots,\mathbf{a}_n\in\mathbb{R}^m\) are the columns of \(A\). The \emph{column space} of \(A\) is the span of its columns:
+\[
+    \operatorname{Col}(A)
+    =\operatorname{span}\{\mathbf{a}_1,
+    \ldots,\mathbf{a}_n\}.
+\]
+Equivalently,
+\[
+    \operatorname{Col}(A)
+    =\{A\mathbf{x}:\mathbf{x}\in\mathbb{R}^n\}
+    \subseteq \mathbb{R}^m.
+\]
+The equivalence comes from the column-combination interpretation of matrix-vector multiplication:
+\[
+    A\mathbf{x}=x_1\mathbf{a}_1+x_2\mathbf{a}_2+\cdots+x_n\mathbf{a}_n.
+\]
+
+Thus the column space answers the question:
+
+\begin{quote}
+Which vectors in \(\mathbb{R}^m\) can be produced as \(A\mathbf{x}\)?
+\end{quote}
+
+A linear system
+\[
+    A\mathbf{x}=\mathbf{b}
+\]
+is solvable if and only if \(\mathbf{b}\in\operatorname{Col}(A)\). If \(\mathbf{b}\notin\operatorname{Col}(A)\), then no exact solution exists. In that case, later least-squares methods look for the vector in \(\operatorname{Col}(A)\) that is closest to \(\mathbf{b}\).
+
+The dimension of the column space is the number of linearly independent columns of \(A\). This is the \emph{column rank}. Since Chapter 10 used \(\operatorname{rank}(A)\) for the common row/column rank, we can write
+\[
+    \dim\operatorname{Col}(A)=\operatorname{rank}(A).
+\]
+
+\section{Row Space}
+\label{mf:row-space}
+
+The \emph{row space} of \(A\) is the span of its rows. Since rows of \(A\) are columns of \(A^T\), it is often cleanest to define
+\[
+    \operatorname{Row}(A)=\operatorname{Col}(A^T).
+\]
+If \(A\in\mathbb{R}^{m\times n}\), then each row has \(n\) entries, so
+\[
+    \operatorname{Row}(A)\subseteq \mathbb{R}^n.
+\]
+The source notes also express the row space as
+\[
+    \operatorname{Row}(A)=\{A^T\mathbf{y}:\mathbf{y}\in\mathbb{R}^m\}.
+\]
+
+The row space answers a different question than the column space. The column space describes reachable outputs. The row space describes the directions in the input or coefficient space that the matrix can actually detect.
+
+The dimension of the row space is the number of linearly independent rows of \(A\). This is the \emph{row rank}. Since row rank and column rank are equal,
+\[
+    \dim\operatorname{Row}(A)=\operatorname{rank}(A).
+\]
+
+\section{Null Space}
+\label{mf:null-space}
+
+The \emph{null space} of \(A\) is the set of all input vectors that are mapped to zero:
+\[
+    \operatorname{Null}(A)
+    =\{\mathbf{x}\in\mathbb{R}^n:A\mathbf{x}=\mathbf{0}\}.
+\]
+This is a subspace of \(\mathbb{R}^n\). To see this, suppose \(\mathbf{x},\mathbf{y}\in\operatorname{Null}(A)\), so
+\[
+    A\mathbf{x}=\mathbf{0},
+    \qquad
+    A\mathbf{y}=\mathbf{0}.
+\]
+For any \(\alpha,\beta\in\mathbb{R}\),
+\[
+    A(\alpha\mathbf{x}+\beta\mathbf{y})
+    =\alpha A\mathbf{x}+\beta A\mathbf{y}
+    =\alpha\mathbf{0}+\beta\mathbf{0}
+    =\mathbf{0}.
+\]
+Therefore \(\alpha\mathbf{x}+\beta\mathbf{y}\in\operatorname{Null}(A)\), so the null space is closed under linear combinations.
+\label{mf:null-space-subspace}
+
+The null space answers the question:
+
+\begin{quote}
+Which nonzero input directions, if any, does the matrix fail to see?
+\end{quote}
+
+This gives an immediate test for column independence:
+\[
+    A \text{ has linearly independent columns}
+    \quad\Longleftrightarrow\quad
+    \operatorname{Null}(A)=\{\mathbf{0}\}.
+\]
+Indeed, the columns of \(A\) are linearly independent exactly when the equation
+\[
+    A\mathbf{x}=\mathbf{0}
+\]
+has only the trivial solution \(\mathbf{x}=\mathbf{0}\). If there is a nonzero vector in the null space, then the columns are linearly dependent.
+\label{mf:null-space-linear-independence}
+
+Null spaces are important because they describe non-uniqueness. If \(A\mathbf{x}=\mathbf{b}\) has one solution \(\mathbf{x}_0\), and \(\mathbf{z}\in\operatorname{Null}(A)\), then
+\[
+    A(\mathbf{x}_0+\mathbf{z})
+    =A\mathbf{x}_0+A\mathbf{z}
+    =\mathbf{b}+\mathbf{0}
+    =\mathbf{b}.
+\]
+So every null-space direction gives another solution. Thus the null space is the space of invisible changes to \(\mathbf{x}\).
+
+\section{Left Null Space}
+\label{mf:left-null-space}
+
+The \emph{left null space} of \(A\) is the null space of \(A^T\):
+\[
+    \operatorname{Null}(A^T)
+    =\{\mathbf{y}\in\mathbb{R}^m:A^T\mathbf{y}=\mathbf{0}\}.
+\]
+It is called the left null space because it is equivalent to the set of row-vector directions \(\mathbf{y}^T\) satisfying
+\[
+    \mathbf{y}^T A=\mathbf{0}^T.
+\]
+If the ordinary null space describes input directions that \(A\) sends to zero, then the left null space describes output-space directions that are orthogonal to every column of \(A\).
+
+This space appears naturally in least squares. When a vector \(\mathbf{b}\in\mathbb{R}^m\) cannot be represented exactly as \(A\mathbf{x}\), the least-squares residual \(\mathbf{b}-A\widehat{\mathbf{x}}\) belongs to the part of output space orthogonal to \(\operatorname{Col}(A)\). That idea becomes the geometric heart of least squares in Chapter 12.
+
+\section{Orthogonality Among the Subspaces}
+\label{mf:orthogonal-subspaces}
+
+The row space and null space live in the same ambient space, \(\mathbb{R}^n\). They are orthogonal to each other. To see why, take
+\[
+    \mathbf{r}\in\operatorname{Row}(A),
+    \qquad
+    \mathbf{z}\in\operatorname{Null}(A).
+\]
+Since \(\mathbf{r}\in\operatorname{Row}(A)\), there is some \(\mathbf{y}\in\mathbb{R}^m\) such that \(\mathbf{r}=A^T\mathbf{y}\). Then
+\[
+    \mathbf{r}^T\mathbf{z}
+    =(A^T\mathbf{y})^T\mathbf{z}
+    =\mathbf{y}^T A\mathbf{z}
+    =\mathbf{y}^T\mathbf{0}
+    =0.
+\]
+So every row-space direction is orthogonal to every null-space direction.
+
+Similarly,
+\[
+    \operatorname{Col}(A)
+    \quad\text{is orthogonal to}\quad
+    \operatorname{Null}(A^T).
+\]
+If \(\mathbf{c}=A\mathbf{x}\in\operatorname{Col}(A)\) and \(\mathbf{w}\in\operatorname{Null}(A^T)\), then
+\[
+    \mathbf{w}^T\mathbf{c}
+    =\mathbf{w}^T A\mathbf{x}
+    =(A^T\mathbf{w})^T\mathbf{x}
+    =\mathbf{0}^T\mathbf{x}
+    =0.
+\]
+These orthogonality relationships organize the four fundamental subspaces.
+
+\section{The Four Fundamental Subspaces}
+\label{mf:four-subspaces}
+
+Let \(A\in\mathbb{R}^{m\times n}\) and let
+\[
+    r=\operatorname{rank}(A).
+\]
+The four fundamental subspaces are:
+\[
+\begin{array}{c|c|c}
+\text{Subspace} & \text{Ambient space} & \text{Dimension}\\
+\hline
+\operatorname{Col}(A) & \mathbb{R}^m & r\\
+\operatorname{Null}(A^T) & \mathbb{R}^m & m-r\\
+\operatorname{Row}(A) & \mathbb{R}^n & r\\
+\operatorname{Null}(A) & \mathbb{R}^n & n-r
+\end{array}
+\]
+
+The first pair lives in output space \(\mathbb{R}^m\): column-space directions and left-null-space directions. The second pair lives in input space \(\mathbb{R}^n\): row-space directions and null-space directions.
+
+The dimension statements are often summarized as the rank-nullity relationships:
+\[
+    \dim\operatorname{Col}(A)+\dim\operatorname{Null}(A^T)=m,
+\]
+\[
+    \dim\operatorname{Row}(A)+\dim\operatorname{Null}(A)=n.
+\]
+\label{mf:rank-nullity}
+
+This table is useful because it keeps two different spaces separate. Column space and left null space live where outputs live. Row space and null space live where inputs or coefficient vectors live.
+
+\section{Example: Non-Uniqueness in a Targeting Problem}
+\label{mf:underdetermined-targeting-problem}
+
+The source notes use a targeting problem to illustrate how linear systems and hidden directions arise. Suppose a projectile state contains position, velocity, and acceleration. A simplified update can be written in block form as
+\[
+\begin{bmatrix}
+    \mathbf{x}_{t+1}\\
+    \mathbf{v}_{t+1}\\
+    \mathbf{a}_{t+1}
+\end{bmatrix}
+=
+\begin{bmatrix}
+    I & \Delta t\,I & 0\\
+    0 & I & \Delta t\,I\\
+    0 & 0 & I
+\end{bmatrix}
+\begin{bmatrix}
+    \mathbf{x}_{t}\\
+    \mathbf{v}_{t}\\
+    \mathbf{a}_{t}
+\end{bmatrix}.
+\]
+After many time steps, the final position can be written as a linear function of the initial state. If the only requirement is to hit a target position, then there may be fewer constraints than unknown initial-state quantities. That leads to an underdetermined linear system.
+
+Subspace language explains what happens. One solution may hit the target, but adding any vector in the null space of the targeting matrix gives another solution that produces the same constrained output. In practical terms, the target may be fixed, while some parts of the initial velocity or other state variables remain free.
+
+The details of the computation belong to a computational notebook. The mathematical lesson is the important part here:
+
+\begin{quote}
+When a linear system is underdetermined, the null space describes the directions that can change without changing the constrained output.
+\end{quote}
+
+\section{Data Analysis Bridge}
+\label{mf:ch11-data-analysis-bridge}
+
+Regression uses these same subspaces with a design matrix. If
+\[
+    X\in\mathbb{R}^{n\times(p+1)},
+\]
+then \(X\) maps coefficient vectors in \(\mathbb{R}^{p+1}\) to fitted-value vectors in observation space \(\mathbb{R}^n\):
+\[
+    \widehat{\mathbf{y}}=X\widehat{\boldsymbol\beta}.
+\]
+Thus fitted values live in
+\[
+    \operatorname{Col}(X)\subseteq\mathbb{R}^n.
+\]
+For least-squares fits, residual vectors are orthogonal to the fitted-value directions, so they live in the left null space:
+\[
+    \mathbf{e}\in\operatorname{Null}(X^T).
+\]
+
+The coefficient-space subspaces are just as important. The row space of \(X\) contains coefficient directions that the data can identify. The null space of \(X\) contains coefficient directions that do not change fitted values:
+\[
+    X(\boldsymbol\beta+\mathbf{z})=X\boldsymbol\beta
+    \qquad\text{for every }\mathbf{z}\in\operatorname{Null}(X).
+\]
+So a nonzero null space means non-identifiability: multiple coefficient vectors give the same fitted responses. This is the linear algebra behind exact multicollinearity and duplicate predictors.
+
+\section{Chapter Summary}
+\label{mf:subspaces-summary}
+
+Carry forward these subspace facts:
+\begin{itemize}
+    \item A subspace is a nonempty subset closed under linear combinations.
+    \item The column space \(\operatorname{Col}(A)\) is the set of vectors \(A\mathbf{x}\); a system \(A\mathbf{x}=\mathbf{b}\) is solvable if and only if \(\mathbf{b}\in\operatorname{Col}(A)\).
+    \item The row space is \(\operatorname{Col}(A^T)\), the null space is \(\{\mathbf{x}:A\mathbf{x}=\mathbf{0}\}\), and the left null space is \(\operatorname{Null}(A^T)\).
+    \item \(\operatorname{Null}(A)=\{\mathbf{0}\}\) exactly when the columns of \(A\) are linearly independent.
+    \item Row space is orthogonal to null space; column space is orthogonal to left null space. Their dimensions are \(r\), \(m-r\), \(r\), and \(n-r\).
+    \item In regression, fitted values live in \(\operatorname{Col}(X)\) and residuals in \(\operatorname{Null}(X^T)\).
+    \item Non-identifiable coefficient directions live in \(\operatorname{Null}(X)\).
+\end{itemize}

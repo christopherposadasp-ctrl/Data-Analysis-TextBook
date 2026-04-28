@@ -1,0 +1,228 @@
+\chapter{Vector Operations and Linear Combinations}
+\label{mf:ch03-vector-operations-linear-combinations}
+
+The previous chapter introduced vectors as ordered collections of real numbers. We now begin to do arithmetic with them. The operations in this chapter are simple, but they are foundational: vector addition describes how quantities combine, vector subtraction describes differences, scalar multiplication describes scaling, and linear combinations describe weighted sums of vectors.
+
+These operations are the language behind many later ideas. Residuals are differences of vectors. Centered variables are data vectors with their mean removed. Linear models are built by weighting and adding input quantities. Least squares will eventually choose the best linear combination of columns in a matrix.
+
+\section{Vector Addition}
+\label{mf:vector-arithmetic}
+\label{mf:vector-addition}
+
+Two vectors can be added only when they have the same dimension. If
+\[
+\mathbf{x}=\begin{bmatrix}x_1\\x_2\\\vdots\\x_n\end{bmatrix},
+\qquad
+\mathbf{y}=\begin{bmatrix}y_1\\y_2\\\vdots\\y_n\end{bmatrix}
+\]
+are both in \(\mathbb{R}^n\), then their sum is defined entry by entry:
+\[
+\mathbf{x}+\mathbf{y}
+=
+\begin{bmatrix}
+x_1+y_1\\
+x_2+y_2\\
+\vdots\\
+x_n+y_n
+\end{bmatrix}.
+\]
+For example,
+\[
+\begin{bmatrix}0\\7\\3\end{bmatrix}
++
+\begin{bmatrix}1\\2\\0\end{bmatrix}
+=
+\begin{bmatrix}1\\9\\3\end{bmatrix}.
+\]
+The requirement that the vectors have the same size matters. Adding a 3-vector to a 2-vector is not defined because there is no entry-by-entry pairing for all components.
+
+Vector addition inherits the usual commutative and associative behavior of real-number addition:
+\[
+\mathbf{x}+\mathbf{y}=\mathbf{y}+\mathbf{x},
+\qquad
+(\mathbf{x}+\mathbf{y})+\mathbf{z}=\mathbf{x}+(\mathbf{y}+\mathbf{z}).
+\]
+These identities hold because they hold entry by entry.
+
+\section{Vector Subtraction and Differences}
+\label{mf:vector-subtraction}
+
+Vector subtraction is also defined entry by entry. For \(\mathbf{x},\mathbf{y}\in\mathbb{R}^n\),
+\[
+\mathbf{x}-\mathbf{y}
+=
+\begin{bmatrix}
+x_1-y_1\\
+x_2-y_2\\
+\vdots\\
+x_n-y_n
+\end{bmatrix}.
+\]
+For example,
+\[
+\begin{bmatrix}1\\9\end{bmatrix}
+-
+\begin{bmatrix}1\\1\end{bmatrix}
+=
+\begin{bmatrix}0\\8\end{bmatrix}.
+\]
+
+Subtraction is the operation of difference. If two vectors represent observed and predicted values, their difference is an error or residual vector. If two points \(\mathbf{p}\) and \(\mathbf{q}\) are represented using coordinates, then \(\mathbf{p}-\mathbf{q}\) is the displacement from \(\mathbf{q}\) to \(\mathbf{p}\). If \(\mathbf{p}\) is a point and \(\mathbf{a}\) is a displacement, then \(\mathbf{p}+\mathbf{a}\) is the point obtained by moving \(\mathbf{p}\) by the displacement \(\mathbf{a}\).
+
+The same operation appears in signal processing. If \(\mathbf{s}\) is a signal of interest and \(\mathbf{n}\) is noise or interference, a received signal may be represented as
+\[
+\mathbf{x}=\mathbf{s}+\mathbf{n}.
+\]
+This is still vector addition. The interpretation changes, but the arithmetic is the same.
+
+\paragraph{Centered vectors.}
+\label{mf:centered-vectors}
+A particularly important difference is a centered vector. If \(\mathbf{x}\in\mathbb{R}^n\) has sample mean \(\bar{x}\), then
+\[
+\mathbf{x}-\bar{x}\mathbf{1}
+\]
+is the vector of deviations from the mean. Its \(i\)th entry is \(x_i-\bar{x}\). This centered-vector notation will later support variance, covariance, correlation, residual sums of squares, and degrees of freedom.
+
+\section{A Notational Warning: Vectors and Scalars}
+\label{mf:vector-scalar-warning}
+
+Some programming languages allow expressions such as
+\[
+\begin{bmatrix}1\\7\\5\end{bmatrix}+3
+=
+\begin{bmatrix}4\\10\\8\end{bmatrix},
+\]
+where the scalar is automatically added to every entry of the vector. This is convenient in code, but it is not the standard mathematical notation used in this course. In mathematical writing, we will not add a scalar directly to a vector unless a convention has been explicitly stated.
+
+There is, however, a standard way to combine a scalar and a vector: scalar multiplication.
+
+\section{Scalar Multiplication}
+\label{mf:scalar-multiplication}
+
+If \(\alpha\in\mathbb{R}\) is a scalar and \(\mathbf{x}\in\mathbb{R}^n\), then \(\alpha\mathbf{x}\) is the vector obtained by multiplying every entry of \(\mathbf{x}\) by \(\alpha\):
+\[
+\alpha\mathbf{x}
+=
+\alpha
+\begin{bmatrix}x_1\\x_2\\\vdots\\x_n\end{bmatrix}
+=
+\begin{bmatrix}
+\alpha x_1\\
+\alpha x_2\\
+\vdots\\
+\alpha x_n
+\end{bmatrix}.
+\]
+For example,
+\[
+(-2)
+\begin{bmatrix}1\\9\\6\end{bmatrix}
+=
+\begin{bmatrix}-2\\-18\\-12\end{bmatrix}.
+\]
+
+Scalar multiplication has a natural interpretation. If \(\mathbf{x}\) is an audio signal, then \(\beta\mathbf{x}\) is the same signal scaled in volume by the factor \(|\beta|\). If \(\beta<0\), the sign of every entry is reversed as well as scaled.
+
+The basic distributive identities are
+\[
+(\alpha+\beta)\mathbf{x}=\alpha\mathbf{x}+\beta\mathbf{x},
+\qquad
+\alpha(\mathbf{x}+\mathbf{y})=\alpha\mathbf{x}+\alpha\mathbf{y}.
+\]
+These rules are again entrywise consequences of the corresponding real-number rules.
+
+\section{Linear Combinations}
+\label{mf:linear-combinations}
+\label{mf:linear-combination-coefficients}
+
+Vector addition and scalar multiplication combine into the most important operation in linear algebra: the linear combination.
+
+Let \(\mathbf{a}_1,\ldots,\mathbf{a}_m\) be vectors in \(\mathbb{R}^n\), and let \(\beta_1,\ldots,\beta_m\) be scalars. The vector
+\[
+\beta_1\mathbf{a}_1+\beta_2\mathbf{a}_2+\cdots+\beta_m\mathbf{a}_m
+\]
+is called a \emph{linear combination} of \(\mathbf{a}_1,\ldots,\mathbf{a}_m\). The scalars \(\beta_1,\ldots,\beta_m\) are the \emph{coefficients} of the linear combination.
+
+The word linear means that we are only scaling vectors and adding the results. We are not multiplying the vectors together, raising them to powers, or applying nonlinear functions to their entries.
+
+Linear combinations are the basic algebraic form behind linear models. A linear model takes measured inputs, assigns coefficients to them, and adds the weighted pieces. Later, when we write a fitted value as a matrix times a coefficient vector, we are saying that the fitted value vector is a linear combination of the columns of the matrix.
+
+\section{Standard Basis Representation}
+\label{mf:standard-basis-linear-combinations}
+
+The standard basis vectors from Chapter 2 give the simplest example of a linear combination. In \(\mathbb{R}^n\), every vector can be written as a linear combination of the standard basis vectors:
+\[
+\mathbf{b}=b_1\mathbf{e}_1+b_2\mathbf{e}_2+\cdots+b_n\mathbf{e}_n.
+\]
+The coefficients are exactly the entries of \(\mathbf{b}\).
+
+For example,
+\[
+\begin{bmatrix}-1\\3\\5\end{bmatrix}
+=
+(-1)\begin{bmatrix}1\\0\\0\end{bmatrix}
++3\begin{bmatrix}0\\1\\0\end{bmatrix}
++5\begin{bmatrix}0\\0\\1\end{bmatrix}.
+\]
+This example shows why the standard basis is useful: it separates a vector into coordinate directions. The first coefficient controls movement in the \(\mathbf{e}_1\) direction, the second controls movement in the \(\mathbf{e}_2\) direction, and so on.
+
+\section{Lines and Line Segments}
+\label{mf:affine-combinations}
+\label{mf:line-segments}
+
+Let \(\mathbf{a}\) and \(\mathbf{b}\) be two different vectors in \(\mathbb{R}^n\). For a scalar \(\theta\), define
+\[
+\mathbf{c}(\theta)=(1-\theta)\mathbf{a}+\theta\mathbf{b}.
+\]
+As \(\theta\) varies over all real numbers, \(\mathbf{c}(\theta)\) traces the line through \(\mathbf{a}\) and \(\mathbf{b}\). When
+\[
+0\leq \theta\leq 1,
+\]
+\(\mathbf{c}(\theta)\) lies on the line segment connecting \(\mathbf{a}\) and \(\mathbf{b}\).
+
+This formula has a simple interpretation. When \(\theta=0\),
+\[
+\mathbf{c}(0)=\mathbf{a}.
+\]
+When \(\theta=1\),
+\[
+\mathbf{c}(1)=\mathbf{b}.
+\]
+When \(\theta=1/2\),
+\[
+\mathbf{c}(1/2)=\frac12\mathbf{a}+\frac12\mathbf{b},
+\]
+which is the midpoint between \(\mathbf{a}\) and \(\mathbf{b}\). Values of \(\theta\) between 0 and 1 interpolate between the two endpoints; values outside this interval extend the line beyond one endpoint.
+
+The expression \((1-\theta)\mathbf{a}+\theta\mathbf{b}\) is sometimes called an affine combination because its coefficients sum to 1:
+\[
+(1-\theta)+\theta=1.
+\]
+Affine combinations will matter later when we distinguish ordinary linear combinations from shifted geometric descriptions such as lines, planes, and intercept-containing models.
+
+\section{Data Analysis Bridge}
+\label{mf:ch03-data-analysis-bridge}
+
+The operations in this chapter appear constantly in data analysis:
+\begin{itemize}
+    \item residual vectors are differences, such as \(\mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}\);
+    \item centered variables are differences, such as \(\mathbf{x}-\bar{x}\mathbf{1}\);
+    \item scaled variables use scalar multiplication;
+    \item linear predictors are weighted sums of input quantities;
+    \item fitted response vectors are linear combinations of design-matrix columns.
+\end{itemize}
+The same small set of vector operations therefore supports prediction error, regression, correlation, least squares, and model diagnostics.
+
+\section{Chapter Summary}
+\label{mf:vector-operations-summary}
+
+Carry forward these operation rules:
+\begin{itemize}
+    \item Vectors of the same dimension can be added or subtracted entry by entry; subtraction represents a difference or displacement.
+    \item Multiplying a vector by a scalar rescales every entry and obeys the usual distributive laws.
+    \item Adding a scalar to a vector is programming broadcast, not standard mathematical notation.
+    \item A linear combination \(\alpha_1\mathbf{v}_1+\cdots+\alpha_k\mathbf{v}_k\) builds a new vector from weighted directions.
+    \item Standard basis vectors represent coordinates, and \((1-\theta)\mathbf{a}+\theta\mathbf{b}\) traces the line segment from \(\mathbf{a}\) to \(\mathbf{b}\) when \(0\leq \theta\leq 1\).
+\end{itemize}
+
+The next chapter returns to sets and quantifiers, which give precise language for membership, subsetting, and indexed collections.

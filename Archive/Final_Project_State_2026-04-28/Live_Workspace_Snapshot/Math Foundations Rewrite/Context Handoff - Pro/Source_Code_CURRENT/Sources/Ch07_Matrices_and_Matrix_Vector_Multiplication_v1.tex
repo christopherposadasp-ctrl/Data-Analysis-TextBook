@@ -1,0 +1,394 @@
+\chapter{Matrices and Matrix-Vector Multiplication}
+\label{mf:ch07-matrices-and-matrix-vector-multiplication}
+
+The previous chapters treated vectors as ordered collections of quantities and described how to add, subtract, scale, combine, compare, and measure them. We now move from a single vector to an array of vectors. A \emph{matrix} is a rectangular table of numbers, and it is one of the main tools for organizing systems of equations, data tables, and linear transformations.
+
+In operations research and data analysis, matrices usually play two roles at once. First, they organize information: rows may represent observations, constraints, or time steps, while columns may represent variables, resources, or directions. Second, they act on vectors: multiplying a matrix by a vector produces a new vector. This chapter introduces matrix notation and the two most important interpretations of matrix-vector multiplication.
+
+We keep the focus narrow. Rank, inverses, subspaces, QR factorization, and least squares all depend on the ideas in this chapter, but they are developed later. Here the goal is to become fluent with dimensions, entries, rows, columns, transposes, special matrices, and matrix-vector products.
+
+\section{Matrices as Rectangular Arrays}
+\label{mf:matrices-dimensions}
+
+A \emph{matrix} is a rectangular array of numbers. For example,
+\[
+    B =
+    \begin{bmatrix}
+        0 & 1 & 7.3 & 0.1\\
+        1.3 & 4 & -0.1 & 0\\
+        4.1 & -1 & 0 & 1.7
+    \end{bmatrix}
+    \in \mathbb{R}^{3\times 4}.
+\]
+The notation \(B\in\mathbb{R}^{3\times 4}\) means that \(B\) has 3 rows and 4 columns. More generally, a matrix \(A\in\mathbb{R}^{m\times n}\) has \(m\) rows and \(n\) columns.
+
+The entries of a matrix are indexed by row and column. We write \(A_{ij}\) for the entry in row \(i\) and column \(j\). For the matrix \(B\) above,
+\[
+    B_{22}=4,
+\]
+using the mathematical convention that indices begin at 1.
+
+A matrix may also be described by its shape:
+\begin{itemize}
+    \item a \emph{square matrix} has the same number of rows and columns;
+    \item a \emph{tall matrix} has more rows than columns;
+    \item a \emph{wide matrix} has more columns than rows.
+\end{itemize}
+
+The shape of a matrix is not just bookkeeping. It tells us whether operations are defined. Many matrix mistakes are dimension mistakes: the entries may be reasonable, but the shapes do not match the operation being attempted.
+
+\section{Rows, Columns, Blocks, and Submatrices}
+\label{mf:matrix-entries-rows-columns}
+\label{mf:matrices-entries}
+\label{mf:matrices-rows-columns}
+\label{mf:submatrix-extraction}
+
+A matrix can be viewed by entries, by rows, by columns, or by blocks. If \(A\in\mathbb{R}^{m\times n}\), then its \(i\)th row is often written as \(A_{i,:}\), and its \(j\)th column is written as \(A_{:,j}\). The colon notation means ``take all entries in that direction.''
+
+For example, the matrix
+\[
+    B =
+    \begin{bmatrix}
+        0 & 1 & 7.3 & 0.1\\
+        1.3 & 4 & -0.1 & 0\\
+        4.1 & -1 & 0 & 1.7
+    \end{bmatrix}
+\]
+has third column
+\[
+    B_{:,3}=\begin{bmatrix}7.3\\ -0.1\\ 0\end{bmatrix},
+\]
+and second row
+\[
+    B_{2,:}=\begin{bmatrix}1.3 & 4 & -0.1 & 0\end{bmatrix}.
+\]
+
+We can also extract submatrices. The notation \(B_{2:3,3:4}\) means rows 2 through 3 and columns 3 through 4:
+\[
+    B_{2:3,3:4}
+    =
+    \begin{bmatrix}
+        -0.1 & 0\\
+        0 & 1.7
+    \end{bmatrix}.
+\]
+This is the matrix version of subvector or slice notation.
+
+Matrices are sometimes written in block form. For instance,
+\[
+    A=
+    \begin{bmatrix}
+        B & C\\
+        D & E
+    \end{bmatrix}
+\]
+means that \(A\) has been built from smaller matrices. The block sizes must be compatible: blocks in the same block row must have the same number of rows, and blocks in the same block column must have the same number of columns.
+
+Block notation makes many large matrix expressions easier to understand as combinations of smaller matrices.
+
+\section{Special Matrices}
+\label{mf:special-matrices}
+\label{mf:matrices-special}
+\label{mf:identity-matrix}
+
+Several special matrices appear often enough that they deserve names.
+
+The \emph{zero matrix} is a matrix whose entries are all zero. We write it as \(0\) when the dimensions are clear, or as \(0_{m\times n}\) when we need to specify the shape.
+
+The \emph{identity matrix} is a square matrix that leaves vectors unchanged under multiplication. It is written \(I_n\in\mathbb{R}^{n\times n}\). Its entries are
+\[
+    (I_n)_{ij}= 
+    \begin{cases}
+        1, & i=j,\\
+        0, & i\neq j.
+    \end{cases}
+\]
+For example,
+\[
+    I_3=
+    \begin{bmatrix}
+        1 & 0 & 0\\
+        0 & 1 & 0\\
+        0 & 0 & 1
+    \end{bmatrix}.
+\]
+The identity matrix is the matrix analogue of the number 1. It is the multiplicative ``do nothing'' matrix.
+
+A matrix is \emph{sparse} if many of its entries are zero. The notation \(\operatorname{nnz}(A)\) counts the number of nonzero entries in \(A\). If \(A\in\mathbb{R}^{m\times n}\), then
+\[
+    \frac{\operatorname{nnz}(A)}{mn}
+\]
+is the fraction of entries that are nonzero. Sparse matrices are important in computation because it is often wasteful to store and operate on large numbers of zeros.
+
+\paragraph{Triangular matrices.}
+\label{mf:triangular-matrices}
+A square matrix is \emph{upper triangular} if all entries below the main diagonal are zero:
+\[
+    A_{ij}=0 \quad \text{whenever } i>j.
+\]
+For example,
+\[
+    \begin{bmatrix}
+        2 & 3 & 9\\
+        0 & 4 & 8\\
+        0 & 0 & 1
+    \end{bmatrix}
+\]
+is upper triangular. A square matrix is \emph{lower triangular} if all entries above the main diagonal are zero:
+\[
+    A_{ij}=0 \quad \text{whenever } i<j.
+\]
+For example,
+\[
+    \begin{bmatrix}
+        2 & 0 & 0\\
+        3 & 4 & 0\\
+        4 & 8 & 1
+    \end{bmatrix}
+\]
+is lower triangular.
+
+Triangular matrices become especially useful when we solve linear systems. That topic appears later; for now, recognize the shape.
+
+\section{Transpose and Symmetry}
+\label{mf:transpose}
+\label{mf:symmetric-matrix}
+
+The \emph{transpose} of a matrix swaps rows and columns. If \(A\in\mathbb{R}^{m\times n}\), then \(A^T\in\mathbb{R}^{n\times m}\), and
+\[
+    (A^T)_{ij}=A_{ji}.
+\]
+For example,
+\[
+    \begin{bmatrix}
+        0 & -4\\
+        7 & 0\\
+        3 & 1
+    \end{bmatrix}^T
+    =
+    \begin{bmatrix}
+        0 & 7 & 3\\
+        -4 & 0 & 1
+    \end{bmatrix}.
+\]
+
+The transpose also works with block matrices. If the block sizes are compatible, then
+\[
+    \begin{bmatrix}
+        A & B\\
+        C & D
+    \end{bmatrix}^T
+    =
+    \begin{bmatrix}
+        A^T & C^T\\
+        B^T & D^T
+    \end{bmatrix}.
+\]
+The blocks move across the diagonal, and each block is transposed.
+
+A square matrix \(A\) is \emph{symmetric} if
+\[
+    A^T=A.
+\]
+Equivalently, \(A_{ij}=A_{ji}\) for every pair of indices. Symmetric matrices appear often in least squares, covariance matrices, and quadratic forms.
+
+\section{Matrix Arithmetic}
+\label{mf:matrix-arithmetic}
+
+Two matrices of the same dimensions can be added or subtracted entry by entry. If \(A,B\in\mathbb{R}^{m\times n}\), then
+\[
+    (A+B)_{ij}=A_{ij}+B_{ij},
+    \qquad
+    (A-B)_{ij}=A_{ij}-B_{ij}.
+\]
+A scalar can multiply a matrix entry by entry:
+\[
+    (\alpha A)_{ij}=\alpha A_{ij}.
+\]
+
+Matrix addition and scalar multiplication behave like the corresponding vector operations. The key shape rule is simple: addition and subtraction require matching dimensions. There is no standard mathematical operation that adds a \(3\times 4\) matrix to a \(4\times 3\) matrix, even though both contain 12 numbers.
+
+If \(A,B\in\mathbb{R}^{m\times n}\), then adding \(A+B\) requires \(mn\) scalar additions. Multiplying \(A\) by a scalar also requires \(mn\) scalar multiplications. These operation counts are not important because of the exact constants; they are important because they help us think about how computation grows with matrix size.
+
+\section{Matrix-Vector Multiplication}
+\label{mf:matrix-vector-multiplication}
+\label{mf:linear-transformations}
+
+Let
+\[
+    A\in\mathbb{R}^{m\times n},
+    \qquad
+    \mathbf{x}\in\mathbb{R}^n.
+\]
+Then the product \(A\mathbf{x}\) is defined, and the result is a vector in \(\mathbb{R}^m\):
+\[
+    \mathbf{y}=A\mathbf{x},
+    \qquad
+    \mathbf{y}\in\mathbb{R}^m.
+\]
+The inner dimensions must match: the number of columns of \(A\) must equal the number of entries in \(\mathbf{x}\). The output length is the number of rows of \(A\).
+
+The source notes emphasize two complementary interpretations of matrix-vector multiplication.
+
+\subsection{Row Inner-Product View}
+\label{mf:matrix-vector-row-view}
+
+The first interpretation computes each output entry as an inner product between \(\mathbf{x}\) and one row of \(A\). If \(\mathbf{y}=A\mathbf{x}\), then
+\[
+    y_i = A_{i,:}\mathbf{x}
+    = A_{i1}x_1+A_{i2}x_2+\cdots+A_{in}x_n.
+\]
+Since \(A_{i,:}\) is a row vector, this expression is the dot product of row \(i\) with \(\mathbf{x}\).
+
+For example, let
+\[
+    A=
+    \begin{bmatrix}
+        0 & 2 & -1\\
+        -2 & 1 & 1
+    \end{bmatrix},
+    \qquad
+    \mathbf{x}=\begin{bmatrix}2\\1\\-1\end{bmatrix}.
+\]
+Then
+\[
+    A\mathbf{x}
+    =
+    \begin{bmatrix}
+        0(2)+2(1)+(-1)(-1)\\
+        -2(2)+1(1)+1(-1)
+    \end{bmatrix}
+    =
+    \begin{bmatrix}3\\-4\end{bmatrix}.
+\]
+The first entry comes from the first row of \(A\), and the second entry comes from the second row of \(A\).
+
+\subsection{Column Linear-Combination View}
+\label{mf:matrix-vector-column-view}
+
+The second interpretation writes the output as a linear combination of the columns of \(A\), using the entries of \(\mathbf{x}\) as coefficients.
+
+Let \(A_{:,j}\) denote the \(j\)th column of \(A\). Then
+\[
+    A\mathbf{x}
+    =x_1A_{:,1}+x_2A_{:,2}+\cdots+x_nA_{:,n}.
+\]
+Using the same example,
+\[
+    A=
+    \begin{bmatrix}
+        0 & 2 & -1\\
+        -2 & 1 & 1
+    \end{bmatrix},
+    \qquad
+    \mathbf{x}=\begin{bmatrix}2\\1\\-1\end{bmatrix},
+\]
+we can compute
+\[
+    A\mathbf{x}
+    =
+    2\begin{bmatrix}0\\-2\end{bmatrix}
+    +1\begin{bmatrix}2\\1\end{bmatrix}
+    +(-1)\begin{bmatrix}-1\\1\end{bmatrix}
+    =
+    \begin{bmatrix}3\\-4\end{bmatrix}.
+\]
+
+This interpretation is often the more important one conceptually. The matrix supplies a list of column vectors. The vector \(\mathbf{x}\) supplies the coefficients. The output \(A\mathbf{x}\) is the linear combination produced by those coefficients.
+
+\section{Computational Cost and Shape Checking}
+\label{mf:computational-matrix-operations}
+
+For \(A\in\mathbb{R}^{m\times n}\) and \(\mathbf{x}\in\mathbb{R}^n\), computing \(A\mathbf{x}\) requires roughly \(2mn\) floating-point operations. Each of the \(m\) output entries is a dot product of length \(n\), requiring about \(n\) multiplications and \(n-1\) additions.
+
+The approximate count is
+\[
+    mn + m(n-1) = 2mn-m \approx 2mn.
+\]
+This is not a rule to memorize for its own sake. It teaches two practical habits:
+\begin{enumerate}
+    \item check the dimensions before multiplying; and
+    \item remember that matrix operations can become expensive when the number of rows and columns is large.
+\end{enumerate}
+
+In software, many bugs are shape bugs. Vectors and matrices are usually stored as arrays, and the mathematical shape rule is the same rule the software enforces. If \(A\in\mathbb{R}^{m\times n}\), then \(A\mathbf{x}\) is defined only when \(\mathbf{x}\in\mathbb{R}^n\). The result will be in \(\mathbb{R}^m\). Matrix multiplication is distinct from entrywise multiplication, and transposes must be requested explicitly. Before interpreting the output, verify that the product you computed has the shape you intended.
+
+\section{A Matrix-Vector Dynamics Example}
+\label{mf:epidemic-dynamics-matrix-vector}
+
+Matrix-vector multiplication is especially useful for state-transition models. Suppose a population is divided into four states:
+\begin{itemize}
+    \item susceptible;
+    \item infected;
+    \item recovered and immune;
+    \item deceased.
+\end{itemize}
+Let
+\[
+    \mathbf{x}_t=
+    \begin{bmatrix}
+        S_t\\ I_t\\ R_t\\ D_t
+    \end{bmatrix}
+\]
+be the vector of population proportions in these four states at time \(t\). For example,
+\[
+    \mathbf{x}_t=\begin{bmatrix}0.75\\0.10\\0.10\\0.05\end{bmatrix}
+\]
+means that 75\% of the population is susceptible, 10\% infected, 10\% recovered, and 5\% deceased.
+
+The source notes describe a simple transition model. Suppose:
+\begin{itemize}
+    \item 95\% of susceptible individuals remain susceptible and 5\% become infected;
+    \item of the infected individuals, 4\% recover without immunity and return to susceptible, 85\% remain infected, 10\% recover with immunity, and 1\% die;
+    \item recovered immune individuals remain recovered;
+    \item deceased individuals remain deceased.
+\end{itemize}
+Then the next state can be written as
+\[
+    \mathbf{x}_{t+1}
+    =
+    \begin{bmatrix}
+        0.95 & 0.04 & 0 & 0\\
+        0.05 & 0.85 & 0 & 0\\
+        0 & 0.10 & 1 & 0\\
+        0 & 0.01 & 0 & 1
+    \end{bmatrix}
+    \mathbf{x}_t.
+\]
+The matrix encodes how much of each current state flows into each future state.
+
+This example illustrates why the column interpretation matters. Each column describes what happens to one current state. The state vector \(\mathbf{x}_t\) provides the proportions in the current states. Multiplying the transition matrix by \(\mathbf{x}_t\) combines the columns according to those proportions to produce the next state.
+
+\section{Data Analysis Bridge}
+\label{mf:ch07-data-analysis-bridge}
+
+The Data Analysis textbook uses the matrix ideas in this chapter whenever it writes a data table, design matrix, fitted-value equation, or linear model in compact form.
+
+In regression, the design matrix \(X\) contains one row per observation and one column per model feature. The coefficient vector \(\boldsymbol{\beta}\) supplies the weights. The product
+\[
+    X\boldsymbol{\beta}
+\]
+produces the vector of systematic fitted values. In the row view, each fitted value is the inner product of one observation's row with the coefficient vector. In the column view, the fitted vector is a linear combination of the columns of the design matrix.
+
+The same two views appear throughout modeling:
+\begin{itemize}
+    \item rows correspond to observations or equations;
+    \item columns correspond to variables, features, constraints, or directions;
+    \item transposes let row-column relationships be written cleanly;
+    \item identity matrices appear in residual operators such as \(I-H\);
+    \item matrix-vector multiplication turns coefficient vectors into fitted-value vectors.
+\end{itemize}
+
+Later chapters use these ideas to discuss linear systems, QR factorization, inverses, rank, subspaces, least squares, normal equations, and projection. The mechanics begin here: a matrix is a structured collection of rows and columns, and multiplying by a vector creates a linear combination of those columns.
+
+\section{Chapter Summary}
+\label{mf:matrices-summary}
+
+Carry forward these matrix ideas:
+\begin{itemize}
+    \item A matrix is organized by dimensions, entries, rows, columns, blocks, and submatrices.
+    \item Zero, identity, sparse, triangular, transpose, and symmetric matrices encode useful structure.
+    \item Matrix arithmetic is dimension-sensitive; always check whether a product is defined.
+    \item The product \(A\mathbf{x}\) can be read either as row inner products or as a linear combination of the columns of \(A\).
+    \item These two views explain data tables, state-transition models, design matrices, and fitted values.
+\end{itemize}

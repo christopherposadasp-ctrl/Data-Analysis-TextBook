@@ -1,0 +1,331 @@
+
+\chapter[Linear Systems and Vandermonde Matrices]{Linear Systems, Polynomial Systems, and Vandermonde Matrices}
+\label{mf:ch08-linear-systems-vandermonde}
+\label{mf:ch08-linear-systems-polynomial-vandermonde}
+
+The previous chapter introduced matrices and matrix-vector multiplication. We saw that a matrix can organize information, and that multiplying a matrix by a vector produces a linear combination of the matrix's columns. We now use that language to study one of the central problems in applied mathematics and operations research:
+\[
+    A\mathbf{x}=\mathbf{b}.
+\]
+A linear system asks us to find the unknown vector \(\mathbf{x}\) whose image under the matrix \(A\) is the known vector \(\mathbf{b}\). This form appears whenever equations are written compactly, whenever polynomial coefficients are solved from data, and later when least squares and optimization problems are reduced to matrix equations.
+
+This chapter has two goals. First, it explains how simple linear systems can be solved when the coefficient matrix has triangular structure. Second, it shows how polynomial interpolation leads naturally to a special matrix called a Vandermonde matrix. We keep the focus narrow: QR factorizations, matrix inverses, rank, pivoting, subspaces, and least squares all appear later. Here the goal is to understand what a linear system is and why polynomial fitting can be written as one.
+
+\section{Linear Systems in Matrix Form}
+\label{mf:linear-systems}
+
+A \emph{linear system} is a collection of linear equations in unknowns. For example,
+\[
+    \begin{aligned}
+        2x_1+3x_2 &= 1,\\
+        4x_2 &= 1
+    \end{aligned}
+\]
+can be written in matrix form as
+\[
+    \begin{bmatrix}
+        2 & 3\\
+        0 & 4
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_1\\ x_2
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        1\\1
+    \end{bmatrix}.
+\]
+The matrix contains the coefficients of the unknowns, the vector \(\mathbf{x}\) contains the unknowns, and the vector \(\mathbf{b}\) contains the right-hand side values.
+
+More generally, if
+\[
+    A\in\mathbb{R}^{m\times n}, \qquad
+    \mathbf{x}\in\mathbb{R}^n, \qquad
+    \mathbf{b}\in\mathbb{R}^m,
+\]
+then
+\[
+    A\mathbf{x}=\mathbf{b}
+\]
+represents \(m\) scalar equations in \(n\) unknowns. Solving the system means finding a vector \(\mathbf{x}\) that satisfies all of those equations at once.
+
+The shape of \(A\) matters. A square system has the same number of equations and unknowns. A tall system has more equations than unknowns. A wide system has fewer equations than unknowns. The shape does not by itself tell us whether a solution exists or whether it is unique, but it tells us what kind of problem we are facing.
+
+A useful interpretation comes from the column view of matrix-vector multiplication. If
+\[
+    A=\begin{bmatrix}\mathbf{a}_1 & \mathbf{a}_2 & \cdots & \mathbf{a}_n\end{bmatrix},
+\]
+then
+\[
+    A\mathbf{x}=x_1\mathbf{a}_1+x_2\mathbf{a}_2+\cdots+x_n\mathbf{a}_n.
+\]
+Thus the equation \(A\mathbf{x}=\mathbf{b}\) asks whether \(\mathbf{b}\) can be built as a linear combination of the columns of \(A\), and if so, which coefficients produce it.
+
+\section{Triangular Systems}
+\label{mf:triangular-systems}
+
+Some linear systems are easier to solve because the coefficient matrix has zeros in useful places. An \emph{upper triangular} matrix has zeros below the main diagonal. A \emph{lower triangular} matrix has zeros above the main diagonal.
+
+For example,
+\[
+    R=\begin{bmatrix}
+        2 & 3\\
+        0 & 4
+    \end{bmatrix}
+\]
+is upper triangular. The system
+\[
+    R\mathbf{z}=\mathbf{b}, \qquad
+    \begin{bmatrix}
+        2 & 3\\
+        0 & 4
+    \end{bmatrix}
+    \begin{bmatrix}
+        z_1\\z_2
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        1\\1
+    \end{bmatrix}
+\]
+is easy because the second equation has only one unknown:
+\[
+    4z_2=1,
+    \qquad
+    z_2=\frac14.
+\]
+Once \(z_2\) is known, the first equation gives
+\[
+    2z_1+3z_2=1,
+\]
+so
+\[
+    2z_1=1-3z_2=1-\frac34=\frac14,
+    \qquad
+    z_1=\frac18.
+\]
+The order matters. We solved the last equation first, then moved upward.
+
+\section{Back Substitution}
+\label{mf:back-substitution}
+
+The procedure just used is called \emph{back substitution}. It solves an upper triangular system by starting with the last equation and moving backward.
+
+Let \(R\in\mathbb{R}^{n\times n}\) be upper triangular with nonzero diagonal entries, and suppose we want to solve
+\[
+    R\mathbf{x}=\mathbf{b}.
+\]
+Because \(R\) is upper triangular, equation \(i\) has the form
+\[
+    R_{ii}x_i+R_{i,i+1}x_{i+1}+\cdots+R_{in}x_n=b_i.
+\]
+If we already know \(x_{i+1},\ldots,x_n\), then we can solve for \(x_i\):
+\[
+    x_i=
+    \frac{b_i-\sum_{j=i+1}^n R_{ij}x_j}{R_{ii}}.
+\]
+Back substitution applies this formula for
+\[
+    i=n,n-1,\ldots,1.
+\]
+The nonzero diagonal condition matters. If some \(R_{ii}=0\), then the formula attempts to divide by zero, and this simple version of the algorithm breaks down.
+
+Back substitution is computationally cheaper than solving a completely unstructured system from scratch. The exact count depends on implementation, but the source notes emphasize that the work grows on the order of \(n^2\) operations for an \(n\times n\) triangular system. This is much smaller than the work required to compute many full matrix factorizations.
+
+\section{Forward Substitution}
+\label{mf:forward-substitution}
+
+Forward substitution is the corresponding method for lower triangular systems. Suppose
+\[
+    L\mathbf{x}=\mathbf{b}
+\]
+where \(L\in\mathbb{R}^{n\times n}\) is lower triangular with nonzero diagonal entries. The first equation contains only \(x_1\), so we solve for \(x_1\) first. Then the second equation involves \(x_1\) and \(x_2\), so we use the value of \(x_1\) to solve for \(x_2\), and so on.
+
+For a lower triangular system, equation \(i\) has the form
+\[
+    L_{i1}x_1+L_{i2}x_2+\cdots+L_{ii}x_i=b_i.
+\]
+If \(x_1,\ldots,x_{i-1}\) are already known, then
+\[
+    x_i=
+    \frac{b_i-\sum_{j=1}^{i-1}L_{ij}x_j}{L_{ii}}.
+\]
+Forward substitution applies this formula for
+\[
+    i=1,2,\ldots,n.
+\]
+
+Together, forward and back substitution are the basic computational tools behind many larger methods. Later, when a factorization turns a hard system into triangular systems, these substitution procedures do the final solve.
+
+
+\section{Solving Systems by Reducing to Triangular Form}
+\label{mf:linear-systems-factorization-bridge}
+
+The source notes motivate triangular systems through factorizations. A factorization rewrites a matrix as a product of simpler matrices, so that a difficult system can sometimes be solved through easier stages.
+
+For example, suppose
+\[
+    A=QR,
+\]
+where the columns of \(Q\) are orthonormal and \(R\) is upper triangular. This is only a preview; the construction and theory of QR are developed in the next chapter. If
+\[
+    A\mathbf{x}=\mathbf{b}
+\]
+is an exact, consistent system, then substituting \(A=QR\) and multiplying by \(Q^T\) gives
+\[
+    Q^TQR\mathbf{x}=Q^T\mathbf{b},
+    \qquad \text{so} \qquad
+    R\mathbf{x}=Q^T\mathbf{b}.
+\]
+The remaining system is upper triangular and can be solved by back substitution. If \(\mathbf{b}\) is not in the span of the columns of \(A\)---the space later denoted \(\operatorname{Col}(A)\)---the original system is not exactly consistent; the same QR structure leads toward least squares rather than an exact solve.
+
+The key workflow is therefore
+\[
+    \text{hard system}
+    \quad\longrightarrow\quad
+    \text{structured system}
+    \quad\longrightarrow\quad
+    \text{substitution solve}.
+\]
+
+\section{Polynomial Interpolation as a Linear System}
+\label{mf:polynomial-systems}
+\label{mf:polynomial-interpolation}
+
+The source notes next use a running example to show that polynomial fitting can be written as a linear system. Suppose we observe \(n\) data points
+\[
+    (x_1,y_1),(x_2,y_2),\ldots,(x_n,y_n).
+\]
+If the \(x_i\) values are distinct, then there is a unique polynomial of degree at most \(n-1\) that passes through all \(n\) points. The distinct-input condition matters: if two observations have the same input value but different output values, then no single-valued polynomial \(p(x)\) can pass through both.
+
+Write that polynomial as
+\[
+    p(x)=a_0+a_1x+a_2x^2+\cdots+a_{n-1}x^{n-1}.
+\]
+The unknowns are the coefficients
+\[
+    a_0,a_1,\ldots,a_{n-1}.
+\]
+To force the polynomial to pass through the data, we impose
+\[
+    p(x_i)=y_i, \qquad i=1,2,\ldots,n.
+\]
+That gives the system
+\[
+    \begin{aligned}
+    a_0+a_1x_1+a_2x_1^2+\cdots+a_{n-1}x_1^{n-1} &= y_1,\\
+    a_0+a_1x_2+a_2x_2^2+\cdots+a_{n-1}x_2^{n-1} &= y_2,\\
+    &\vdots\\
+    a_0+a_1x_n+a_2x_n^2+\cdots+a_{n-1}x_n^{n-1} &= y_n.
+    \end{aligned}
+\]
+This is a linear system in the unknown coefficients, even though the polynomial may be nonlinear as a function of \(x\). The coefficients \(a_0,\ldots,a_{n-1}\) appear linearly.
+
+This distinction is important: powers of the observed input values are allowed in the columns, but the unknown coefficients still enter as a linear combination.
+
+\section{Vandermonde Matrices}
+\label{mf:vandermonde-matrices}
+
+The polynomial interpolation system can be written compactly using a special matrix. Define
+\[
+    V=
+    \begin{bmatrix}
+        1 & x_1 & x_1^2 & \cdots & x_1^{n-1}\\
+        1 & x_2 & x_2^2 & \cdots & x_2^{n-1}\\
+        \vdots & \vdots & \vdots & \ddots & \vdots\\
+        1 & x_n & x_n^2 & \cdots & x_n^{n-1}
+    \end{bmatrix}
+    \in\mathbb{R}^{n\times n}.
+\]
+Let
+\[
+    \mathbf{a}=\begin{bmatrix}a_0\\a_1\\\vdots\\a_{n-1}\end{bmatrix},
+    \qquad
+    \mathbf{y}=\begin{bmatrix}y_1\\y_2\\\vdots\\y_n\end{bmatrix}.
+\]
+Then the interpolation equations become
+\[
+    V\mathbf{a}=\mathbf{y}.
+\]
+The matrix \(V\) is called a \emph{Vandermonde matrix}. Each row is built from consecutive powers of one input value:
+\[
+    1,\;x_i,\;x_i^2,\;\ldots,\;x_i^{n-1}.
+\]
+Vandermonde matrices appear naturally in polynomial interpolation and in systems of equations involving powers of variables.
+
+The source notes use a running-distance example: distance values become the inputs \(x_i\), observed durations or paces become the outputs \(y_i\), and the polynomial coefficients are found by solving \(V\mathbf{a}=\mathbf{y}\). The example is not mainly about running. It is about recognizing that a curve-fitting problem can become a matrix equation.
+
+\paragraph{A caution.}
+Solving \(V\mathbf{a}=\mathbf{y}\) gives the polynomial that passes through the data points when the inputs are distinct. That does not mean the polynomial is automatically a good predictive model. A high-degree polynomial can pass exactly through the observed data and still behave poorly between or beyond the observed points. This modeling caution becomes important later in data analysis when we distinguish interpolation, least squares, and prediction.
+
+
+\section{Exact Systems and Approximate Systems}
+\label{mf:overdetermined-systems}
+\label{mf:least-squares-motivation}
+
+Sometimes we do not want a polynomial that passes exactly through every point. Instead, we may choose a simpler polynomial, such as a quadratic:
+\[
+    p(x)=a_0+a_1x+a_2x^2.
+\]
+For \(n\) observations, the corresponding system has the form
+\[
+    \begin{bmatrix}
+        1 & x_1 & x_1^2\\
+        1 & x_2 & x_2^2\\
+        \vdots & \vdots & \vdots\\
+        1 & x_n & x_n^2
+    \end{bmatrix}
+    \begin{bmatrix}
+        a_0\\a_1\\a_2
+    \end{bmatrix}
+    \approx
+    \begin{bmatrix}
+        y_1\\y_2\\ \vdots\\ y_n
+    \end{bmatrix}.
+\]
+When \(n>3\), there are more equations than unknown coefficients, so a single quadratic generally cannot pass through every observed point exactly.
+
+This is where approximation enters. Instead of solving \(A\mathbf{x}=\mathbf{b}\) exactly, we choose \(\mathbf{x}\) so that \(A\mathbf{x}\) is close to \(\mathbf{b}\). That idea motivates least squares. The full theory appears later; the point here is simply that data often give more equations than unknowns, so exact equality may be too much to ask.
+
+\section{Data Analysis Bridge}
+\label{mf:ch08-data-analysis-bridge}
+
+The Data Analysis textbook uses the ideas in this chapter whenever transformed regression models are written in matrix form. If a model includes polynomial terms such as
+\[
+    1,\quad x,\quad x^2,\quad x^3,
+\]
+then the design matrix contains columns built from powers of the observed predictor values. This is the same structural idea as a Vandermonde matrix.
+
+For example, a polynomial regression model
+\[
+    y_i \approx a_0+a_1x_i+a_2x_i^2
+\]
+can be written as
+\[
+    \mathbf{y}\approx
+    \begin{bmatrix}
+        1 & x_1 & x_1^2\\
+        1 & x_2 & x_2^2\\
+        \vdots & \vdots & \vdots\\
+        1 & x_n & x_n^2
+    \end{bmatrix}
+    \begin{bmatrix}
+        a_0\\a_1\\a_2
+    \end{bmatrix}.
+\]
+The design columns may be nonlinear functions of the original predictor values, but the model is still linear in the unknown coefficients.
+
+This chapter also supports the computational habit of reducing problems to linear systems and solving them with structure. Later chapters develop QR, inverses, rank, subspaces, and least squares; this chapter provides the basic equation form those tools act on.
+
+\section{Chapter Summary}
+\label{mf:linear-systems-summary}
+\label{mf:linear-systems-vandermonde-summary}
+
+Carry forward these system-solving ideas:
+\begin{itemize}
+    \item A linear system \(A\mathbf{x}=\mathbf{b}\) asks whether \(\mathbf{b}\) can be built as a linear combination of the columns of \(A\).
+    \item Upper and lower triangular systems are solved efficiently by back substitution and forward substitution.
+    \item Matrix factorizations can replace hard solves with triangular solves.
+    \item Polynomial interpolation conditions form a linear system with a Vandermonde matrix.
+    \item Exact interpolation fits the observed points exactly; approximate fitting becomes necessary when exact equality is not possible or not desirable.
+\end{itemize}

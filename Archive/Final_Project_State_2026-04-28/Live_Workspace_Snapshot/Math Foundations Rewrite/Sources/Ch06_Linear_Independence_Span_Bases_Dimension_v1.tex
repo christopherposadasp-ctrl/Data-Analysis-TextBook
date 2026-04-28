@@ -1,0 +1,246 @@
+\chapter{Linear Independence, Span, Bases, and Dimension}
+\label{mf:ch06-linear-independence-span-bases-dimension}
+
+The previous chapters treated vectors as ordered collections of quantities and described how to add, subtract, scale, combine, compare, and measure them. We now ask a structural question: when does a collection of vectors contain genuinely different directions, and when is one vector redundant because it can be built from the others?
+
+This chapter develops four connected ideas. The \emph{span} of a set of vectors is the collection of all vectors that can be built from them by linear combinations. \emph{Linear independence} tells us whether any vector in the collection is redundant. A \emph{basis} is a nonredundant set of directions that can represent every vector in a space. The \emph{dimension} of a space counts how many independent directions are needed to describe it.
+
+These ideas will later support matrix rank, invertibility, least squares, degrees of freedom, and identifiability. For now, we stay with vectors and linear combinations.
+
+\section{Span: All Vectors Built from a Collection}
+\label{mf:span}
+
+Let \(\mathbf{a}_1,\ldots,\mathbf{a}_k\in\mathbb{R}^n\). The \emph{span} of these vectors is the set of all linear combinations of them:
+\[
+    \operatorname{span}\{\mathbf{a}_1,\ldots,\mathbf{a}_k\}
+    =
+    \left\{\beta_1\mathbf{a}_1+\cdots+\beta_k\mathbf{a}_k:
+    \beta_1,\ldots,\beta_k\in\mathbb{R}\right\}.
+\]
+In words, the span is everything we can make by scaling and adding the listed vectors.
+
+If \(\mathbf{a}_1\) is a single nonzero vector, then
+\[
+    \operatorname{span}\{\mathbf{a}_1\}=\{\beta\mathbf{a}_1:\beta\in\mathbb{R}\},
+\]
+which is the line through the origin in the direction of \(\mathbf{a}_1\). If two nonzero vectors in \(\mathbb{R}^3\) point in genuinely different directions, their span is a plane through the origin. If three vectors in \(\mathbb{R}^3\) point in enough different directions, their span may be all of \(\mathbb{R}^3\).
+
+The span language makes linear combinations geometric. A set of vectors supplies directions; the span is the collection of all locations reachable by moving in those directions with real-valued coefficients.
+
+\section{Linear Dependence}
+\label{mf:linear-dependence}
+
+A set of vectors \(\{\mathbf{a}_1,\ldots,\mathbf{a}_k\}\subset\mathbb{R}^n\) is \emph{linearly dependent} if there exist scalars \(\beta_1,\ldots,\beta_k\), not all zero, such that
+\[
+    \beta_1\mathbf{a}_1+\beta_2\mathbf{a}_2+\cdots+\beta_k\mathbf{a}_k=\mathbf{0}.
+\]
+The phrase ``not all zero'' is essential. We can always make the zero vector by choosing all coefficients equal to zero. Linear dependence means there is a \emph{nontrivial} way to make the zero vector.
+
+For two vectors, suppose
+\[
+    \beta_1\mathbf{a}_1+\beta_2\mathbf{a}_2=\mathbf{0}
+\]
+with \(\beta_2\neq 0\). Then
+\[
+    \mathbf{a}_2=-\frac{\beta_1}{\beta_2}\mathbf{a}_1.
+\]
+Thus \(\mathbf{a}_2\) is just a scalar multiple of \(\mathbf{a}_1\). The two vectors do not provide two different directions; one is redundant.
+
+The same idea holds for more than two vectors. If a collection is linearly dependent, then at least one vector in the collection can be written as a linear combination of the others. To see why, suppose
+\[
+    \beta_1\mathbf{a}_1+\cdots+\beta_k\mathbf{a}_k=\mathbf{0}
+\]
+for coefficients not all zero. Choose an index \(j\) with \(\beta_j\neq 0\). Then
+\[
+    \mathbf{a}_j
+    =
+    -\frac{1}{\beta_j}\sum_{i\neq j}\beta_i\mathbf{a}_i.
+\]
+So \(\mathbf{a}_j\) can be built from the remaining vectors.
+
+A collection that contains the zero vector is automatically linearly dependent. If \(\mathbf{a}_j=\mathbf{0}\), choose \(\beta_j=1\) and all other coefficients equal to zero. That is a nontrivial linear combination that equals \(\mathbf{0}\).
+
+\section{Linear Independence}
+\label{mf:linear-independence}
+
+A set of vectors \(\mathbf{a}_1,\ldots,\mathbf{a}_k\in\mathbb{R}^n\) is \emph{linearly independent} if it is not linearly dependent. Equivalently,
+\[
+    \beta_1\mathbf{a}_1+\cdots+\beta_k\mathbf{a}_k=\mathbf{0}
+    \quad\Longrightarrow\quad
+    \beta_1=\beta_2=\cdots=\beta_k=0.
+\]
+In words, the only way to combine the vectors to get the zero vector is the trivial way: use all-zero coefficients.
+
+Linear independence means that no vector in the set is unnecessary. Each vector contributes a direction that cannot be built from the others.
+
+\paragraph{Example in \(\mathbb{R}^2\).}
+Consider
+\[
+    \mathbf{a}_1=\begin{bmatrix}1\\0\end{bmatrix},
+    \qquad
+    \mathbf{a}_2=\begin{bmatrix}1\\1\end{bmatrix}.
+\]
+If
+\[
+    \beta_1\mathbf{a}_1+\beta_2\mathbf{a}_2=\mathbf{0},
+\]
+then
+\[
+    \beta_1\begin{bmatrix}1\\0\end{bmatrix}
+    +\beta_2\begin{bmatrix}1\\1\end{bmatrix}
+    =
+    \begin{bmatrix}\beta_1+\beta_2\\ \beta_2\end{bmatrix}
+    =
+    \begin{bmatrix}0\\0\end{bmatrix}.
+\]
+The second coordinate gives \(\beta_2=0\). Then the first coordinate gives \(\beta_1=0\). Therefore the two vectors are linearly independent.
+
+\section{How Many Independent Vectors Can There Be?}
+\label{mf:maximal-independent-sets}
+\label{mf:dimension}
+
+A linearly independent set of \(n\)-vectors can have at most \(n\) vectors. In \(\mathbb{R}^2\), we cannot have three linearly independent vectors. In \(\mathbb{R}^3\), we cannot have four linearly independent vectors. More generally, no more than \(n\) independent directions fit inside \(\mathbb{R}^n\).
+
+One way to see this is to examine the equation
+\[
+    \beta_1\mathbf{a}_1+\cdots+\beta_k\mathbf{a}_k=\mathbf{0}.
+\]
+This is a system of \(n\) scalar equations, one for each coordinate, in \(k\) unknown coefficients \(\beta_1,\ldots,\beta_k\). If \(k>n\), then there are more unknown coefficients than equations. Such a homogeneous system has a nontrivial solution, so the vectors are linearly dependent.
+
+This fact gives the first meaning of \emph{dimension}: \(\mathbb{R}^n\) has \(n\) independent directions. The number \(n\) is not just the number of entries in a vector; it is the maximum number of mutually independent directions available in the space.
+
+\section{Bases}
+\label{mf:bases}
+
+A \emph{basis} for \(\mathbb{R}^n\) is a collection of \(n\) linearly independent vectors in \(\mathbb{R}^n\). Equivalently, it is a set of vectors that is both:
+\begin{enumerate}
+    \item linearly independent, so none of the vectors is redundant; and
+    \item spanning, so every vector in \(\mathbb{R}^n\) can be written as a linear combination of them.
+\end{enumerate}
+
+Suppose \(\mathbf{a}_1,\ldots,\mathbf{a}_n\) form a basis for \(\mathbb{R}^n\). Then every vector \(\mathbf{b}\in\mathbb{R}^n\) can be written in the form
+\[
+    \mathbf{b}=c_1\mathbf{a}_1+c_2\mathbf{a}_2+\cdots+c_n\mathbf{a}_n
+\]
+for some scalars \(c_1,\ldots,c_n\).
+
+The source notes justify this using the maximum-size fact. The set
+\[
+    \{\mathbf{a}_1,\ldots,\mathbf{a}_n,\mathbf{b}\}
+\]
+contains \(n+1\) vectors in \(\mathbb{R}^n\), so it must be linearly dependent. Therefore there are coefficients, not all zero, such that
+\[
+    \beta_1\mathbf{a}_1+\cdots+\beta_n\mathbf{a}_n+\beta_{n+1}\mathbf{b}=\mathbf{0}.
+\]
+The coefficient \(\beta_{n+1}\) cannot be zero; if it were zero, then the basis vectors themselves would be linearly dependent. Thus \(\beta_{n+1}\neq0\), and we may solve for \(\mathbf{b}\):
+\[
+    \mathbf{b}
+    =
+    -\frac{\beta_1}{\beta_{n+1}}\mathbf{a}_1
+    -\cdots-
+    \frac{\beta_n}{\beta_{n+1}}\mathbf{a}_n.
+\]
+So every vector in \(\mathbb{R}^n\) is in the span of the basis vectors.
+
+\section{Coordinates in a Basis Are Unique}
+\label{mf:coordinate-representation}
+
+A basis does more than merely represent every vector. It represents every vector \emph{uniquely}.
+
+Suppose \(\mathbf{a}_1,\ldots,\mathbf{a}_n\) form a basis and suppose that \(\mathbf{b}\in\mathbb{R}^n\) has two representations:
+\[
+    \mathbf{b}=c_1\mathbf{a}_1+\cdots+c_n\mathbf{a}_n
+\]
+and
+\[
+    \mathbf{b}=d_1\mathbf{a}_1+\cdots+d_n\mathbf{a}_n.
+\]
+Subtract the second equation from the first:
+\[
+    \mathbf{0}
+    =
+    (c_1-d_1)\mathbf{a}_1+\cdots+(c_n-d_n)\mathbf{a}_n.
+\]
+Because the basis vectors are linearly independent,
+\[
+    c_1-d_1=\cdots=c_n-d_n=0.
+\]
+Therefore \(c_i=d_i\) for every \(i\). The coordinates of \(\mathbf{b}\) in that basis are unique.
+
+This is the reason bases are useful. Once a basis has been chosen, a vector can be described by its coordinate weights relative to that basis.
+
+\section{The Standard Basis}
+\label{mf:standard-basis}
+
+The standard basis for \(\mathbb{R}^n\) is
+\[
+    \mathbf{e}_1=\begin{bmatrix}1\\0\\\vdots\\0\end{bmatrix},
+    \quad
+    \mathbf{e}_2=\begin{bmatrix}0\\1\\\vdots\\0\end{bmatrix},
+    \quad \ldots \quad,
+    \mathbf{e}_n=\begin{bmatrix}0\\0\\\vdots\\1\end{bmatrix}.
+\]
+Each \(\mathbf{e}_i\) has a 1 in the \(i\)th entry and 0 everywhere else. For any vector
+\[
+    \mathbf{b}=\begin{bmatrix}b_1\\b_2\\\vdots\\b_n\end{bmatrix}\in\mathbb{R}^n,
+\]
+we have
+\[
+    \mathbf{b}=b_1\mathbf{e}_1+b_2\mathbf{e}_2+\cdots+b_n\mathbf{e}_n.
+\]
+Thus the standard basis expresses the usual coordinates of \(\mathbf{b}\).
+
+Other bases are possible. For example, the two vectors
+\[
+    \begin{bmatrix}1.2\\-2.6\end{bmatrix},
+    \qquad
+    \begin{bmatrix}-0.3\\-3.7\end{bmatrix}
+\]
+form a basis for \(\mathbb{R}^2\). They point in different directions, so neither one is a scalar multiple of the other. Therefore they provide two independent directions in a two-dimensional space.
+
+\section{Orthonormal Bases}
+\label{mf:orthonormal-basis-note}
+
+The standard basis is special because its vectors are both orthogonal and normal. For the standard basis vectors,
+\[
+    \mathbf{e}_i^T\mathbf{e}_j=
+    \begin{cases}
+        1, & i=j,\\
+        0, & i\neq j.
+    \end{cases}
+\]
+A basis whose vectors are mutually orthogonal and each have norm 1 is called an \emph{orthonormal basis}. Equivalently, for an orthonormal basis \(\mathbf{q}_1,\ldots,\mathbf{q}_n\),
+\[
+    \mathbf{q}_i^T\mathbf{q}_j=
+    \begin{cases}
+        1, & i=j,\\
+        0, & i\neq j.
+    \end{cases}
+\]
+
+For an orthonormal basis, dot products recover coordinates directly. These bases return later with Gram--Schmidt and QR factorization. This chapter only introduces the idea; the construction is deferred.
+
+\section{Data Analysis Bridge}
+\label{mf:ch06-data-analysis-bridge}
+
+The Data Analysis textbook uses the ideas in this chapter in several places:
+\begin{itemize}
+    \item A model becomes more flexible when it has more independent directions available for fitting patterns.
+    \item Degrees of freedom count independent dimensions, not just the number of formulas on a page.
+    \item Regression design columns must provide enough independent information for coefficients to be uniquely identified.
+    \item Multicollinearity is a practical warning that some design columns are nearly, or exactly, redundant.
+\end{itemize}
+
+Later chapters reuse this vocabulary for matrix rank, column space, null space, and least-squares identifiability. Here the key point is simpler: independent vectors add directions, dependent vectors repeat directions, bases give unique coordinates, and dimension counts directions.
+
+\section{Chapter Summary}
+\label{mf:linear-independence-summary}
+
+Carry forward these structure ideas:
+\begin{itemize}
+    \item The span of a set of vectors is the collection of all linear combinations of those vectors.
+    \item A linearly dependent set contains redundancy; a linearly independent set does not.
+    \item No more than \(n\) linearly independent vectors can exist in \(\mathbb{R}^n\).
+    \item A basis for \(\mathbb{R}^n\) is an independent set that represents every vector in \(\mathbb{R}^n\), and those coordinates are unique.
+    \item The standard basis is the default coordinate system; orthonormal bases will become useful when we build Gram-Schmidt and QR.
+\end{itemize}

@@ -1,0 +1,62 @@
+Label,ProposedChapter,ProposedChapterTitle,ProposedSectionTitle,OldNotesPages,Notes
+mf:logic-statements,Ch01,Logic and Deductive Reasoning,Mathematical statements and truth values,pp. 1--3,"Supports assumptions, hypotheses, and defensible conclusions."
+mf:logic-negation,Ch01,Logic and Deductive Reasoning,Negation and alternatives,pp. 1--5,Supports null/alternative hypotheses and quantified cleaning rules.
+mf:logic-implication,Ch01,Logic and Deductive Reasoning,"Implication, biconditional reasoning, and De Morgan rules",pp. 1--5,Supports reasoning from assumptions to conclusions.
+mf:vectors-rn,Ch02,Vectors in R^n,Vectors in R^n,pp. 6--7,Core vector notation dependency.
+mf:vectors-as-data,Ch02,Vectors in R^n,Vectors as structured collections of quantities,pp. 6--7,"Bridge from vectors to data columns, observations, and feature vectors."
+mf:vector-entries-subvectors,Ch02,Vectors in R^n,"Entries, coordinates, and subvectors",pp. 6--8,Supports row/column selection and vector coordinates.
+mf:ones-vector,Ch02,Vectors in R^n,"Special vectors, including the ones vector",pp. 6--7,Supports mean-only vectors and intercept columns.
+mf:probability-vectors,Ch02,Vectors in R^n,Probability vectors as weighted collections,p. 7,Supports expectation as weighted average / inner product.
+mf:vector-arithmetic,Ch03,Vector Operations and Linear Combinations,"Vector addition, subtraction, and centering",pp. 8--10,Supports residuals and centered variables.
+mf:scalar-multiplication,Ch03,Vector Operations and Linear Combinations,Scalar multiplication,pp. 8--10,Supports weighted predictors and scaled vectors.
+mf:linear-combinations,Ch03,Vector Operations and Linear Combinations,Linear combinations,pp. 9--10,"Supports fitted values, columns, and parameterized models."
+mf:centered-vectors,Ch03,Vector Operations and Linear Combinations,Centered vectors and deviations,pp. 8--10,"Supports spread, covariance, correlation, and sums of squares."
+mf:set-membership,Ch04,"Sets, Set Operations, and Quantifiers",Set membership and common number systems,pp. 11--15,Supports variable domains and valid values.
+mf:set-operations,Ch04,"Sets, Set Operations, and Quantifiers","Set operations, complements, and differences",pp. 11--15,"Supports filtering, row selection, and cleaning rules."
+mf:subsets,Ch04,"Sets, Set Operations, and Quantifiers",Subsets and families of sets,pp. 11--15,Supports selected rows/columns and data-cleaning subsets.
+mf:quantifiers,Ch04,"Sets, Set Operations, and Quantifiers",Universal and existential quantifiers,pp. 11--15,Supports precise cleaning predicates and assumptions.
+mf:quantifier-negation,Ch04,"Sets, Set Operations, and Quantifiers",Negating quantified statements,pp. 11--15,Supports defensive data-cleaning logic.
+mf:dot-product,Ch05,"Dot Products, Norms, Distance, Angles, and Orthogonality",Dot products,p. 16,"Supports weighted sums, inner products, covariance, and normal equations."
+mf:inner-product-weighted-sums,Ch05,"Dot Products, Norms, Distance, Angles, and Orthogonality",Inner products as weighted sums,p. 16,"Supports expectation, means, and linear predictors."
+mf:norms-euclidean,Ch05,"Dot Products, Norms, Distance, Angles, and Orthogonality",Euclidean norm and squared length,pp. 16--18,"Supports RSS, TSS, MSE, RMSE, and least-squares geometry."
+mf:vector-distance,Ch05,"Dot Products, Norms, Distance, Angles, and Orthogonality",Distance between vectors,pp. 17--18,Supports residual length and prediction error.
+mf:angles,Ch05,"Dot Products, Norms, Distance, Angles, and Orthogonality",Angles between vectors,p. 18,Supports correlation as geometric alignment.
+mf:orthogonality,Ch05,"Dot Products, Norms, Distance, Angles, and Orthogonality",Orthogonality and zero dot products,p. 18,Supports residual orthogonality and projection geometry.
+mf:linear-independence,Ch06,"Linear Independence, Span, Bases, and Dimension",Linear independence,pp. 20--21,"Supports rank, degrees of freedom, and identifiability."
+mf:span,Ch06,"Linear Independence, Span, Bases, and Dimension",Span,pp. 20--22,Supports column-space and fitted-value interpretations.
+mf:bases,Ch06,"Linear Independence, Span, Bases, and Dimension",Bases and coordinates,pp. 20--22,Supports dimension and unique linear-combination representations.
+mf:dimension,Ch06,"Linear Independence, Span, Bases, and Dimension",Dimension and maximum independent sets,pp. 20--21,Supports degrees of freedom.
+mf:matrices-dimensions,Ch07,Matrices and Matrix-Vector Multiplication,Matrix notation and dimensions,pp. 23--24,Supports design matrices and data tables.
+mf:transpose,Ch07,Matrices and Matrix-Vector Multiplication,Transpose notation,pp. 23--25,Supports X^T e and normal-equation notation.
+mf:identity-matrix,Ch07,Matrices and Matrix-Vector Multiplication,Identity matrices and symmetry,pp. 23--24,Supports hat matrices and matrix algebra.
+mf:matrix-vector-row-view,Ch07,Matrices and Matrix-Vector Multiplication,Matrix-vector multiplication as row inner products,p. 25,Supports X beta as fitted values.
+mf:matrix-vector-column-view,Ch07,Matrices and Matrix-Vector Multiplication,Matrix-vector multiplication as a linear combination of columns,pp. 25--26,Supports fitted values as column-space combinations.
+mf:submatrix-extraction,Ch07,Matrices and Matrix-Vector Multiplication,Submatrices and slicing notation,pp. 23--24,Supports filtering rows and selecting columns.
+mf:computational-matrix-operations,Ch07,Matrices and Matrix-Vector Multiplication,Computational matrix operations and array shapes,pp. 37--38,Supports Python/NumPy matrix-operation bridges.
+mf:linear-systems,Ch08,"Linear Systems, Polynomial Systems, and Vandermonde Matrices",Linear systems,pp. 28--31,Supports transformed systems and coefficient solving.
+mf:vandermonde-matrices,Ch08,"Linear Systems, Polynomial Systems, and Vandermonde Matrices",Polynomial systems and Vandermonde matrices,p. 31,Supports polynomial design matrices.
+mf:orthogonal-bases,Ch09,"Orthogonal Bases, Gram-Schmidt, and QR",Orthogonal and orthonormal bases,pp. 34--36,Supports orthogonal-polynomial intuition.
+mf:gram-schmidt,Ch09,"Orthogonal Bases, Gram-Schmidt, and QR",Gram-Schmidt orthogonalization,pp. 34--36,Supports orthogonal basis construction.
+mf:qr-factorization,Ch09,"Orthogonal Bases, Gram-Schmidt, and QR",QR factorization,pp. 34--36,Supports stable least-squares background if retained chronologically.
+mf:orthogonal-polynomials,Ch09,"Orthogonal Bases, Gram-Schmidt, and QR",Orthogonal polynomial intuition,pp. 34--36,Supports transformed-regression interpretation.
+mf:matrix-inverse,Ch10,"Matrix Inverses, Rank, and Pseudoinverses",Matrix inverses,pp. 59--62,Supports inverse and left-inverse intuition.
+mf:left-inverse,Ch10,"Matrix Inverses, Rank, and Pseudoinverses",Left inverses,pp. 59--62,Supports identifiability and full column rank.
+mf:rank,Ch10,"Matrix Inverses, Rank, and Pseudoinverses",Rank,"pp. 59--62, 67--69",Supports full-rank conditions.
+mf:full-column-rank,Ch10,"Matrix Inverses, Rank, and Pseudoinverses",Full column rank,"pp. 59--62, 67--69",Supports unique regression coefficients.
+mf:ata-invertibility,Ch10,"Matrix Inverses, Rank, and Pseudoinverses",Invertibility of A^T A under full column rank,p. 122,Supports normal-equation coefficient uniqueness.
+mf:column-space,Ch11,"Subspaces: Column Space, Row Space, and Null Space",Column space,pp. 67--69,Supports fitted-value spaces and projections.
+mf:row-space,Ch11,"Subspaces: Column Space, Row Space, and Null Space",Row space,pp. 67--69,Part of the subspace framework.
+mf:null-space,Ch11,"Subspaces: Column Space, Row Space, and Null Space",Null space,pp. 67--69,Supports identifiability and non-identifiability.
+mf:subspaces,Ch11,"Subspaces: Column Space, Row Space, and Null Space","Column, row, and null subspaces",pp. 67--69,Supports Big Four subspace language.
+mf:multivariable-functions,Ch12,"Multivariable Functions, Gradients, and Least Squares",Multivariable functions,pp. 104--105,Supports optimization setup.
+mf:gradient,Ch12,"Multivariable Functions, Gradients, and Least Squares",Gradients,pp. 104--105,Supports normal-equation derivations.
+mf:stationary-points,Ch12,"Multivariable Functions, Gradients, and Least Squares",Stationary points,pp. 104--105,Supports least-squares minimization.
+mf:least-squares-objective,Ch12,"Multivariable Functions, Gradients, and Least Squares",Least-squares objective,pp. 104--105,Supports regression loss minimization.
+mf:least-squares-normal-equations,Ch12,"Multivariable Functions, Gradients, and Least Squares",Normal equations,"pp. 104--105, 120--122",Supports X^T X beta = X^T y.
+mf:least-squares-residual-orthogonality,Ch12,"Multivariable Functions, Gradients, and Least Squares",Residual orthogonality in least squares,pp. 104--105,Supports X^T e = 0.
+mf:least-squares-projection-bridge,Ch12,"Multivariable Functions, Gradients, and Least Squares",Least squares as an orthogonal-projection bridge,pp. 104--105,Short bridge label for Data Analysis projection language; do not expand into a long new chapter.
+mf:hessian,Ch13,"Hessians, Quadratic Forms, and Second-Order Conditions",Hessians,pp. 120--122,Supports second-order least-squares arguments.
+mf:quadratic-forms,Ch13,"Hessians, Quadratic Forms, and Second-Order Conditions",Quadratic forms,pp. 120--122,Supports A^T A arguments.
+mf:positive-semidefinite,Ch13,"Hessians, Quadratic Forms, and Second-Order Conditions",Positive semidefinite matrices,pp. 120--122,Supports convexity and uniqueness checks.
+mf:second-order-conditions,Ch13,"Hessians, Quadratic Forms, and Second-Order Conditions",Second-order conditions,pp. 120--122,Supports classifying stationary points.
+mf:data-analysis-bridge-index,Appendix A,Data Analysis Bridge Index,Data Analysis Bridge Index,Derived from MF_Connections_Map.md,Index layer that points Data Analysis dependencies back to chronological sections.

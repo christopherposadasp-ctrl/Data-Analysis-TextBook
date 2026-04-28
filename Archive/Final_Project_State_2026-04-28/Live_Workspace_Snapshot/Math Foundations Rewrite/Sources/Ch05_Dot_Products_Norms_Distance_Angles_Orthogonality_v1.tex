@@ -1,0 +1,227 @@
+\chapter{Dot Products, Norms, Distance, Angles, and Orthogonality}
+\label{mf:ch05-dot-products-norms-distance-angles-orthogonality}
+
+The previous chapters treated vectors as ordered collections of quantities and described how to add, subtract, scale, and combine them. Those operations produce new vectors. This chapter introduces operations that use vectors to produce scalars: dot products, lengths, distances, and angles.
+
+These ideas are central because they connect algebra, geometry, computation, and later least-squares reasoning. A dot product is a weighted sum. A norm is a length. A distance compares two vectors. An angle measures alignment. Orthogonality is the special case of zero alignment.
+
+\section{The Inner Product}
+\label{mf:dot-product}
+
+Let \(\mathbf{a},\mathbf{b}\in\mathbb{R}^n\). The \emph{inner product}, also called the \emph{dot product}, of \(\mathbf{a}\) and \(\mathbf{b}\) is the scalar
+\[
+    \mathbf{a}^T\mathbf{b}
+    =a_1b_1+a_2b_2+\cdots+a_nb_n
+    =\sum_{i=1}^n a_i b_i.
+\]
+Some references write this as \(\langle \mathbf{a},\mathbf{b}\rangle\), \((\mathbf{a}\mid\mathbf{b})\), or \(\mathbf{a}\cdot\mathbf{b}\). In this text, we primarily use \(\mathbf{a}^T\mathbf{b}\), because that notation connects naturally to matrix algebra later.
+
+The two vectors must have the same length. The operation multiplies matching entries and then adds the products. For example,
+\[
+    \begin{bmatrix}-1\\2\\2\end{bmatrix}^T
+    \begin{bmatrix}1\\0\\-3\end{bmatrix}
+    =(-1)(1)+(2)(0)+(2)(-3)=-7.
+\]
+The result is not a vector. It is a single number.
+
+\section{Properties of the Inner Product}
+\label{mf:dot-product-properties}
+
+The inner product has three basic algebraic properties that we will use repeatedly:
+\[
+\begin{aligned}
+    \mathbf{a}^T\mathbf{b} &= \mathbf{b}^T\mathbf{a}, &&\text{commutativity},\\
+    (\gamma\mathbf{a})^T\mathbf{b} &= \gamma(\mathbf{a}^T\mathbf{b}), &&\text{compatibility with scalar multiplication},\\
+    (\mathbf{a}+\mathbf{b})^T\mathbf{c} &= \mathbf{a}^T\mathbf{c}+\mathbf{b}^T\mathbf{c}, &&\text{distributivity over addition}.
+\end{aligned}
+\]
+Together, these say that the inner product behaves like a linear measuring device. It converts a vector into a scalar by weighting and adding entries, and it respects vector addition and scalar multiplication.
+
+\section{Inner Products as Selection, Sums, Means, and Weighted Sums}
+\label{mf:inner-product-weighted-sums}
+\label{mf:selection-operator}
+\label{mf:ones-vector-sums-means}
+
+The inner product is useful because many common calculations are special cases of weighted sums.
+
+Let \(\mathbf{e}_i\in\mathbb{R}^n\) be the \(i\)th standard basis vector. Then
+\[
+    \mathbf{e}_i^T\mathbf{a}=a_i.
+\]
+Thus \(\mathbf{e}_i^T\) acts as a selection operator: it selects the \(i\)th entry of \(\mathbf{a}\).
+
+Let \(\mathbf{1}\in\mathbb{R}^n\) be the ones vector. Then
+\[
+    \mathbf{1}^T\mathbf{a}=\sum_{i=1}^n a_i.
+\]
+The sample mean of the entries of \(\mathbf{a}\) can therefore be written as
+\[
+    \frac{1}{n}\mathbf{1}^T\mathbf{a}
+    =\frac{1}{n}\sum_{i=1}^n a_i.
+\]
+Finally,
+\[
+    \mathbf{a}^T\mathbf{a}=\sum_{i=1}^n a_i^2,
+\]
+which is the sum of squared entries. This expression becomes the foundation for squared length, residual sum of squares, and least squares.
+
+\paragraph{Example: prices and quantities.}
+\label{mf:price-quantity-dot-product}
+Suppose \(\mathbf{p}\in\mathbb{R}^n\) is a vector of prices for \(n\) goods, and \(\mathbf{q}\in\mathbb{R}^n\) is a vector of quantities to purchase. Then
+\[
+    \mathbf{p}^T\mathbf{q}
+    =p_1q_1+\cdots+p_nq_n
+\]
+is the total cost of the goods. The price vector supplies the weights; the quantity vector supplies the amounts being weighted.
+
+This same pattern appears in probability. If \(\mathbf{p}\) is a probability vector and \(\mathbf{x}\) is a vector of possible outcome values, then \(\mathbf{p}^T\mathbf{x}\) is the expected value of the outcome. It is a weighted average written as an inner product.
+
+
+\section{Computational Cost of Vector Operations}
+\label{mf:vector-computation-complexity}
+\label{mf:floating-point-storage}
+
+Vector operations are not only algebraic; they also have computational cost. In double precision, a vector with \(n\) entries uses about \(8n\) bytes of memory. A useful first approximation for runtime is to count floating-point operations, or \emph{flops}:
+\[
+\begin{array}{lll}
+\text{scalar-vector multiplication} & \alpha\mathbf{x} & n\text{ multiplications},\\
+\text{vector addition} & \mathbf{x}+\mathbf{y} & n\text{ additions},\\
+\text{inner product} & \mathbf{x}^T\mathbf{y} & n\text{ multiplications and }n-1\text{ additions}.
+\end{array}
+\]
+Thus an inner product costs about \(2n\) flops. For small vectors this detail is usually invisible; for large vectors or repeated operations, it becomes part of algorithmic reasoning.
+
+\section{The Euclidean Norm}
+\label{mf:norms-euclidean}
+
+The \emph{Euclidean norm} of \(\mathbf{x}\in\mathbb{R}^n\) is
+\[
+    \|\mathbf{x}\|=\sqrt{x_1^2+x_2^2+\cdots+x_n^2}.
+\]
+Using the inner product, this can be written compactly as
+\[
+    \|\mathbf{x}\|=\sqrt{\mathbf{x}^T\mathbf{x}}.
+\]
+The Euclidean norm is also called length, magnitude, or simply norm when the context is clear. A vector with norm 1 is called a \emph{unit vector}; we also say the vector has been normalized.
+\label{mf:unit-vector}
+
+For example, if
+\[
+    \mathbf{x}=\begin{bmatrix}3\\4\end{bmatrix},
+\]
+then
+\[
+    \|\mathbf{x}\|=\sqrt{3^2+4^2}=5.
+\]
+This is the familiar Pythagorean length formula, now written for vectors.
+
+\section{Norm Properties}
+\label{mf:norm-properties}
+
+The Euclidean norm satisfies three important properties:
+\[
+\begin{aligned}
+    \|\beta\mathbf{x}\| &= |\beta|\,\|\mathbf{x}\|, &&\text{positive homogeneity},\\
+    \|\mathbf{x}+\mathbf{y}\| &\leq \|\mathbf{x}\|+\|\mathbf{y}\|, &&\text{subadditivity or triangle inequality},\\
+    \|\mathbf{x}\| &\geq 0,\quad \|\mathbf{x}\|=0\Rightarrow \mathbf{x}=\mathbf{0}, &&\text{positive definiteness}.
+\end{aligned}
+\]
+Any function satisfying these properties is called a norm. In this course, unless otherwise stated, \(\|\cdot\|\) means the Euclidean norm.
+
+These properties match geometric intuition. Scaling a vector by \(\beta\) scales its length by \(|\beta|\). The length of a sum is no greater than the sum of lengths. Only the zero vector has zero length.
+
+\section{Distance Between Vectors}
+\label{mf:vector-distance}
+
+The distance between two vectors \(\mathbf{a},\mathbf{b}\in\mathbb{R}^n\) is defined as the length of their difference:
+\[
+    \operatorname{dist}(\mathbf{a},\mathbf{b})
+    =\|\mathbf{a}-\mathbf{b}\|
+    =\sqrt{(a_1-b_1)^2+\cdots+(a_n-b_n)^2}.
+\]
+Thus distance is not a new operation separate from subtraction and norm. First subtract the vectors, then measure the length of the resulting displacement.
+
+This is why squared prediction error and residual error later become geometric ideas. If \(\mathbf{y}\) is an observed response vector and \(\widehat{\mathbf{y}}\) is a fitted response vector, then \(\|\mathbf{y}-\widehat{\mathbf{y}}\|\) is the distance between what was observed and what the model fitted.
+
+\section{Angles and Orthogonality}
+\label{mf:angles}
+\label{mf:orthogonality}
+
+For nonzero vectors \(\mathbf{a},\mathbf{b}\in\mathbb{R}^n\), the angle \(\theta\) between them is defined by
+\[
+    \theta=\cos^{-1}\left(\frac{\mathbf{a}^T\mathbf{b}}{\|\mathbf{a}\|\,\|\mathbf{b}\|}\right),
+\]
+where \(0\leq \theta\leq \pi\). Equivalently,
+\[
+    \mathbf{a}^T\mathbf{b}=\|\mathbf{a}\|\,\|\mathbf{b}\|\cos(\theta).
+\]
+This formula shows that the dot product measures both length and alignment.
+
+Some special cases are especially important:
+\[
+\begin{aligned}
+    \theta=0 &\quad\Longrightarrow\quad \mathbf{a}^T\mathbf{b}=\|\mathbf{a}\|\,\|\mathbf{b}\|,\\
+    \theta=\frac{\pi}{2} &\quad\Longrightarrow\quad \mathbf{a}^T\mathbf{b}=0.
+\end{aligned}
+\]
+When \(\mathbf{a}^T\mathbf{b}=0\), the vectors are called \emph{orthogonal}. In two or three dimensions, this means a right angle. In higher dimensions, it is the correct generalization of perpendicularity.
+
+The angle formula is defined only for nonzero vectors because the denominator contains \(\|\mathbf{a}\|\|\mathbf{b}\|\). The zero vector is orthogonal to every vector in the algebraic sense \(\mathbf{0}^T\mathbf{b}=0\), but it does not have a meaningful angle with other vectors.
+
+\section{Example: Earth Geometry}
+\label{mf:earth-geometry-example}
+
+Distance depends on the geometry being used. As a useful example, approximate Earth as a sphere with radius
+\[
+    R=6367.5\text{ km}.
+\]
+Using a standard latitude-longitude convention, a point with latitude \(\theta\) and longitude \(\lambda\) can be represented by the three-dimensional vector
+\[
+    \mathbf{r}(\theta,\lambda)
+    =R\begin{bmatrix}
+        \cos\theta\cos\lambda\\
+        \cos\theta\sin\lambda\\
+        \sin\theta
+    \end{bmatrix}.
+\]
+If \(\mathbf{a}\) and \(\mathbf{b}\) are two such position vectors, then \(\|\mathbf{a}-\mathbf{b}\|\) is the straight-line distance through Earth, also called the chord distance. The distance along the surface is found from the central angle between \(\mathbf{a}\) and \(\mathbf{b}\):
+\[
+    \alpha=\cos^{-1}\left(\frac{\mathbf{a}^T\mathbf{b}}{\|\mathbf{a}\|\,\|\mathbf{b}\|}\right),
+    \qquad
+    \text{surface distance}=R\alpha.
+\]
+When evaluating these formulas numerically, latitude, longitude, and the central angle \(\alpha\) must be measured in radians.
+For the Beijing and Palo Alto coordinates in the source notes, the through-Earth distance is approximately
+\[
+    8674.78\text{ km},
+\]
+and the surface distance is approximately
+\[
+    9543.20\text{ km}.
+\]
+The example illustrates a general point: norms and angles are not abstract decorations. They let us turn geometry into computable formulas.
+
+\section{Data Analysis Bridge}
+\label{mf:ch05-data-analysis-bridge}
+
+This chapter supplies several mathematical tools that the Data Analysis textbook uses repeatedly:
+\begin{itemize}
+    \item Dot products write weighted sums such as \(\boldsymbol{\beta}^T\mathbf{x}\), expected values, sample means, and sums of products.
+    \item The expression \(\mathbf{a}^T\mathbf{a}\) writes sums of squared entries compactly.
+    \item Euclidean norms and distances describe residual length, MSE, RMSE, RSS, and TSS.
+    \item Angles describe alignment between centered data vectors, which is the geometric meaning behind correlation.
+    \item Orthogonality drives projections, normal equations, and residual geometry.
+\end{itemize}
+Later regression chapters use these ideas to express least squares as choosing the fitted vector closest to the observed response vector.
+
+\section{Chapter Summary}
+\label{mf:dot-products-summary}
+
+Carry forward these geometric tools:
+\begin{itemize}
+    \item The dot product \(\mathbf{a}^T\mathbf{b}\) is both an algebraic operation and a weighted sum.
+    \item \(\mathbf{1}^T\mathbf{a}\), \(\frac{1}{n}\mathbf{1}^T\mathbf{a}\), and \(\mathbf{a}^T\mathbf{a}\) express sums, means, and squared lengths compactly.
+    \item The Euclidean norm \(\|\mathbf{x}\|\) measures length, and \(\|\mathbf{a}-\mathbf{b}\|\) measures distance.
+    \item Dot products determine angles; orthogonality is the condition \(\mathbf{a}^T\mathbf{b}=0\).
+    \item These ideas support sums of squares, correlation, residual geometry, and least squares.
+\end{itemize}

@@ -1,0 +1,69 @@
+\documentclass[11pt,oneside]{book}
+
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{verbatim}
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark}
+
+\pagestyle{plain}
+\setlength{\parskip}{0.45em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{topsep=0.4em,itemsep=0.2em}
+\setlist[enumerate]{topsep=0.4em,itemsep=0.2em}
+\emergencystretch=3em
+
+\makeatletter
+\renewcommand{\thechapter}{}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\def\@makechapterhead#1{%
+  \vspace*{1in}%
+  {\parindent \z@ \centering \normalfont
+    \Huge\bfseries #1\par\nobreak
+    \vspace{0.75em}%
+    \rule{0.52\textwidth}{0.4pt}\par\nobreak
+    \vspace{1.2em}}}
+\makeatother
+
+\pdfstringdefDisableCommands{%
+  \def\mathbf#1{#1}%
+  \def\boldsymbol#1{#1}%
+  \def\mathbb#1{#1}%
+  \def\operatorname#1{#1}%
+  \def\text#1{#1}%
+  \def\hat#1{#1}%
+  \def\widehat#1{#1}%
+  \def\epsilon{epsilon}%
+  \def\beta{beta}%
+  \def\sigma{sigma}%
+}
+
+\begin{document}
+
+\frontmatter
+\begin{titlepage}
+  \centering
+  \vspace*{2.5in}
+  {\Huge\bfseries Coding and Software Cookbook\par}
+  \vspace{1em}
+  {\Large Data Analysis Companion v3\par}
+  \vfill
+  {\large Python and R workflow companion for the Data Analysis textbook\par}
+  \thispagestyle{empty}
+\end{titlepage}
+\tableofcontents
+\clearpage
+
+\mainmatter
+\input{Sources/Appendix_Coding_and_Software_Cookbook_v3}
+
+\end{document}
