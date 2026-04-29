@@ -9,10 +9,12 @@ Current working products in this folder:
 
 Current post-v3 integration status:
 - Plan B expansion for the cleaned categorical-predictor, residual-diagnostics, leverage/influence, and interaction lectures has been integrated and committed in `fd1b399`.
+- Pro's targeted PDF-only audit fixes were applied and committed in `964cc12`; the current PDFs include those fixes.
 - The full reference PDF is current at 171 pages.
 - The Cookbook PDF is current at 37 pages.
 - Integrated source areas: Notation Guide, a short Chapter 9 bridge, Chapter 10 residual/leverage theory bridge, Chapter 11 categorical predictors/interactions expansion, Chapter 12 diagnostics/model repair expansion, and the Cookbook recipes supporting Chapters 11 and 12.
-- A small Cookbook code fix was applied after audit: manual pandas dummy creation now uses `dtype=float` so the example works reliably with `statsmodels.OLS`.
+- Cookbook code fixes after audit: statsmodels formula strings use ASCII quote-safe Python strings, manual pandas dummy creation pins `Other` as the reference category and uses `dtype=float`, and the examples were smoke-tested.
+- Main-text targeted fixes after audit: Chapter 12 clarifies that \(p+1\) is the number of fitted coefficients/design columns for average leverage, and Chapter 11's Math Foundations connection now includes Chapter 11 for null-space support.
 
 Distributed release copies are in `Peer Review Release Products\`:
 - `Data_Analysis_Textbook_v3.pdf`
