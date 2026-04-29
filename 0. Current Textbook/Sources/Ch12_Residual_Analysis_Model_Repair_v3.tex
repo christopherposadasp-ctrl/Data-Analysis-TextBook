@@ -348,7 +348,7 @@ Cook's distance combines residual size and leverage:
   =\frac{e_i^2}{(p+1)\widehat{\sigma}^2}
   \frac{h_{ii}}{(1-h_{ii})^2}.
 \end{equation}
-Large Cook's distance suggests that deleting observation \(i\) would noticeably change the fitted model.  The most concerning observations usually have both high leverage and a large adjusted residual.
+Large Cook's distance is context-dependent screening evidence that deleting observation \(i\) would noticeably change the fitted model, not a deletion rule.  The most concerning observations usually have both high leverage and a large adjusted residual.
 
 \subsection*{Keep, remove, or repair?}
 
