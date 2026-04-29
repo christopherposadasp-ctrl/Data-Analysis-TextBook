@@ -64,3 +64,13 @@ Any earlier-chapter edit should be recorded with:
 ## Handoff Rule
 
 For Pro/editorial review, provide only the current full DA PDF/source, Cookbook PDF/source, relevant new lecture files, Math Foundations PDF or connection map as needed, `CURRENT_STATUS.md`, and this protocol. Do not include the inactive Core Reader unless specifically requested.
+
+For PDF-only conceptual/pedagogical audits, do not provide LaTeX source files. Provide:
+- the current full DA textbook PDF,
+- the current Cookbook PDF,
+- PDF exports of the relevant cleaned lecture decks,
+- `CURRENT_STATUS.md`,
+- this protocol,
+- a focused audit prompt.
+
+Use PDF-only review when the goal is to check mathematical/statistical correctness, pedagogy, coverage of lecture material, and conceptual routing between the main textbook and Cookbook. Use source-level review only when the goal is to inspect LaTeX implementation, labels, build mechanics, or exact source edits.
