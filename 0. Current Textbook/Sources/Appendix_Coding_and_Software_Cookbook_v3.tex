@@ -1157,7 +1157,7 @@ import statsmodels.formula.api as smf
 
 # curriculum is categorical; Other is the reference level.
 fit_cat = smf.ols(
-    "iq ~ C(curriculum, Treatment(reference='Other'))",
+    "iq ~ C(curriculum, Treatment(reference=\"Other\"))",
     data=df
 ).fit()
 print(fit_cat.summary())
@@ -1167,7 +1167,7 @@ print(fit_cat.summary())
 
 \begin{verbatim}
 fit_group_slope = smf.ols(
-    "iq ~ hours * C(curriculum, Treatment(reference='Other'))",
+    "iq ~ hours * C(curriculum, Treatment(reference=\"Other\"))",
     data=df
 ).fit()
 print(fit_group_slope.summary())
@@ -1470,7 +1470,7 @@ plot(fit)   # standard diagnostic panel
 plot(fit, which = 1)  # Residuals vs fitted
 plot(fit, which = 2)  # Normal Q-Q
 plot(fit, which = 3)  # Scale-location
-plot(fit, which = 5)  # Residuals vs leverage with Cook's distance
+plot(fit, which = 5)  # Residuals vs leverage with Cook distance
 \end{verbatim}
 
 \subsubsection*{Breusch-Pagan test}
