@@ -832,6 +832,10 @@ This is often called an internally studentized residual.  It gives a more compar
 \paragraph{Why leverage matters.}
 A point with a large residual but low leverage may be an outlier in the response direction.  A point with high leverage may control the fitted hyperplane even if its residual is not large.  A point with both high leverage and a large residual is especially important to inspect.
 
+\CoreCompress{
+Chapter~\ref{chap:residual-analysis-model-repair} turns these objects into an applied influence workflow.  The diagonal values \(h_{ii}\), leverage-adjusted residuals, and Cook's distance help identify observations that deserve investigation.  High influence is not an automatic deletion order; it is a signal to check data quality, model form, and sensitivity of the conclusion.
+
+}{}
 \section{A Clean Interpretation of Diagnostics}
 
 The following table connects each theoretical assumption to the residual behavior we expect to see.

@@ -120,6 +120,11 @@ Here \(\mathbf{x}_j\) is the \(j\)th predictor column.  Therefore,
 \end{equation}
 Regression chooses the linear combination of design-matrix columns that gets closest to \(\mathbf{y}\) in squared-error distance.
 
+\CoreCompress{
+\paragraph{Looking ahead.}
+The columns of a design matrix do not have to be only raw numeric predictors.  Later chapters use the same matrix machinery after adding encoded categorical predictors, transformed predictors, and interaction columns.  The least-squares problem stays the same; what changes is the analyst's responsibility to choose columns that are interpretable, identifiable, and defensible.
+
+}{}
 \section{What Changes Geometrically? Lines, Planes, and Hyperplanes}
 
 A simple linear regression fit looks like a line in a two-dimensional scatterplot.  With two predictors, the fitted relationship is a plane:

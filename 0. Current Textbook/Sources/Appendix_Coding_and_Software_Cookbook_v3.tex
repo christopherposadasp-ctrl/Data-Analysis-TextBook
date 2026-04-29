@@ -34,7 +34,7 @@ SLR fit and inference & Chapter 6 & Compute \(R^2\), \(F\)-statistics, p-values,
 Regression geometry & Chapters 7--8 & Build design matrices, hat matrices, leverage values, rank checks, and residual degrees of freedom \\
 MLR practice & Chapter 9 & Fit full/reduced multiple-regression models, predict, compare fit, and plot residuals \\
 Residual objects & Chapter 10 & Extract fitted values, residuals, leverage, studentized residuals, coefficient covariance, and diagnostic plots \\
-Transformations & Chapter 11 & Fit polynomial, interaction, log-response, and linear-in-parameters models \\
+Transformations and encodings & Chapter 11 & Fit polynomial, categorical, interaction, log-response, and linear-in-parameters models \\
 Model repair & Chapter 12 & Diagnose residuals, compare repaired models, and validate on a common response scale \\
 \hline
 \end{tabular}
@@ -1150,6 +1150,42 @@ In the formula \texttt{y \(\sim\) x1 * x2}, the star expands to main effects plu
   x_1*x_2 \quad\Longrightarrow\quad x_1+x_2+x_1x_2.
 \end{equation}
 
+\subsubsection*{Categorical predictors with formulas}
+
+\begin{verbatim}
+import statsmodels.formula.api as smf
+
+# curriculum is categorical; Other is the reference level.
+fit_cat = smf.ols(
+    'iq ~ C(curriculum, Treatment(reference="Other"))',
+    data=df
+).fit()
+print(fit_cat.summary())
+\end{verbatim}
+
+\subsubsection*{Numeric-by-categorical interaction}
+
+\begin{verbatim}
+fit_group_slope = smf.ols(
+    'iq ~ hours * C(curriculum, Treatment(reference="Other"))',
+    data=df
+).fit()
+print(fit_group_slope.summary())
+\end{verbatim}
+
+In formula syntax, \texttt{hours * C(curriculum)} expands to main effects plus the interaction.  Use the fitted output to interpret reference-category intercepts, category contrasts, and group-specific slope changes.
+
+\subsubsection*{Inspect dummy columns manually}
+
+\begin{verbatim}
+dummies = pd.get_dummies(df["curriculum"], drop_first=True, dtype=float)
+X = pd.concat([df[["hours"]], dummies], axis=1)
+X = sm.add_constant(X)
+fit_manual = sm.OLS(df["iq"], X).fit()
+\end{verbatim}
+
+Manual dummy creation is useful for inspecting the design matrix.  For routine modeling, formulas are usually clearer.
+
 \subsubsection*{Prediction on a grid}
 
 \begin{verbatim}
@@ -1200,6 +1236,34 @@ This expands to:
 y ~ x1 + x2 + x1:x2
 \end{verbatim}
 
+\subsubsection*{Categorical predictors and reference levels}
+
+\begin{verbatim}
+df$curriculum <- as.factor(df$curriculum)
+df$curriculum <- relevel(df$curriculum, ref = "Other")
+
+fit_cat <- lm(iq ~ curriculum, data = df)
+summary(fit_cat)
+\end{verbatim}
+
+\subsubsection*{Mixed numeric/categorical model and interaction}
+
+\begin{verbatim}
+fit_mixed <- lm(iq ~ hours + curriculum, data = df)
+fit_int   <- lm(iq ~ hours * curriculum, data = df)
+
+summary(fit_mixed)
+summary(fit_int)
+\end{verbatim}
+
+\subsubsection*{Inspect the encoded design matrix}
+
+\begin{verbatim}
+X <- model.matrix(~ hours * curriculum, data = df)
+head(X)
+qr(X)$rank
+\end{verbatim}
+
 \subsubsection*{Transformed response}
 
 \begin{verbatim}
@@ -1247,12 +1311,50 @@ ax.set_ylabel("Residuals")
 ax.set_title("Residuals vs fitted values")
 \end{verbatim}
 
+\subsubsection*{Residuals versus a predictor}
+
+\begin{verbatim}
+fig, ax = plt.subplots()
+ax.scatter(df["x1"], df["resid"])
+ax.axhline(0, linestyle="--")
+ax.set_xlabel("x1")
+ax.set_ylabel("Residuals")
+ax.set_title("Residuals vs x1")
+\end{verbatim}
+
 \subsubsection*{Normal Q-Q plot}
 
 \begin{verbatim}
 fig = sm.qqplot(fit.resid, line="45")
 plt.title("Normal Q-Q plot of residuals")
 \end{verbatim}
+
+\subsubsection*{Scale-location plot}
+
+\begin{verbatim}
+infl = fit.get_influence()
+std_resid = infl.resid_studentized_internal
+
+fig, ax = plt.subplots()
+ax.scatter(fit.fittedvalues, np.sqrt(np.abs(std_resid)))
+ax.set_xlabel("Fitted values")
+ax.set_ylabel("Sqrt(|studentized residuals|)")
+ax.set_title("Scale-location plot")
+\end{verbatim}
+
+\subsubsection*{Breusch-Pagan test}
+
+\begin{verbatim}
+from statsmodels.stats.diagnostic import het_breuschpagan
+
+bp_stat, bp_pvalue, f_stat, f_pvalue = het_breuschpagan(
+    fit.resid,
+    fit.model.exog
+)
+print(bp_stat, bp_pvalue, f_stat, f_pvalue)
+\end{verbatim}
+
+Use the BP test as supporting evidence for nonconstant variance.  Inspect the residual plots before deciding how to repair the model.
 
 \subsubsection*{Influence and leverage}
 
@@ -1262,7 +1364,12 @@ df["leverage"] = infl.hat_matrix_diag
 df["student_resid"] = infl.resid_studentized_external
 df["cooks_d"] = infl.cooks_distance[0]
 
-# Sort largest Cook's distances
+avg_leverage = len(fit.params) / fit.nobs
+high_lev_2x = 2 * avg_leverage
+high_lev_3x = 3 * avg_leverage
+
+print("average leverage:", avg_leverage)
+print("2x, 3x flags:", high_lev_2x, high_lev_3x)
 print(df.sort_values("cooks_d", ascending=False).head())
 \end{verbatim}
 
@@ -1352,6 +1459,24 @@ qqline(resid(fit))
 plot(fit)   # standard diagnostic panel
 \end{verbatim}
 
+\subsubsection*{Select individual R diagnostic plots}
+
+\begin{verbatim}
+plot(fit, which = 1)  # Residuals vs fitted
+plot(fit, which = 2)  # Normal Q-Q
+plot(fit, which = 3)  # Scale-location
+plot(fit, which = 5)  # Residuals vs leverage with Cook's distance
+\end{verbatim}
+
+\subsubsection*{Breusch-Pagan test}
+
+\begin{verbatim}
+library(lmtest)
+bptest(fit)
+\end{verbatim}
+
+Use this as supporting evidence for heteroskedasticity, not as a replacement for the residual and scale-location plots.
+
 \subsubsection*{Polynomial and interaction repairs}
 
 \begin{verbatim}
@@ -1372,9 +1497,14 @@ summary(fit_log)
 \subsubsection*{Influence}
 
 \begin{verbatim}
-hatvalues(fit)
-rstudent(fit)
-cooks.distance(fit)
+h <- hatvalues(fit)
+r_student <- rstudent(fit)
+D <- cooks.distance(fit)
+
+avg_h <- length(coef(fit)) / nobs(fit)
+which(h > 2 * avg_h)
+which(h > 3 * avg_h)
+sort(D, decreasing = TRUE)[1:5]
 \end{verbatim}
 
 \paragraph{Defensibility check.} A repair is justified when it addresses a visible diagnostic issue and improves the analysis without hiding an important limitation.

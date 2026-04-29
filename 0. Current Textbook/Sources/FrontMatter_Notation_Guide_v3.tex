@@ -105,6 +105,8 @@ when $\mathbf{X}$ has full column rank.  The hat matrix is
   \widehat{\mathbf{y}}=\mathbf{H}\mathbf{y}.
 \]
 The residual-maker matrix is $\mathbf{I}_n-\mathbf{H}$.
+
+Later chapters also use $\mathbf{Z}$ for an \emph{engineered} design matrix.  Its columns may include transformed predictors, indicator/dummy variables for categories, and interaction columns.  Once those columns are built, least squares treats them like any other design-matrix columns; the new work is choosing and interpreting the columns responsibly.
 }{
 In the regression chapters, the design matrix $\mathbf{X}$ includes an intercept column unless stated otherwise.  With $p$ predictors and an intercept,
 \[
@@ -191,7 +193,7 @@ The stronger assumptions support stronger inferential claims, but they are not a
 \section*{Linear Models}
 
 \CoreCompress{
-Early chapters use ``linear'' in the familiar geometric sense: a line, plane, or hyperplane in the displayed predictors.  Chapter~\ref{chap:linear-models-beyond-straight-lines} sharpens the definition: for least squares, the key requirement is that the model be linear in the unknown coefficients.  Curved functions of the original predictors can still be linear models if they can be written as a design matrix times a coefficient vector plus error.
+Early chapters use ``linear'' in the familiar geometric sense: a line, plane, or hyperplane in the displayed predictors.  Chapter~\ref{chap:linear-models-beyond-straight-lines} sharpens the definition: for least squares, the key requirement is that the model be linear in the unknown coefficients.  Curved functions of the original predictors, category indicators, and interaction terms can still be linear models if they can be written as a design matrix times a coefficient vector plus error.
 }{
 Early chapters use ``linear'' in the familiar geometric sense: a line, plane, or hyperplane in the displayed predictors.  Chapter~\ref{chap:linear-models-beyond-straight-lines} sharpens the definition: for least squares, the key requirement is linearity in the unknown coefficients, not straightness in the original variables.
 }

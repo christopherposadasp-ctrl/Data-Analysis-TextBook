@@ -1,5 +1,5 @@
 % Chapter 11 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, and hyperref.
-\chapter[Linear Models Beyond Straight Lines]{Linear Models Beyond Straight Lines: Transformations and Linear-in-Parameters Models}
+\chapter[Linear Models Beyond Straight Lines]{Linear Models Beyond Straight Lines: Transformations, Categorical Predictors, and Interactions}
 \label{chap:linear-models-beyond-straight-lines}
 
 \section{The Big Picture}
@@ -19,7 +19,7 @@ That distinction is easy to miss.  The model
 \begin{equation}
   Y=\beta_0+\beta_1x+\beta_2x^2+\epsilon
 \end{equation}
-is curved as a function of \(x\), but it is still a linear model in the parameters \(\beta_0,\beta_1,\beta_2\).  Once we create the transformed predictor column \(x^2\), ordinary least squares can be used exactly as before.
+is curved as a function of \(x\), but it is still a linear model in the parameters \(\beta_0,\beta_1,\beta_2\).  Once we create the transformed predictor column \(x^2\), ordinary least squares can be used exactly as before.  The same idea lets us use category indicators and interaction columns while keeping the model linear in the coefficients.
 
 The central question is therefore not, ``Is the graph a straight line?''  The better question is:
 \begin{quote}
@@ -31,7 +31,7 @@ If the answer is yes, then the linear regression machinery still applies.
 We also return to the sample-level notation of Chapters~\ref{chap:linear-regression-projection-design-matrix-hat-matrix} and \ref{chap:mlr-in-practice-predictors-hyperplanes-advertising}: \(\mathbf{y}\) is the observed response vector from the data set being fit.
 
 \paragraph{Math Foundations Connection.}
-This chapter uses the Math Foundations ideas of vectors, linear combinations, bases, matrix-vector multiplication, submatrices, linear independence, Gram-Schmidt orthogonalization, solving linear systems, and full-column-rank inverse-like formulas.  In particular, transformed regression is just a new way of building columns for the design matrix.  Those columns form candidate directions in \(\mathbb{R}^n\), and least squares chooses the best linear combination of those directions.  See the Math Foundations textbook, Chapters~2, 3, 5, 6, 7, 8, 9, 10, and~12.
+This chapter uses the Math Foundations ideas of vectors, sets, linear combinations, bases, matrix-vector multiplication, submatrices, linear independence, null spaces, and full-column-rank inverse-like formulas.  Transformed regression, categorical regression, and interaction modeling are all ways of building columns for the design matrix.  Those columns form candidate directions in \(\mathbb{R}^n\), and least squares chooses the best linear combination of those directions.  See the Math Foundations textbook, Chapters~2, 3, 4, 5, 6, 7, 8, 9, 10, and~12.
 
 \section{What ``Linear'' Means Here}
 
@@ -72,7 +72,7 @@ where
   \end{bmatrix}.
 \end{equation}
 
-This is the same matrix form as ordinary multiple linear regression.  The only difference is that the design matrix may contain transformed versions of the original variables.
+This is the same matrix form as ordinary multiple linear regression.  The only difference is that the design matrix may contain transformed versions of the original variables, category indicators, and interaction columns.
 
 \subsection*{Original predictor space versus feature space}
 
@@ -288,18 +288,90 @@ A practical rule:
 
 Residual plots and test error help decide whether the added flexibility is helping or merely fitting noise.
 
+\CoreCompress{
+\section{Categorical Predictors as Indicator Columns}
+
+A categorical predictor cannot be used as an arbitrary numerical label unless the numbers have quantitative meaning.  If a curriculum is coded as OR = 1, Physics = 2, Applied Math = 3, and so on, the number 3 is not ``larger'' than the number 1 in the same way that a height or budget is larger.  The category must first be encoded as design-matrix columns.
+
+For a binary category, define an indicator variable
+\begin{equation}
+  X_i=\begin{cases}
+  1, & \text{if observation } i \text{ is in category } C,\\
+  0, & \text{otherwise.}
+  \end{cases}
+\end{equation}
+
+Using the source-slide example, suppose \(Y\) is IQ for an NPS student and \(X_i=1\) if the student is in the OR curriculum.  The model
+\begin{equation}
+  Y_i=\beta_0+\beta_1X_i+\epsilon_i
+\end{equation}
+has two fitted group means:
+\begin{align}
+  \widehat{Y}\mid X=0 &= \widehat{\beta}_0,\\
+  \widehat{Y}\mid X=1 &= \widehat{\beta}_0+\widehat{\beta}_1.
+\end{align}
+Thus \(\widehat{\beta}_0\) is the fitted mean for the reference category, and \(\widehat{\beta}_1\) is the contrast from the reference category to the coded category.  In this example, \(\widehat{\beta}_1\) is the fitted OR adjustment from the non-OR baseline; as the slides joke, we hope it is positive.
+
+Changing the reference category changes the intercept and the sign of the contrast, but it does not change the fitted values.  The reference category is an interpretation choice, not a different least-squares method.
+
+\section{Multi-Level Categorical Predictors}
+
+If a categorical predictor has \(k\) levels and the model includes an intercept, use \(k-1\) indicator columns.  Pick one level as the reference category and create indicators for the remaining levels.
+
+For example, let curriculum have levels
+\begin{equation}
+  \{\text{OR},\text{ Physics},\text{ Applied Math},\text{ Engineering},\text{ Other}\}.
+\end{equation}
+If Other is the reference category, define
+\begin{align}
+  X_{i1}&=1\{\text{student }i\text{ is in OR}\},\\
+  X_{i2}&=1\{\text{student }i\text{ is in Physics}\},\\
+  X_{i3}&=1\{\text{student }i\text{ is in Applied Math}\},\\
+  X_{i4}&=1\{\text{student }i\text{ is in Engineering}\}.
+\end{align}
+Then
+\begin{equation}
+  Y_i=\beta_0+\beta_1X_{i1}+\beta_2X_{i2}+\beta_3X_{i3}+\beta_4X_{i4}+\epsilon_i.
+\end{equation}
+The fitted reference mean is \(\widehat{\beta}_0\).  The fitted OR mean is \(\widehat{\beta}_0+\widehat{\beta}_1\), the fitted Physics mean is \(\widehat{\beta}_0+\widehat{\beta}_2\), and so on.
+
+\paragraph{Why not use all \(k\) indicators?}
+With an intercept and all five curriculum indicators, every row satisfies
+\begin{equation}
+  X_{i,\text{OR}}+X_{i,\text{Physics}}+X_{i,\text{Applied Math}}+X_{i,\text{Engineering}}+X_{i,\text{Other}}=1.
+\end{equation}
+That sum is exactly the intercept column.  The design matrix is therefore rank deficient, so the coefficient vector is not uniquely identified.  This is the dummy-variable trap.  The fix is to drop one level as the reference category or to remove the intercept and use all group indicators with a different interpretation.
+
+\section{Mixed Numeric and Categorical Predictors}
+
+Numeric and categorical predictors can appear in the same design matrix.  For example,
+\begin{equation}
+  Y_i=\beta_0+\beta_1\texttt{hours}_i+\beta_2\texttt{OR}_i+\epsilon_i
+\end{equation}
+uses a numeric predictor and a binary curriculum indicator.  If \(\texttt{OR}_i=0\), the fitted line is
+\begin{equation}
+  \widehat{Y}_i=\widehat{\beta}_0+\widehat{\beta}_1\texttt{hours}_i.
+\end{equation}
+If \(\texttt{OR}_i=1\), the fitted line is
+\begin{equation}
+  \widehat{Y}_i=(\widehat{\beta}_0+\widehat{\beta}_2)+\widehat{\beta}_1\texttt{hours}_i.
+\end{equation}
+The two groups share the same slope but have different intercepts.  That is a modeling assumption.  If the slope should differ by group, we need an interaction.
+
 \section{Interactions as Transformed Columns}
 
-Interactions are another example of linear-in-parameters modeling.  With two predictors, the model
+An interaction means that the effect of one predictor depends on another predictor.  It is not merely correlation between predictors.  In the Advertising example, Newspaper and Radio may be correlated because marketing budgets are allocated together, but an interaction asks a different question: does the marginal effect of Radio change when Newspaper spending changes?
+
+With two numeric predictors, the model
 \begin{equation}
   Y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i1}x_{i2}+\epsilon_i
   \label{eq:ch11-interaction-model}
 \end{equation}
-is linear in the coefficients.  The interaction column is simply
+is linear in the coefficients.  The interaction column is
 \begin{equation}
-  z_{i3}=x_{i1}x_{i2}.
+  z_{i3}=x_{i1}x_{i2},
 \end{equation}
-The design matrix is
+and the design matrix is
 \begin{equation}
   \mathbf{Z}=\begin{bmatrix}
     1 & x_{11} & x_{12} & x_{11}x_{12} \\
@@ -308,15 +380,43 @@ The design matrix is
     1 & x_{n1} & x_{n2} & x_{n1}x_{n2}
   \end{bmatrix}.
 \end{equation}
-
 The model can be rewritten as
 \begin{equation}
   Y_i=\beta_0+\left(\beta_1+\beta_3x_{i2}\right)x_{i1}+\beta_2x_{i2}+\epsilon_i.
 \end{equation}
-Thus the slope with respect to \(x_1\) depends on \(x_2\).  This is why interactions are useful: they allow one predictor's effect to change depending on the value of another predictor, while preserving a linear-in-parameters model.
+Thus the slope with respect to \(x_1\) depends on \(x_2\).
+
+\subsection*{Numeric-by-categorical interactions}
+
+Suppose \(Y\) is health-insurance charges, \(x\) is BMI, and \(S_i=1\) if person \(i\) is a smoker.  The model
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_i+\beta_2S_i+\beta_3x_iS_i+\epsilon_i
+\end{equation}
+allows smokers and nonsmokers to have different intercepts and different BMI slopes:
+\begin{align}
+  \widehat{Y}_i\mid S_i=0 &= \widehat{\beta}_0+\widehat{\beta}_1x_i,\\
+  \widehat{Y}_i\mid S_i=1 &= (\widehat{\beta}_0+\widehat{\beta}_2)+(\widehat{\beta}_1+\widehat{\beta}_3)x_i.
+\end{align}
+The interaction coefficient \(\widehat{\beta}_3\) is the difference between the smoker and nonsmoker BMI slopes.
+
+\paragraph{Factor crossings.}
+When two categorical predictors interact, the model allows each combination of levels to have its own adjustment relative to a reference cell.  This is useful when the categories combine in a way that is not additive.  The cost is more columns, more degrees of freedom, and more care in interpretation.
 
 \paragraph{Hierarchy principle.}
-If a model includes \(x_1x_2\), it is usually good practice to include \(x_1\) and \(x_2\) as well.  This makes interpretation more stable and avoids treating the combined effect as meaningful while excluding its component directions.
+If a model includes an interaction such as \(x_1x_2\), it is usually good practice to include the corresponding main effects \(x_1\) and \(x_2\).  This makes interpretation more stable and avoids treating the combined effect as meaningful while excluding its component directions.  Exceptions require a clear domain reason.
+
+\paragraph{Coding companion reference.}
+Package-specific commands for factors, reference levels, dummy-variable inspection, and formula syntax belong in the Coding and Software Cookbook companion.  The main text focuses on the design-matrix logic and coefficient interpretation.
+
+}{
+\section{Interactions as Transformed Columns}
+
+Interactions are another example of linear-in-parameters modeling.  With two predictors, the model
+\begin{equation}
+  Y_i=\beta_0+\beta_1x_{i1}+\beta_2x_{i2}+\beta_3x_{i1}x_{i2}+\epsilon_i
+\end{equation}
+is linear in the coefficients.  The interaction column is \(x_{i1}x_{i2}\).  The slope with respect to \(x_1\) depends on \(x_2\), so one predictor's effect changes with another predictor's value.  In the full reference, this idea is extended to categorical indicators, reference categories, and numeric-by-categorical interactions.
+}
 
 \section{Transforming the Response}
 
@@ -580,6 +680,14 @@ the coefficient \(\beta_1\) is not simply the global slope.  The instantaneous s
 \end{equation}
 Thus the effect of changing \(x\) depends on where you are on the curve.
 
+\subsection*{Categorical coefficient interpretation}
+
+For an indicator variable, the coefficient is a contrast from the reference category.  In a model with one indicator,
+\begin{equation}
+  Y_i=\beta_0+\beta_1X_i+\epsilon_i,
+\end{equation}
+\(\beta_0\) is the fitted reference mean and \(\beta_1\) is the fitted adjustment for the coded group.  In a model with \(k-1\) indicators, each contrast is interpreted relative to the omitted reference level.
+
 \subsection*{Interaction coefficient interpretation}
 
 In
@@ -705,20 +813,30 @@ More columns usually improve training fit.  That does not guarantee better predi
 
 A transformed design matrix can still be singular.  Check for duplicate columns, redundant indicators, too many polynomial terms, and variables with too few distinct values.
 
+\subsection*{Mistake 7: Treating category codes as numeric measurements}
+
+A category code is not a quantity just because it is stored as a number.  Encode categories with indicator variables or another defensible contrast system.
+
+\subsection*{Mistake 8: Using all category indicators plus an intercept}
+
+With an intercept, use \(k-1\) indicators for a \(k\)-level categorical predictor.  Otherwise the indicator columns sum to the intercept column and the coefficients are not uniquely identified.
+
 \section{Operational Briefing Checklist}
 
 When briefing a transformed linear model, answer the following:
 \begin{enumerate}
   \item What is the response variable?
   \item What original predictors were measured?
-  \item What transformed columns were created?
+  \item What transformed, categorical, or interaction columns were created?
   \item Can the model be written as \(\mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}\)?
   \item Why are these transformations operationally or scientifically plausible?
   \item Does the transformed design matrix have full column rank?
   \item What residual pattern motivated the transformation?
   \item Did residual behavior improve after the transformation?
   \item Was model comparison based on residuals, test MSE, adjusted \(R^2\), AIC/BIC, nested tests, or a combination?
-  \item How does the transformation change interpretation for the customer or commander?
+  \item What is the reference category for each categorical predictor?
+  \item If interactions are included, what effect modification is being claimed?
+  \item How does the transformation or encoding change interpretation for the customer or commander?
 \end{enumerate}
 
 \section{Chapter Summary}
@@ -749,7 +867,7 @@ The residuals are still orthogonal to the model columns:
   \mathbf{Z}^T\mathbf{e}=\mathbf{0}.
 \end{equation}
 
-Transformations let us fit more realistic structure while keeping the interpretability and inference tools of linear regression.  Polynomial terms, interactions, sine/cosine terms, log terms, and indicator columns are all ways to build richer design matrices.  The cost is that interpretation, rank, and overfitting must be handled carefully.
+Transformations let us fit more realistic structure while keeping the interpretability and inference tools of linear regression.  Polynomial terms, sine/cosine terms, log terms, indicator columns, and interactions are all ways to build richer design matrices.  For a \(k\)-level categorical predictor with an intercept, use \(k-1\) indicators and interpret coefficients relative to the reference category.  The cost is that interpretation, rank, and overfitting must be handled carefully.
 
 \section{Math Foundations Source Map}
 
@@ -765,6 +883,10 @@ Transformed columns as candidate directions & Vector notation in \(\mathbb{R}^n\
 Basis and spanning viewpoint & Bases, linear independence, and unique linear-combination representations & Ch06 Secs. 6.1, 6.3, 6.5 \\
 \hline
 Design-matrix mechanics & Matrix notation, submatrices, transposes, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
+\hline
+Categorical indicators and reference levels & Set membership, subsets, and variables as data vectors & Ch02 Sec. 2.6; Ch04 Secs. 4.1, 4.4 \\
+\hline
+Dummy-variable trap & Linear independence, rank, full column rank, and nonzero null spaces & Ch06 Sec. 6.3; Ch10 Secs. 10.3, 10.5; Ch11 Sec. 11.4 \\
 \hline
 Solving transformed systems & QR decomposition, triangular systems, and solving linear systems & Ch08 Sec. 8.1; Ch09 Sec. 9.9 \\
 \hline
@@ -786,10 +908,11 @@ Use this as a final check after proposing a transformed linear model.
 
 \begin{enumerate}
   \item Can you state the difference between original predictors and created features?
-  \item Can you write the transformed design matrix \(\mathbf{Z}\)?
+  \item Can you write the transformed or engineered design matrix \(\mathbf{Z}\)?
   \item Can you express the model as \(\mathbf{y}=\mathbf{Z}\boldsymbol{\theta}+\boldsymbol{\epsilon}\)?
   \item Can you explain why the model is linear in the coefficients even if it is curved in the original variables?
-  \item Can you check whether the transformed columns create rank or identifiability problems?
+  \item Can you identify reference categories and interpret categorical contrasts?
+  \item Can you check whether transformed, indicator, or interaction columns create rank or identifiability problems?
   \item Can you compare residual behavior before and after the transformation?
   \item Can you interpret the transformed model in language that remains useful to the customer?
 \end{enumerate}

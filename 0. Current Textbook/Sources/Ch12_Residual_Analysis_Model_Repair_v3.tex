@@ -136,14 +136,14 @@ A common standardized residual is
 \begin{equation}
   r_i=\frac{e_i}{\widehat{\sigma}\sqrt{1-h_{ii}}}.
 \end{equation}
-This accounts for the fact that residual variance depends on leverage.  This leverage-adjusted version is often called an internally studentized residual.  Externally studentized residuals use a leave-one-out estimate of \(\sigma\), which we do not need here.  Large standardized or studentized residuals are potential outliers.  A rough screening rule is that values beyond \(\pm 2\) deserve attention and values beyond \(\pm 3\) deserve a closer look.
+This accounts for the fact that residual variance depends on leverage and is often called an internally studentized residual.  Externally studentized residuals use a leave-one-out estimate of \(\sigma\); the idea is the same but the scaling is slightly more protective against the observation being tested.  Large standardized or studentized residuals are potential outliers.  A rough screening rule is that values beyond \(\pm 2\) deserve attention and values beyond \(\pm 3\) deserve a closer look.
 
 \paragraph{Do not automate judgment.}
 A large residual is a flag, not an automatic deletion order.  Ask whether the observation is a data-entry error, an unusual but valid case, evidence of missing predictors, or evidence that the model class is too limited.
 }{
 \section{Residual Scaling: Raw, Standardized, and Studentized}
 
-Raw residuals are useful for seeing patterns, but they do not all have the same variance because leverage changes residual variability.  Standardized and internally studentized residuals rescale residuals so unusually large residuals are easier to spot; externally studentized residuals use a leave-one-out estimate of \(\sigma\).  The full reference text gives the detailed formulas.
+Raw residuals are useful for seeing patterns, but they do not all have the same variance because leverage changes residual variability.  Standardized and studentized residuals rescale residuals so unusually large residuals are easier to spot.  The full reference text gives the detailed formulas.
 }
 \section{Core Diagnostic Plots}
 
@@ -198,6 +198,20 @@ against fitted values.  It is designed to make changing variance easier to see. 
 
 If the observations have a natural order, plot residuals against time, mission phase, batch number, route order, or collection order.  A visible wave, trend, or clustering pattern can indicate correlated errors or missing time-varying predictors.
 
+\CoreCompress{
+\section{A Practical Diagnostic Hierarchy}
+
+Different diagnostics answer different questions.  A useful order is:
+\begin{enumerate}
+  \item \textbf{Test MSE or cross-validation error} for prediction performance.
+  \item \textbf{Residual plots} for missed structure, nonconstant variance, and outliers.
+  \item \textbf{Residuals versus individual predictors} to identify which variable may need a transformation or interaction.
+  \item \textbf{Formal tests} such as the Breusch--Pagan test as supporting evidence, not as the sole decision rule.
+  \item \textbf{\(t\)- and \(F\)-tests} for inference after the modeling assumptions are plausible enough for the claim being made.
+\end{enumerate}
+Use the hierarchy to avoid overreacting to one number.  A p-value can flag a problem, but a plot usually shows the shape of the problem and suggests the repair.
+
+}{}
 \section{Problem 1: Nonlinearity}
 
 A linear model assumes that the conditional mean is linear in the columns of the design matrix:
@@ -280,6 +294,14 @@ A square-root response model has the form
 \end{equation}
 which can help for nonnegative count-like responses.
 
+\CoreCompress{
+\subsection*{Breusch--Pagan test as supporting evidence}
+
+The Breusch--Pagan test is a formal check for evidence that error variance is not constant.  Operationally, it asks whether squared residuals show systematic structure as a function of the predictors or fitted values.  A small p-value is evidence against constant variance, but it does not identify the correct repair.  Residual plots remain the primary diagnostic tool because they reveal the shape: funneling, curvature, group-specific spread, or a few unusual points.
+
+Do not use the BP test in a vacuum.  If the plot and test disagree, investigate why: the model may be nonlinear, the variance pattern may be subtle, or one influential observation may be driving the result.
+
+}{}
 \section{Problem 3: Nonnormal Residuals}
 
 The Gaussian noise model assumes
@@ -302,34 +324,57 @@ Candidate repairs include:
   \item use a model family more appropriate to the response distribution.
 \end{enumerate}
 
-\section{Problem 4: Outliers and Influence}
+\CoreCompress{
+\section{Problem 4: Leverage and Influence}
 
-An outlier is an observation with a response value far from what the model predicts.  A high-leverage point is an observation with an unusual predictor vector.  A point can be one, both, or neither.
+An outlier is unusual in the response direction.  A high-leverage point is unusual in predictor space.  An influential point is one that can noticeably change the fitted model.  These are related but not identical.
 
-The leverage of observation \(i\) is
+The leverage of observation \(i\) is the \(i\)th diagonal entry of the hat matrix:
 \begin{equation}
   h_{ii}=\mathbf{x}_i^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_i.
 \end{equation}
-Here \(\mathbf{x}_i^T\) is the full design row for observation \(i\), including the intercept and any transformed or interaction columns.  High leverage is not automatically bad.  It means the observation is far out in predictor space and can have a strong effect on the fitted model.
+Here \(\mathbf{x}_i^T\) is the full design row, including the intercept and any transformed, categorical, or interaction columns.  High leverage means the design row is far from the center of the other design rows.  The model has fewer nearby observations to stabilize the fit around that point.
 
-A common influence measure is Cook's distance:
+Because \(\operatorname{trace}(\mathbf{H})=p+1\) under full column rank, the average leverage is
+\begin{equation}
+  \bar{h}=\frac{p+1}{n}.
+\end{equation}
+Rules such as \(h_{ii}>2\bar{h}\) or \(h_{ii}>3\bar{h}\) are screening heuristics, not deletion rules.
+
+Cook's distance combines residual size and leverage:
 \begin{equation}
   D_i
   =\frac{e_i^2}{(p+1)\widehat{\sigma}^2}
   \frac{h_{ii}}{(1-h_{ii})^2}.
 \end{equation}
-Large Cook's distance suggests that deleting observation \(i\) would noticeably change the fitted model.
+Large Cook's distance suggests that deleting observation \(i\) would noticeably change the fitted model.  The most concerning observations usually have both high leverage and a large adjusted residual.
 
-\paragraph{Repair logic.}
-Do not delete a point merely because it is inconvenient.  First ask:
-\begin{enumerate}
-  \item Was the observation recorded correctly?
-  \item Is it inside the intended population of analysis?
-  \item Does it represent an operationally important rare case?
-  \item Does the conclusion change if the point is included versus excluded?
-\end{enumerate}
-A defensible analysis often reports a sensitivity check.
+\subsection*{Keep, remove, or repair?}
 
+Influential is not the same as bad.  Use EDA and the problem context before deciding what to do.
+\begin{center}
+\begin{tabular}{p{0.33\textwidth}p{0.55\textwidth}}
+\toprule
+Situation & Reasonable response \\
+\midrule
+Data-entry error, such as age 400 instead of 40 & Correct if the truth is recoverable; otherwise remove or mark missing with documentation. \\
+Valid extreme case, such as a very tall basketball player or a mansion-sized home & Usually keep; report that the model is sensitive to an operationally real case. \\
+Influential pattern at the edge of a curved relationship & Repair the model, often with a transformation or interaction, rather than deleting the endpoints. \\
+Observation outside the intended population & Exclude only under a pre-stated, reproducible population rule. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A defensible analysis often reports a sensitivity check: fit with and without the point, explain the difference, and justify the final choice.
+
+}{
+\section{Problem 4: Outliers and Influence}
+
+An outlier is an observation with a response value far from what the model predicts.  A high-leverage point is an observation with an unusual predictor vector.  A point can be one, both, or neither.  High leverage is not automatically bad, but it deserves inspection.
+
+Cook's distance combines residual size and leverage.  A large Cook's distance suggests that deleting the observation would noticeably change the fitted model.  Do not delete a point merely because it is inconvenient; first ask whether it is a data-entry error, outside the intended population, or a valid but important rare case.
+
+}
 \section{Problem 5: Correlated Errors}
 
 Least squares formulas for standard errors often assume uncorrelated errors:
@@ -606,6 +651,14 @@ Sometimes residuals look bad because the data are bad: wrong units, miscoded cat
 
 A small p-value for one transformation does not automatically make it the best model.  Consider residual behavior, prediction performance, assumptions, and operational meaning together.
 
+\subsection*{Mistake 8: Letting the Breusch--Pagan test replace the plot}
+
+The BP test can support a heteroskedasticity concern, but it does not show the shape of the problem or tell you how to repair it.  Use the plot, the test, and the modeling context together.
+
+\subsection*{Mistake 9: Deleting influential points automatically}
+
+A high-leverage or high-Cook's-distance observation is a flag for investigation.  It may be a data error, a valid extreme case, or evidence that the model form is too simple.
+
 \section{Operational Briefing Checklist}
 
 When briefing residual analysis and model repair, answer:
@@ -618,7 +671,8 @@ When briefing residual analysis and model repair, answer:
   \item Did residual behavior improve after the repair?
   \item Did test MSE or cross-validation error improve on the response scale?
   \item Did the repair change interpretation?
-  \item Were outliers or influential observations investigated?
+  \item Were outliers, high-leverage observations, or influential observations investigated?
+  \item Did BP or another formal test support the visual diagnostic evidence, and was it interpreted cautiously?
   \item Were any observations removed?  If yes, what was the defensible rule?
   \item Are remaining limitations clear to the customer or commander?
 \end{enumerate}
@@ -642,7 +696,7 @@ If the model is correctly specified, then
 \end{equation}
 Residual plots help us evaluate whether the leftover variation behaves like random noise or contains missed structure.
 
-A good residual plot is not proof that the model is true.  A bad residual plot is useful evidence that the model needs work.  Repairs include transformed predictors, transformed responses, interaction terms, different model families, robust methods, and sometimes better data.
+A good residual plot is not proof that the model is true.  A bad residual plot is useful evidence that the model needs work.  Formal tests such as Breusch--Pagan can provide supporting evidence, but they do not replace plots or judgment.  Repairs include transformed predictors, transformed responses, interaction terms, different model families, robust methods, and sometimes better data.  Leverage and Cook's distance help identify observations that may drive the fit and require investigation.
 
 The guiding principle is:
 \begin{quote}
@@ -663,6 +717,8 @@ Residual vectors in observation space & Vector notation in \(\mathbb{R}^n\), coo
 Orthogonality condition \(\mathbf{X}^T\mathbf{e}=\mathbf{0}\) & Dot products, Euclidean norms, and the zero-dot-product condition for orthogonality & Ch05 Secs. 5.1, 5.3, 5.5, 5.8 \\
 \hline
 Hat-matrix computations as linear transformations & Matrix notation, identity matrices, transposes, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.3, 7.4, 7.6.1, 7.6.2; Ch12 Sec. 12.12 \\
+\hline
+Leverage and influence diagnostics & Hat-matrix diagonal entries, trace, Euclidean residual length, and projection geometry & Ch05 Secs. 5.5, 5.8; Ch07 Secs. 7.6.1, 7.6.2; Ch11 Sec. 11.2 \\
 \hline
 Column-space / residual-space viewpoint & Column rank, column space, and full-rank conditions & Ch02 Sec. 2.6; Ch05 Sec. 5.8; Ch10 Sec. 10.5; Ch11 Sec. 11.2 \\
 \hline
