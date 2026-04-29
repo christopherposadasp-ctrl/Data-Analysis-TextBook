@@ -1157,7 +1157,7 @@ import statsmodels.formula.api as smf
 
 # curriculum is categorical; Other is the reference level.
 fit_cat = smf.ols(
-    'iq ~ C(curriculum, Treatment(reference="Other"))',
+    "iq ~ C(curriculum, Treatment(reference='Other'))",
     data=df
 ).fit()
 print(fit_cat.summary())
@@ -1167,7 +1167,7 @@ print(fit_cat.summary())
 
 \begin{verbatim}
 fit_group_slope = smf.ols(
-    'iq ~ hours * C(curriculum, Treatment(reference="Other"))',
+    "iq ~ hours * C(curriculum, Treatment(reference='Other'))",
     data=df
 ).fit()
 print(fit_group_slope.summary())
@@ -1178,6 +1178,11 @@ In formula syntax, \texttt{hours * C(curriculum)} expands to main effects plus t
 \subsubsection*{Inspect dummy columns manually}
 
 \begin{verbatim}
+# Put Other first so drop_first=True drops the reference category.
+df["curriculum"] = pd.Categorical(
+    df["curriculum"],
+    categories=["Other", "OR", "Physics", "Applied Math", "Engineering"]
+)
 dummies = pd.get_dummies(df["curriculum"], drop_first=True, dtype=float)
 X = pd.concat([df[["hours"]], dummies], axis=1)
 X = sm.add_constant(X)

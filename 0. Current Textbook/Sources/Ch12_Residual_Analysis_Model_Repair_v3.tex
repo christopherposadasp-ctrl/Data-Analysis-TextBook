@@ -337,8 +337,9 @@ Here \(\mathbf{x}_i^T\) is the full design row, including the intercept and any 
 
 Because \(\operatorname{trace}(\mathbf{H})=p+1\) under full column rank, the average leverage is
 \begin{equation}
-  \bar{h}=\frac{p+1}{n}.
+\bar{h}=\frac{p+1}{n}.
 \end{equation}
+Here \(p+1\) means the number of fitted coefficients, equivalently the number of columns in the current full-rank design matrix.
 Rules such as \(h_{ii}>2\bar{h}\) or \(h_{ii}>3\bar{h}\) are screening heuristics, not deletion rules.
 
 Cook's distance combines residual size and leverage:
