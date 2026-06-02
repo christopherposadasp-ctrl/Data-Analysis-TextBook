@@ -352,29 +352,7 @@ For inference, linear models remain extremely important.  Their assumptions, est
 
 The practical takeaway is not that one class of models is universally best.  The task determines the model.  If the goal is prediction, prioritize generalization error.  If the goal is inference, prioritize interpretability, assumptions, and uncertainty quantification.  When the goal includes both, state the tradeoff explicitly.
 
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 2 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Response, prediction, and residual vectors & $\mathbb{R}^n$ vector notation, entries, and vector subtraction & Ch02 Secs. 2.1, 2.2, 2.6; Ch03 Sec. 3.1 \\
-\hline
-Empirical MSE as squared distance & Dot products, $\mathbf{a}^T\mathbf{a}=\sum_i a_i^2$, Euclidean norm, and distance between vectors & Ch05 Secs. 5.1, 5.3, 5.5, 5.7 \\
-\hline
-Residual length and RMSE & Euclidean norm properties and distance as $\|\mathbf{a}-\mathbf{b}\|$ & Ch02 Sec. 2.6; Ch05 Secs. 5.5, 5.7 \\
-\hline
-Linear models as finite-parameter estimators & Linear combinations, coefficients of linear combinations, and inner products & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3 \\
-\hline
-Flexibility and degrees-of-freedom intuition & Linear independence, bases, and the maximum size of linearly independent sets in $\mathbb{R}^n$ & Ch02 Sec. 2.1; Ch06 Secs. 6.3, 6.4, 6.5 \\
-\hline
-Matrix notation behind fitted predictors & Matrix size, transpose notation, and matrix-vector multiplication & Ch02 Sec. 2.6; Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
-\hline
-\end{tabular}
-\end{center}
+Later chapters return to this tradeoff when choosing predictor sets, shrinking coefficients with regularization, reducing dimension, and using neural networks as flexible prediction models.
 
 \section{Chapter Summary}
 
@@ -524,10 +502,6 @@ A \emph{nonparametric} method avoids committing to a simple fixed form for $f$. 
 \section{Model Flexibility and Interpretability}
 
 Flexible models can be powerful for prediction, but they may be harder to interpret.  Linear models are often less flexible, but their assumptions, coefficients, uncertainty measures, and diagnostics are easier to explain.  If the goal is prediction, prioritize generalization error.  If the goal is inference, prioritize interpretation, assumptions, and uncertainty quantification.  If the goal includes both, state the tradeoff explicitly.
-
-\section{Math Foundations Source Map}
-
-The Core Reader keeps the short Math Foundations connections for MSE as squared distance and parametric models as linear combinations.  The full Math Foundations textbook-location map for this chapter appears in the full reference textbook.
 
 \section{Chapter Summary}
 

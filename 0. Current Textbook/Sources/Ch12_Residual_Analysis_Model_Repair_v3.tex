@@ -194,6 +194,10 @@ A scale-location plot often uses
 \end{equation}
 against fitted values.  It is designed to make changing variance easier to see.  A rising trend suggests that the residual spread increases with the fitted value.
 
+\CoreCompress{
+Funnel or inverted-funnel patterns suggest nonconstant variance.  A curved smooth trend can suggest missing mean structure, such as a nonlinear predictor effect.  Use the scale-location plot together with residuals-versus-fitted and residuals-versus-predictor plots before choosing a repair.
+}{}
+
 \subsection{Residuals versus time or collection order}
 
 If the observations have a natural order, plot residuals against time, mission phase, batch number, route order, or collection order.  A visible wave, trend, or clustering pattern can indicate correlated errors or missing time-varying predictors.
@@ -211,6 +215,35 @@ Different diagnostics answer different questions.  A useful order is:
 \end{enumerate}
 Use the hierarchy to avoid overreacting to one number.  A p-value can flag a problem, but a plot usually shows the shape of the problem and suggests the repair.
 
+}{}
+\CoreCompress{
+\section{Diagnosing and Repairing Multicollinearity}
+
+Most diagnostics in this chapter look at residual behavior.  Multicollinearity is different: it is a predictor-side problem.  The fitted model may leave no obvious residual pattern, yet individual coefficients may be unstable because predictors contain overlapping information.
+
+\paragraph{First-pass reconnaissance.}
+Scatterplot matrices and predictor-predictor correlations are useful first screens.  Strong pairwise association is an early warning, but low pairwise correlations do not rule out multicollinearity.  One predictor can be explained by a combination of several others even when no single pair looks extreme.
+
+\paragraph{Variance inflation factor.}
+A common diagnostic is the variance inflation factor.  For predictor \(X_j\), regress \(X_j\) on the remaining predictors and compute the resulting \(R^2\), written \(R^2_{X_j\mid X_{-j}}\).  Then
+\begin{equation}
+  \operatorname{VIF}_j
+  =\frac{1}{1-R^2_{X_j\mid X_{-j}}}.
+\end{equation}
+If the other predictors do not explain much of \(X_j\), then \(R^2_{X_j\mid X_{-j}}\) is small and \(\operatorname{VIF}_j\) is near 1.  If the other predictors explain \(X_j\) well, then \(R^2_{X_j\mid X_{-j}}\) is near 1 and the VIF becomes large.  A large VIF means the coefficient attached to \(X_j\) is harder to estimate separately from the other predictors.
+
+Rules of thumb such as \(\operatorname{VIF}>5\) or \(\operatorname{VIF}>10\) are screening rules, not deletion rules.  A large VIF says to look closer.  It does not by itself say that the predictor must be removed.  Also, do not interpret the VIF for the intercept or constant column; the intercept is not a substantive predictor.
+
+\paragraph{Fit, prediction, and interpretation.}
+Multicollinearity mainly warns about coefficient interpretation and inference.  Large VIFs often correspond to inflated standard errors, unstable coefficient signs, or coefficients that change sharply when related predictors are added or removed.  A model can still have useful fitted values, a strong overall test, or good validation error.  If prediction is the goal and validation performance is good, keeping collinear predictors may be defensible.  If interpretation or inference is the goal, the same collinearity may be a serious limitation.
+
+\paragraph{Condition-number intuition.}
+Rank, condition-number, and small-eigenvalue checks describe the design matrix as a whole rather than one predictor at a time.  They can flag exact or near linear dependence, but their numerical values depend on scaling, so use them as supporting screens rather than standalone rules.
+
+\paragraph{Repair and documentation.}
+For exact dependence, remove a redundant column or use a reference category.  For near-collinearity, first ask what the related predictors mean.  Are they duplicates, unit conversions, totals and components, or several measurements of the same underlying construct?  For interpretation, consider dropping one predictor, combining predictors into a meaningful index, or redefining the model.  Ridge regression, principal components, and principal-components regression are advanced remedies, but they are future tools rather than part of this chapter's ordinary least-squares workflow.
+
+Document the decision.  A defensible note should answer: Which predictors were involved? Was the issue exact dependence or near-collinearity? Was the goal prediction or interpretation? What repair, if any, was attempted? Did the conclusion, residual behavior, or validation error change?
 }{}
 \section{Problem 1: Nonlinearity}
 
@@ -447,6 +480,8 @@ No repair makes sense & model class mismatch & change model family or data strat
 \bottomrule
 \end{tabular}
 \end{center}
+
+When several repairs remain defensible, later chapters develop model-selection criteria, cross-validation, and regularization tools for comparing or stabilizing candidate models; those tools supplement this diagnostic workflow rather than replace it.
 
 \CoreCompress{
 \section{Transformation Repairs}
@@ -704,34 +739,6 @@ The guiding principle is:
   Residuals are the model's after-action report.  Read them before trusting the fit.
 \end{quote}
 
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 12 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Residual vectors in observation space & Vector notation in \(\mathbb{R}^n\), coordinates, and subvectors & Ch02 Secs. 2.1, 2.2, 2.6; Ch03 Sec. 3.1; Ch06 Sec. 6.5 \\
-\hline
-Orthogonality condition \(\mathbf{X}^T\mathbf{e}=\mathbf{0}\) & Dot products, Euclidean norms, and the zero-dot-product condition for orthogonality & Ch05 Secs. 5.1, 5.3, 5.5, 5.8 \\
-\hline
-Hat-matrix computations as linear transformations & Matrix notation, identity matrices, transposes, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.3, 7.4, 7.6.1, 7.6.2; Ch12 Sec. 12.12 \\
-\hline
-Leverage and influence diagnostics & Hat-matrix diagonal entries, trace, Euclidean residual length, and projection geometry & Ch05 Secs. 5.5, 5.8; Ch07 Secs. 7.6.1, 7.6.2; Ch11 Sec. 11.2 \\
-\hline
-Column-space / residual-space viewpoint & Column rank, column space, and full-rank conditions & Ch02 Sec. 2.6; Ch05 Sec. 5.8; Ch10 Sec. 10.5; Ch11 Sec. 11.2 \\
-\hline
-Least-squares repair criterion & Stationary points, least-squares minimization, the normal equations, and the positive-semidefinite \(\mathbf{A}^T\mathbf{A}\) argument & Ch05 Sec. 5.5; Ch10 Sec. 10.6; Ch12 Secs. 12.8, 12.9, 12.11; Ch13 Sec. 13.4 \\
-\hline
-Identifiability after repair & Left inverses, linearly independent columns, rank, and full column rank & Ch06 Sec. 6.3; Ch10 Secs. 10.1, 10.3, 10.5; Ch11 Sec. 11.4 \\
-\hline
-Computational matrix operations & Python/NumPy arrays, shapes, transposes, and matrix multiplication & Ch07 Secs. 7.1, 7.4, 7.7 \\
-\hline
-\end{tabular}
-\end{center}
-
 \section{Practice and Workflow}
 \subsection*{Focused Study Checklist}
 
@@ -768,5 +775,5 @@ Residual plots help diagnose violations of the Big Three regression assumptions 
 Model repair should be deliberate.  Transform predictors or the response, add interactions, address data-quality problems, or admit that the current linear-model frame is inadequate.  Do not rely on a single hypothesis test, a single \(R^2\), or a single residual plot in isolation.
 
 \paragraph{Can you do this?}
-You should be able to explain what a residual plot is checking, connect patterns to assumptions, propose a targeted repair, compare repair candidates, and brief the limitations of the final model.  The full reference text contains the common-mistakes list, operational briefing checklist, complete Math Foundations source map, and reusable study template.
+You should be able to explain what a residual plot is checking, connect patterns to assumptions, propose a targeted repair, compare repair candidates, and brief the limitations of the final model.  The full reference text contains the common-mistakes list, operational briefing checklist, and reusable study template; the consolidated Math Foundations source map appears in Appendix~\ref{app:math-foundations-source-map}.
 }

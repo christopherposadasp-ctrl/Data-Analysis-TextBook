@@ -1,0 +1,212 @@
+% Appendix draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, hyperref, and verbatim.
+\chapter[Regression Assumption Ladder]{Regression Assumptions, Diagnostics, and What They Support}
+\label{app:regression-assumption-ladder}
+
+\section{Why This Appendix Exists}
+
+The regression chapters use one recurring assumption ladder.  Chapter~5 introduces it in simple linear regression, Chapter~6 uses it to justify classical tests, Chapter~10 writes it in fixed-design matrix form, Chapter~12 turns it into residual diagnostics, Chapter~13 uses it for intervals, and Chapter~14 connects the Gaussian version to likelihood.
+
+This appendix gathers those ideas in one place.  It is not a new theory chapter.  It is a review map for answering three practical questions:
+\begin{enumerate}
+  \item What are the major regression assumptions?
+  \item What does each assumption support?
+  \item What should an analyst say when a diagnostic check looks weak?
+\end{enumerate}
+
+The key habit is to separate \emph{fitting} from \emph{trusting inferential claims}.  Least squares will produce fitted values and residuals whenever the computation is well defined.  The assumptions determine how far we can go when interpreting coefficients, standard errors, tests, intervals, and model repairs.
+
+\section{The Regression Model and the Assumption Ladder}
+
+For the fixed-design regression model, write
+\begin{equation}
+  \mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+  \label{eq:app-reg-model}
+\end{equation}
+where
+\begin{equation}
+  \mathbf{Y}\in\mathbb{R}^n,
+  \qquad
+  \mathbf{X}\in\mathbb{R}^{n\times q},
+  \qquad
+  \boldsymbol{\beta}\in\mathbb{R}^{q},
+  \qquad
+  \boldsymbol{\epsilon}\in\mathbb{R}^{n}.
+\end{equation}
+Here \(q=p+1\) when the model includes an intercept and \(p\) ordinary predictors.  The design matrix \(\mathbf{X}\) is treated as fixed, or the analysis is read conditionally on the observed predictor values.
+
+The three-step assumption ladder is:
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}p{0.36\textwidth}}
+\toprule
+\textbf{Level} & \textbf{Mathematical statement} & \textbf{Plain-language meaning} \\
+\midrule
+Mean-zero errors & \(\mathbb{E}[\boldsymbol{\epsilon}\mid \mathbf{X}]=\mathbf{0}\) & The model is centered correctly.  After accounting for the predictors in \(\mathbf{X}\), the remaining error does not systematically lean positive or negative. \\
+Constant variance and uncorrelated errors & \(\operatorname{Var}(\boldsymbol{\epsilon}\mid \mathbf{X})=\sigma^2\mathbf{I}_n\) & Errors have a common variance and are uncorrelated across observations after conditioning on the design. \\
+Gaussian errors & \(\boldsymbol{\epsilon}\mid \mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n)\) & The conditional errors are normally distributed with mean zero, common variance, and no correlation. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These assumptions are increasingly strong.  Mean-zero errors are about the location of the regression surface.  Constant variance and uncorrelated errors are about the error covariance structure.  Gaussian errors add a distributional shape assumption.
+
+\paragraph{A structural condition, not one of the Big Three.}
+Full column rank is also important, but it is not an error assumption.  It is a design-matrix condition.  The inverse-form estimator
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}
+\end{equation}
+requires \(\mathbf{X}\) to have full column rank.  If the columns are exactly dependent, the ordinary coefficient vector is not uniquely identified.  If the columns are nearly dependent, the coefficients may be unstable even though fitted values can still be useful.
+
+\section{What Each Assumption Supports}
+
+The assumptions support different claims.  Do not use a stronger conclusion than the assumptions justify.
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.35\textwidth}>{\raggedright\arraybackslash}p{0.33\textwidth}}
+\toprule
+\textbf{Assumption or condition} & \textbf{Supports} & \textbf{Does not automatically support} \\
+\midrule
+Full column rank of \(\mathbf{X}\) & Unique inverse-form OLS coefficient estimate; identifiable coefficients in the chosen design & Correct mean model; valid standard errors; normality; causal interpretation \\
+Mean-zero errors & \(\mathbf{X}\boldsymbol{\beta}\) is the conditional mean; OLS is centered on the true coefficient vector under the fixed-design model & Constant variance; independent errors; exact \(t\)- or \(F\)-based inference \\
+Constant variance and uncorrelated errors & Classical coefficient covariance formulas; usual standard errors; residual variance logic & Correct mean model if mean-zero fails; Gaussian finite-sample inference \\
+Gaussian errors & Exact finite-sample \(t\)-tests, \(F\)-tests, and standard intervals under the linear model & Immunity to misspecification, outliers, dependence, or bad design \\
+Reasonable residual behavior & Practical evidence that the model assumptions may be defensible & Proof that the assumptions are true \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+A common mistake is to treat a fitted regression output table as self-validating.  The table can compute coefficients, standard errors, and \(p\)-values.  It cannot prove that the model assumptions are credible.
+
+\section{Errors Are Not Residuals}
+
+The true error vector \(\boldsymbol{\epsilon}\) belongs to the data-generating model.  It is not observed.  The residual vector \(\mathbf{e}\) is computed after fitting a model:
+\begin{equation}
+  \widehat{\mathbf{y}}=\mathbf{X}\widehat{\boldsymbol{\beta}},
+  \qquad
+  \mathbf{e}=\mathbf{y}-\widehat{\mathbf{y}}.
+\end{equation}
+When ordinary least squares is fit with hat matrix
+\begin{equation}
+  \mathbf{H}=\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T,
+\end{equation}
+the residuals satisfy
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\mathbf{y}.
+\end{equation}
+If the truth-plus-error model \(\mathbf{y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon}\) is appropriate and \(\mathbf{H}\mathbf{X}=\mathbf{X}\), then
+\begin{equation}
+  \mathbf{e}=(\mathbf{I}_n-\mathbf{H})\boldsymbol{\epsilon}.
+\end{equation}
+Thus residuals are not the errors themselves.  They are the portion of the errors left after projection away from the fitted model space.
+
+This distinction matters for diagnostics.  Residual plots are useful because residuals are the observable shadows of errors.  But residual plots do not prove assumptions.  They reveal visible patterns that would be surprising if the assumptions were a good description of the data.
+
+\section{Diagnostics-to-Assumptions Map}
+
+Residual diagnostics turn the assumption ladder into practical checks.
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.35\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}}
+\toprule
+\textbf{Diagnostic evidence} & \textbf{Main assumption being checked} & \textbf{Common diagnostic view} \\
+\midrule
+Residuals show no systematic curve or trend around zero & Mean-zero errors; mean model is not visibly missing structure & Residuals versus fitted values; residuals versus predictors \\
+Residual spread is roughly stable across fitted values and predictors & Constant variance & Residuals versus fitted values; scale-location plot \\
+Residuals show no runs, waves, or time-ordered pattern & Uncorrelated errors & Residuals versus time, collection order, or spatial/operational grouping \\
+Residual shape is roughly symmetric and Q-Q plot has no severe tail departures & Gaussian error plausibility & Histogram; normal Q-Q plot \\
+A few observations have high leverage or large Cook's distance & Influence or design sensitivity, not exactly one of the Big Three & Leverage plot; studentized residuals; Cook's distance \\
+Predictors are nearly redundant & Design instability, not an error assumption & Scatterplot matrix; VIF; condition-number or rank check \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The diagnostic hierarchy in Chapter~12 is useful: first check whether the mean structure is missing something important, then check variance and dependence, then check normality and influence.  A normal Q-Q plot is not very comforting if the residuals versus fitted plot shows obvious curvature.
+
+\section{What Breaks When an Assumption Fails?}
+
+Assumption failures do not all have the same consequences.  The right response depends on the goal of the analysis.
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.33\textwidth}}
+\toprule
+\textbf{Problem} & \textbf{Main risk} & \textbf{Smallest responsible response} \\
+\midrule
+Mean structure is wrong & Coefficients and fitted means describe the wrong conditional mean relationship & Add missing predictors, transform predictors, add interactions, or change model class \\
+Nonconstant variance & Usual standard errors, tests, and intervals may be misleading; prediction uncertainty may vary across cases & Transform response if appropriate, use a variance-aware method if covered, or report inference with caution \\
+Correlated errors & Standard errors and tests may be too optimistic because observations contain less independent information than assumed & Model dependence, use time/order-aware validation, or report the limitation clearly \\
+Strong nonnormality & Exact small-sample \(t\)- and \(F\)-based claims weaken & Check whether sample size makes approximation reasonable; transform, use robust alternatives if covered, or caveat inference \\
+High leverage or influential observations & A small number of cases may dominate coefficients or fitted pattern & Investigate data quality and context; compare keep/remove/repair decisions; document the choice \\
+Exact rank deficiency & Coefficients are not uniquely identified & Remove or recode redundant columns; fix dummy-variable trap or duplicate predictors \\
+Near collinearity & Coefficients and standard errors may be unstable even when predictions remain acceptable & Clarify prediction versus interpretation goal; consider combining variables, dropping redundancy, ridge, LASSO, or PCR if appropriate \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The goal is not to delete every uncomfortable point or chase every diagnostic plot until it looks perfect.  The goal is to decide whether the model is defensible for the question being asked.
+
+\section{Which Claims Are Still Defensible?}
+
+When assumptions are imperfect, avoid all-or-nothing thinking.  A model may be weak for one purpose and still useful for another.
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.32\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}}
+\toprule
+\textbf{Claim} & \textbf{Needs most} & \textbf{If assumptions look weak} \\
+\midrule
+Training fit is small & Computation of fitted values and residuals & Still descriptive, but may not generalize \\
+Prediction on new data is good & Validation or cross-validation evidence & Prefer test/CV error over assumption-heavy claims \\
+A coefficient has a clear interpretation & Correct mean model, identifiable design, and meaningful units & Interpret cautiously if collinearity, omitted structure, or transformations complicate meaning \\
+A coefficient test is reliable & Mean-zero errors, usable standard errors, degrees of freedom, and distributional approximation & Caveat or avoid strong significance language if diagnostics are poor \\
+A confidence interval is defensible & Same assumptions supporting standard errors and \(t\)-based reference distribution & Report interval with caveat, repair model, or use an alternative interval method if covered \\
+A prediction interval is defensible & Correct mean model, variance model, and future case comparable to training design & Be cautious if variance changes, extrapolation occurs, or future conditions differ \\
+A causal claim is warranted & Research design or causal assumptions beyond ordinary regression output & Do not infer causality from regression association alone \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For operational work, this table often matters more than the formal formulas.  The analyst must decide what claim the evidence can support.
+
+\section{A Short Project-Report Template}
+
+A regression report should say what was checked and how that affected interpretation.  The following language can be adapted without overstating the evidence.
+
+\begin{quote}
+We fit a linear regression model with \emph{[response]} as the response and \emph{[predictors]} as predictors.  We checked the residual behavior against the regression assumption ladder.  The residuals showed \emph{[no major pattern, curvature, changing spread, possible nonnormality, possible dependence, or influential cases]}.  Based on these diagnostics, the model is \emph{[reasonably defensible for inference, useful mainly for prediction, descriptive only, or in need of repair]}.  We interpret coefficients, \(p\)-values, and intervals with \emph{[standard confidence or caution]} because \emph{[reason]}.
+\end{quote}
+
+For a briefing, shorten the message:
+\begin{quote}
+The model fits the main trend, but the residuals show \emph{[issue]}.  That means \emph{[which claim is weakened]}.  The model is still useful for \emph{[purpose]}, but we should not overstate \emph{[p-values, intervals, coefficient interpretation, or prediction outside the observed range]}.
+\end{quote}
+
+\section{Chapter Map}
+
+The same assumption ladder appears in different forms across the regression chapters.
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.73\textwidth}}
+\toprule
+\textbf{Chapter} & \textbf{Role of the assumption ladder} \\
+\midrule
+Chapter~5 & Introduces the Big Three assumptions in simple linear regression and explains what each level supports. \\
+Chapter~6 & Uses the assumptions to justify \(F\)-tests, slope \(t\)-tests, \(p\)-values, and the interpretation of software output. \\
+Chapter~10 & Restates the assumptions in fixed-design matrix form and derives how they affect \(\widehat{\boldsymbol{\beta}}\), residuals, and residual variance. \\
+Chapter~12 & Turns the assumptions into practical diagnostic checks and model-repair decisions. \\
+Chapter~13 & Uses the assumptions to explain coefficient intervals, mean-response intervals, and prediction intervals. \\
+Chapter~14 & Shows that the Gaussian-error version of the linear model makes ordinary least squares a maximum likelihood estimator. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Appendix Summary}
+
+Carry forward these habits:
+\begin{enumerate}
+  \item State the regression assumption ladder before making strong inference claims.
+  \item Remember that full rank is a design condition; it is not an error assumption.
+  \item Keep true errors \(\boldsymbol{\epsilon}\) separate from residuals \(\mathbf{e}\).
+  \item Use residual plots as evidence, not proof.
+  \item Match the diagnostic to the assumption: pattern for mean structure, spread for variance, order for dependence, Q-Q for normality.
+  \item Decide what claim remains defensible: description, prediction, coefficient interpretation, testing, intervals, or causal language.
+  \item Report limitations plainly.  A useful model is not the same thing as a perfect model.
+\end{enumerate}

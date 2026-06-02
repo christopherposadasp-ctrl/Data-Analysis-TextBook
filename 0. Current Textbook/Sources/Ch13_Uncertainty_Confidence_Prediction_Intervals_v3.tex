@@ -1,0 +1,386 @@
+% Chapter 13 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, hyperref, and verbatim.
+\chapter[Uncertainty for Linear Regression]{Uncertainty for Linear Regression: Confidence and Prediction Intervals}
+\label{chap:uncertainty-linear-regression-confidence-prediction-intervals}
+\label{chap:uncertainty-confidence-prediction-intervals}
+
+\section{The Big Picture}
+
+A fitted regression model gives point estimates:
+\begin{equation}
+  \widehat{\boldsymbol{\beta}},
+  \qquad
+  \widehat{y}_0 = \mathbf{x}_0^T\widehat{\boldsymbol{\beta}}.
+\end{equation}
+Point estimates are useful, but they are incomplete.  A briefing that only gives a fitted coefficient or a fitted value hides the fact that the estimate came from one sample.
+
+This chapter asks a practical question:
+\begin{quote}
+  How uncertain should we be about the coefficient, the mean response, or a future response?
+\end{quote}
+
+There are three interval questions that students often mix together:
+\begin{center}
+\begin{tabular}{p{0.27\textwidth}p{0.36\textwidth}p{0.27\textwidth}}
+\toprule
+\textbf{Question} & \textbf{Target} & \textbf{Interval type} \\
+\midrule
+How uncertain is a coefficient? & a true coefficient \(\beta_j\) & coefficient confidence interval \\
+What is the average response at this predictor setting? & the conditional mean \(\mathbb{E}[Y\mid \mathbf{x}_0]\) & mean-response confidence interval \\
+What value might a new case have? & a future observation \(Y_0\mid \mathbf{x}_0\) & prediction interval \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The first two intervals describe uncertainty about unknown but fixed model quantities.  The third interval describes uncertainty about a new observed response, so it must include the irreducible noise in that future observation.  This is why prediction intervals are wider than confidence intervals for the mean response.
+
+\paragraph{Connection to earlier chapters.}
+Chapter~10 developed the fixed-design theory behind \(\widehat{\boldsymbol{\beta}}\), fitted values, residuals, and residual variance.  Chapter~12 emphasized that the assumptions behind those formulas should be checked with residual diagnostics.  This chapter uses those same ingredients to build interpretable uncertainty statements.
+
+\paragraph{Math Foundations Connection.}
+The interval formulas use vector notation, matrix inverses, diagonal entries of matrices, quadratic forms such as \(\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0\), residual norms, and least-squares projection geometry.  These ideas are supported by the Math Foundations textbook, especially Chapters~2, 5, 7, 10, 11, 12, and~13.
+
+\section{Recall: Fixed-Design Regression Theory}
+
+We use the fixed-design multiple regression model
+\begin{equation}
+  \mathbf{Y}=\mathbf{X}\boldsymbol{\beta}+\boldsymbol{\epsilon},
+  \label{eq:ch13-fixed-design-model}
+\end{equation}
+where \(\mathbf{X}\in\mathbb{R}^{n\times q}\), \(q=p+1\), and the intercept column is included unless stated otherwise.  In this chapter, \(q\) is the number of fitted coefficients.
+
+Under the usual full-column-rank condition,
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}
+  = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{Y}.
+\end{equation}
+If the errors have mean zero and covariance \(\sigma^2\mathbf{I}_n\), then
+\begin{equation}
+  \mathbb{E}[\widehat{\boldsymbol{\beta}}\mid \mathbf{X}]
+  =\boldsymbol{\beta},
+  \qquad
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid \mathbf{X})
+  =\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}.
+  \label{eq:ch13-beta-var}
+\end{equation}
+The unknown error variance is estimated by
+\begin{equation}
+  \widehat{\sigma}^2
+  =\frac{RSS}{n-q}
+  =\frac{\|\mathbf{y}-\widehat{\mathbf{y}}\|^2}{n-q}.
+  \label{eq:ch13-sigma-hat}
+\end{equation}
+This is the residual variance estimate with residual degrees of freedom \(n-q=n-p-1\).
+
+If we also assume Gaussian errors,
+\begin{equation}
+  \boldsymbol{\epsilon}\mid \mathbf{X}\sim N(\mathbf{0},\sigma^2\mathbf{I}_n),
+\end{equation}
+then the usual standardized regression quantities have exact \(t\)-distributions.  That is the distributional fact that turns standard errors into confidence and prediction intervals.
+
+\paragraph{Observed data versus random response.}
+The theoretical formulas use \(\mathbf{Y}\) because the response vector is random before we observe the data.  In the actual computation, we plug in the realized data vector \(\mathbf{y}\).
+
+\section{Confidence Intervals for Coefficients}
+
+A coefficient confidence interval describes uncertainty about one true coefficient \(\beta_j\).  For \(j=0,1,\ldots,p\), the estimated coefficient is \(\widehat{\beta}_j\).  Its estimated standard error is
+\begin{equation}
+  SE(\widehat{\beta}_j)
+  =\widehat{\sigma}\sqrt{\left[(\mathbf{X}^T\mathbf{X})^{-1}\right]_{j+1,j+1}},
+  \label{eq:ch13-beta-se}
+\end{equation}
+where the \(j+1\) indexing accounts for the intercept \(\beta_0\) being the first entry of the coefficient vector.
+
+A \(100(1-\alpha)\%\) confidence interval for \(\beta_j\) is
+\begin{equation}
+  \boxed{
+  \widehat{\beta}_j
+  \pm
+  t_{1-\alpha/2,\,n-q}\,SE(\widehat{\beta}_j).
+  }
+  \label{eq:ch13-beta-ci}
+\end{equation}
+Here \(t_{1-\alpha/2,\,n-q}\) is the appropriate quantile of a \(t\)-distribution with \(n-q\) degrees of freedom.
+
+\paragraph{Interpretation.}
+A 95\% confidence interval is not a claim that the probability is 95\% that the fixed coefficient lies in this particular realized interval.  The coefficient is fixed in the model.  The interval is random because it depends on the sample.  The repeated-sampling interpretation is:
+\begin{quote}
+  If we repeated the data-collection and interval-building process many times under the same model, about 95\% of the intervals would contain the true coefficient.
+\end{quote}
+
+\paragraph{Briefing language.}
+For a coefficient interval, say what coefficient you are describing and what units it uses.  For example: ``After adjusting for the other predictors, the model estimates the slope for this predictor to be between these two values, under the regression assumptions.''
+
+\section{Confidence Intervals for the Mean Response}
+
+A coefficient interval answers a question about a slope or intercept.  Often, the analyst also wants a statement about the expected response at a particular predictor setting.
+
+Let \(\mathbf{x}_0\in\mathbb{R}^{q}\) be a design row for the predictor setting of interest, including the intercept entry.  The fitted mean response is
+\begin{equation}
+  \widehat{\mu}_0
+  =\mathbf{x}_0^T\widehat{\boldsymbol{\beta}}.
+\end{equation}
+The target is
+\begin{equation}
+  \mu_0
+  =\mathbb{E}[Y_0\mid \mathbf{x}_0]
+  =\mathbf{x}_0^T\boldsymbol{\beta}.
+\end{equation}
+
+The variance of the fitted mean is
+\begin{equation}
+  \operatorname{Var}(\widehat{\mu}_0\mid \mathbf{X})
+  =\sigma^2\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0.
+\end{equation}
+Therefore the estimated standard error for the fitted mean is
+\begin{equation}
+  SE(\widehat{\mu}_0)
+  =\widehat{\sigma}\sqrt{\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0}.
+\end{equation}
+A \(100(1-\alpha)\%\) confidence interval for the mean response at \(\mathbf{x}_0\) is
+\begin{equation}
+  \boxed{
+  \widehat{\mu}_0
+  \pm
+  t_{1-\alpha/2,\,n-q}\widehat{\sigma}
+  \sqrt{\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0}.
+  }
+  \label{eq:ch13-mean-response-ci}
+\end{equation}
+
+\paragraph{Existing design rows.}
+If \(\mathbf{x}_0^T\) is the \(i\)th row of the fitted design matrix, then
+\begin{equation}
+  h_{ii}=\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0.
+\end{equation}
+In that special case, the mean-response interval becomes
+\begin{equation}
+  \widehat{y}_i
+  \pm
+  t_{1-\alpha/2,\,n-q}\widehat{\sigma}\sqrt{h_{ii}}.
+\end{equation}
+The hat value \(h_{ii}\) measures how far that predictor setting is from the center of the design.  Mean estimates at unusual predictor settings tend to have larger uncertainty.
+
+\section{Prediction Intervals for Future Observations}
+
+A prediction interval answers a different question.  It is not asking for the average response at \(\mathbf{x}_0\).  It is asking where a new observation might fall.
+
+Write the future response as
+\begin{equation}
+  Y_0=\mathbf{x}_0^T\boldsymbol{\beta}+\epsilon_0,
+\end{equation}
+where \(\epsilon_0\) is the new observation's random error.  The prediction error is
+\begin{equation}
+  Y_0-\widehat{\mu}_0.
+\end{equation}
+It contains two sources of variation:
+\begin{enumerate}
+  \item uncertainty in the fitted mean \(\widehat{\mu}_0\), and
+  \item the new noise term \(\epsilon_0\).
+\end{enumerate}
+Because of the new noise term, the prediction standard error is
+\begin{equation}
+  \widehat{\sigma}
+  \sqrt{1+\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0}.
+\end{equation}
+Thus a \(100(1-\alpha)\%\) prediction interval for a future response at \(\mathbf{x}_0\) is
+\begin{equation}
+  \boxed{
+  \widehat{\mu}_0
+  \pm
+  t_{1-\alpha/2,\,n-q}\widehat{\sigma}
+  \sqrt{1+\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0}.
+  }
+  \label{eq:ch13-prediction-interval}
+\end{equation}
+
+For a new observation at the same predictor values as the \(i\)th observed row, this becomes
+\begin{equation}
+  \widehat{y}_i
+  \pm
+  t_{1-\alpha/2,\,n-q}\widehat{\sigma}\sqrt{1+h_{ii}}.
+\end{equation}
+
+\section{Why Prediction Intervals Are Wider}
+
+The mean-response interval and the prediction interval both start with the same fitted value \(\widehat{\mu}_0\).  The difference is the extra \(1\) inside the square root:
+\begin{equation}
+  \underbrace{\widehat{\sigma}^2\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0}_{\text{uncertainty in fitted mean} }
+  \qquad\text{versus}\qquad
+  \underbrace{\widehat{\sigma}^2\left(1+\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0\right)}_{\text{fitted mean uncertainty plus new noise}}.
+\end{equation}
+The prediction interval is wider because it must cover an individual future response, not just the average response.
+
+A practical way to remember the difference is:
+\begin{quote}
+  A confidence interval for the mean response asks, ``Where is the regression surface?''  A prediction interval asks, ``Where might the next point land?''
+\end{quote}
+
+\section{Which Interval Should I Use?}
+
+Use the target of the question to choose the interval.
+
+\begin{center}
+\begin{tabular}{p{0.34\textwidth}p{0.35\textwidth}p{0.20\textwidth}}
+\toprule
+\textbf{Analyst question} & \textbf{What is uncertain?} & \textbf{Use} \\
+\midrule
+How much does predictor \(j\) change the response after adjustment? & the coefficient \(\beta_j\) & coefficient CI \\
+What is the expected response for this type of case? & the mean \(\mathbb{E}[Y\mid\mathbf{x}_0]\) & mean-response CI \\
+What response should we expect for one future case? & a new value \(Y_0\) & prediction interval \\
+How accurate is the model over many cases? & prediction error over cases & validation metric \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The last row is included to prevent a common mistake.  Intervals are uncertainty statements about coefficients, means, or future observations.  Prediction accuracy over many cases is a model-performance question.  It is usually evaluated with test error, cross-validation, RMSE, MAE, or a similar metric.
+
+\section{Assumptions Behind the Intervals}
+
+The interval formulas above are not magic.  They depend on the regression assumptions.
+
+\begin{center}
+\begin{tabular}{p{0.32\textwidth}p{0.56\textwidth}}
+\toprule
+\textbf{Assumption} & \textbf{Why it matters for intervals} \\
+\midrule
+Mean-zero errors & centers the model correctly around \(\mathbf{X}\boldsymbol{\beta}\). \\
+Constant variance and uncorrelated errors & supports the usual variance and standard-error formulas. \\
+Gaussian errors & gives exact finite-sample \(t\)-based intervals under the model. \\
+Full column rank & makes the inverse-form OLS estimator and coefficient covariance formula unique. \\
+Fixed design, or conditioning on observed \(\mathbf{X}\) & clarifies that the uncertainty is in the response noise, not in the already observed design matrix. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Chapter~12's residual diagnostics matter here.  If the residuals show strong nonlinearity, changing variance, dependence, heavy tails, or influential observations, then the interval formulas may still compute, but their interpretation becomes less defensible.
+
+\paragraph{Operational warning.}
+An interval is only as credible as the model behind it.  If the model is misspecified, a narrow interval can give a false sense of precision.
+
+\section{Intervals Are Not the Same as Prediction Accuracy}
+
+The slides that motivated this chapter also discuss alternative fit measures.  Those measures are useful, but they answer a different question.
+
+\begin{center}
+\begin{tabular}{p{0.20\textwidth}p{0.60\textwidth}}
+\toprule
+\textbf{Quantity} & \textbf{What it summarizes} \\
+\midrule
+RMSE or RSE & typical size of residuals in response units, with squared-error emphasis. \\
+MAE or MAD & average absolute residual size; less sensitive to very large residuals than RMSE. \\
+\(R^2\) & fraction of sample variation explained relative to the mean-only baseline. \\
+Adjusted \(R^2\) & an \(R^2\)-style summary that penalizes additional predictors. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+In this book, we will usually call the average absolute residual size \emph{MAE}, or mean absolute error.  Some course slides call the same idea MAD, mean absolute deviation.  Do not confuse this with the median absolute deviation, which is a different robust summary used in other statistics contexts.
+
+Fit measures help compare models and communicate error size.  They do not replace confidence intervals or prediction intervals.  Later model-selection chapters use these quantities more directly when choosing among competing models.
+
+\section{Optional Note: Least Absolute Deviation}
+
+Ordinary least squares chooses coefficients by minimizing squared residuals.  An alternative is the least absolute deviation estimator, or LAD, which minimizes absolute residuals:
+\begin{equation}
+  \min_{\mathbf{b}} \frac{1}{n}\sum_{i=1}^n |y_i-\mathbf{x}_i^T\mathbf{b}|.
+\end{equation}
+This criterion is less sensitive to extremely large residuals than squared error because \(|r|\) grows more slowly than \(r^2\).  The cost is that the absolute value is not differentiable at zero, so the calculus used for ordinary least squares does not produce the same normal equations.
+
+For this course, LAD is a useful comparison point, not a new main method.  The key lesson is that the choice of loss function changes what the fitted model is trying to optimize.
+
+\section{Worked Interpretation Example}
+
+Suppose we fit a regression model to predict body fat percentage from several physical measurements.  The fitted model can produce three different uncertainty statements for a new predictor setting \(\mathbf{x}_0\).
+
+\begin{enumerate}
+  \item \textbf{Coefficient interval:} ``The coefficient for waist circumference is estimated with this uncertainty, after adjusting for the other predictors.''
+  \item \textbf{Mean-response interval:} ``For people with this predictor pattern, the average body fat percentage is estimated to fall in this interval.''
+  \item \textbf{Prediction interval:} ``For one future person with this predictor pattern, the observed body fat percentage is predicted to fall in this wider interval.''
+\end{enumerate}
+
+These are not interchangeable.  The coefficient interval talks about the model parameter.  The mean-response interval talks about the average of a subpopulation or predictor pattern.  The prediction interval talks about an individual future case.
+
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Using a mean-response interval as a prediction interval}
+
+A confidence interval for \(\mathbb{E}[Y\mid\mathbf{x}_0]\) is too narrow for a future individual observation.  Use a prediction interval when the question is about one future case.
+
+\subsection*{Mistake 2: Forgetting the extra noise in a future response}
+
+The extra \(1\) in
+\begin{equation}
+  1+\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0
+\end{equation}
+comes from the new observation's own error term.  It is not a typo.
+
+\subsection*{Mistake 3: Treating the confidence level as certainty for this dataset}
+
+A 95\% confidence interval is a repeated-sampling procedure.  It is not a promise that the realized interval has a 95\% posterior probability unless a Bayesian framework is being used.
+
+\subsection*{Mistake 4: Ignoring diagnostics before trusting intervals}
+
+Intervals can be printed even when residual diagnostics look bad.  That does not mean the interval interpretation is defensible.
+
+\subsection*{Mistake 5: Comparing error metrics on different scales}
+
+RMSE on \(Y\) and RMSE on \(\log(Y)\) are not directly comparable.  Compare model performance on the operational response scale that matters.
+
+\section{Operational Briefing Checklist}
+
+When briefing interval results, answer the following questions:
+\begin{enumerate}
+  \item What is the target: coefficient, mean response, or future observation?
+  \item What predictor setting \(\mathbf{x}_0\) is being used, if any?
+  \item Is the interval a confidence interval or a prediction interval?
+  \item What confidence level is being used?
+  \item What residual degrees of freedom are used?
+  \item Are the model assumptions plausible enough for this interpretation?
+  \item Do residual diagnostics reveal nonlinearity, changing variance, dependence, or influential observations?
+  \item Is the interval on the same scale as the operational decision?
+  \item How should the decision-maker use the interval, not just the point estimate?
+\end{enumerate}
+
+\paragraph{Coding companion reference.}
+Package-specific Python/R commands for coefficient intervals, mean-response intervals, prediction intervals, and model-fit metrics belong in the separate Coding and Software Cookbook companion.  The main chapter keeps the statistical meaning and formulas.
+
+\section{Chapter Summary}
+
+Regression uncertainty has three common targets:
+\begin{equation}
+  \boxed{
+  \text{coefficient} \qquad \text{mean response} \qquad \text{future observation}
+  }
+\end{equation}
+
+A coefficient confidence interval describes uncertainty about \(\beta_j\).  A mean-response confidence interval describes uncertainty about \(\mathbb{E}[Y\mid\mathbf{x}_0]\).  A prediction interval describes uncertainty about a future response \(Y_0\mid\mathbf{x}_0\), so it is wider because it includes new observation noise.
+
+The key formulas are:
+\begin{align}
+  \widehat{\beta}_j
+  &\pm t_{1-\alpha/2,\,n-q}\,SE(\widehat{\beta}_j),\\
+  \widehat{\mu}_0
+  &\pm t_{1-\alpha/2,\,n-q}\widehat{\sigma}
+  \sqrt{\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0},\\
+  \widehat{\mu}_0
+  &\pm t_{1-\alpha/2,\,n-q}\widehat{\sigma}
+  \sqrt{1+\mathbf{x}_0^T(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{x}_0}.
+\end{align}
+
+Fit metrics such as RMSE, MAE, \(R^2\), and adjusted \(R^2\) summarize performance.  They do not replace interval statements.  A defensible analysis explains both the fitted value and the uncertainty around it.
+
+\section{Practice and Workflow}
+\subsection*{Focused Study Checklist}
+
+Use this as a final check after studying regression intervals.
+
+\begin{enumerate}
+  \item Can you distinguish a coefficient confidence interval from a mean-response confidence interval?
+  \item Can you explain why a prediction interval is wider than a mean-response interval?
+  \item Can you identify whether a question is about \(\beta_j\), \(\mathbb{E}[Y\mid\mathbf{x}_0]\), or \(Y_0\mid\mathbf{x}_0\)?
+  \item Can you state the residual degrees of freedom \(n-p-1\) or \(n-q\)?
+  \item Can you explain the role of \(\widehat{\sigma}\) in the interval formulas?
+  \item Can you recognize when the hat value \(h_{ii}\) appears in an interval formula?
+  \item Can you explain why residual diagnostics matter before reporting intervals?
+  \item Can you avoid using RMSE, MAE, or \(R^2\) as a substitute for an uncertainty interval?
+\end{enumerate}

@@ -1,0 +1,353 @@
+% Chapter 14 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, hyperref, and verbatim.
+\chapter[Likelihood, GLMs, and Hypothesis Testing]{Likelihood, GLMs, and Hypothesis Testing Beyond Least Squares}
+\label{chap:likelihood-glms-hypothesis-testing}
+
+\section{The Big Picture}
+
+Least squares gave us a way to fit a regression model by minimizing squared residuals.  Chapter~13 used the Gaussian-error theory behind least squares to build coefficient confidence intervals, mean-response intervals, and prediction intervals.
+
+This chapter asks a different question:
+\begin{quote}
+  What if we start with a probability model for the response and fit the unknown parameters by choosing the values that make the observed data most plausible?
+\end{quote}
+That idea is called \emph{maximum likelihood}.  It explains why ordinary least squares is the natural estimator under Gaussian errors, and it gives us a way to build models when least squares is not appropriate, such as logistic regression for binary responses and Poisson regression for counts.
+
+The goal is not to turn this chapter into a complete generalized-linear-model course.  The goal is to give the statistical logic needed to recognize likelihood-based models, understand their assumptions, and interpret their tests carefully.
+
+\paragraph{Connection to earlier chapters.}
+Chapters~5--10 built the linear-regression model, its assumptions, and the distributional behavior of \(\widehat{\boldsymbol{\beta}}\).  Chapter~12 emphasized diagnostics.  Chapter~13 turned Gaussian fixed-design theory into interval estimates.  This chapter explains the likelihood logic that sits underneath those results and extends the same modeling mindset beyond Gaussian least squares.
+
+\paragraph{Math Foundations Connection.}
+Likelihood models use functions, optimization, gradients, and sometimes second-derivative checks.  Regression likelihoods also rely on matrix-vector multiplication, least-squares objectives, full-rank inverse formulas, and quadratic residual forms.  These ideas are supported by the Math Foundations textbook, especially Chapters~5, 7, 10, 12, and~13.
+
+\section{Likelihood and Log-Likelihood}
+
+Suppose we observe data \(Y_1,\ldots,Y_n\) from a probability model with parameter vector \(\boldsymbol{\theta}\).  For each possible value of \(\boldsymbol{\theta}\), the model assigns a probability density or probability mass to the observed data.
+
+For independent observations, the likelihood is
+\begin{equation}
+  L(\boldsymbol{\theta}\mid y_1,\ldots,y_n)
+  = \prod_{i=1}^n f(y_i\mid \boldsymbol{\theta}),
+  \label{eq:ch14-likelihood}
+\end{equation}
+where \(f\) is the density or mass function of the response model.
+
+The \emph{maximum likelihood estimator}, or MLE, is
+\begin{equation}
+  \widehat{\boldsymbol{\theta}}_{MLE}
+  =\arg\max_{\boldsymbol{\theta}\in\Theta}
+  L(\boldsymbol{\theta}\mid y_1,\ldots,y_n).
+\end{equation}
+In words, the MLE is the parameter value that makes the observed data most likely under the model.
+
+Because products are often awkward, we usually maximize the log-likelihood
+\begin{equation}
+  \ell(\boldsymbol{\theta})
+  =\log L(\boldsymbol{\theta}\mid y_1,\ldots,y_n)
+  =\sum_{i=1}^n \log f(y_i\mid \boldsymbol{\theta}).
+  \label{eq:ch14-loglikelihood}
+\end{equation}
+The logarithm is increasing, so the value of \(\boldsymbol{\theta}\) that maximizes the likelihood also maximizes the log-likelihood.
+
+\paragraph{Important interpretation.}
+The likelihood is a function of the parameter after the data have been observed.  It is not the probability that the model is true.  It is a way to compare parameter values within an assumed model family.
+
+\section{A First MLE Example: The Poisson Mean}
+
+Let \(Y_1,\ldots,Y_n\) be independent observations from a Poisson distribution with mean \(\mu>0\):
+\begin{equation}
+  Y_i\sim \operatorname{Pois}(\mu).
+\end{equation}
+The probability mass function is
+\begin{equation}
+  f(y_i\mid \mu)=\frac{e^{-\mu}\mu^{y_i}}{y_i!}.
+\end{equation}
+The log-likelihood is
+\begin{align}
+  \ell(\mu)
+  &=\sum_{i=1}^n \log\left(\frac{e^{-\mu}\mu^{y_i}}{y_i!}\right) \\
+  &=\sum_{i=1}^n \left[-\mu+y_i\log(\mu)-\log(y_i!)\right].
+\end{align}
+Taking the derivative and setting it equal to zero gives
+\begin{equation}
+  0=-n+\frac{1}{\widehat{\mu}_{MLE}}\sum_{i=1}^n y_i,
+\end{equation}
+so
+\begin{equation}
+  \boxed{\widehat{\mu}_{MLE}=\bar{y}.}
+\end{equation}
+When at least one observed count is positive, this is the interior maximizer.  The all-zero sample is a boundary case: the likelihood is maximized at \(\mu=0\) if that boundary is allowed.
+For a Poisson mean, maximum likelihood gives the sample mean.  This example is simple, but it illustrates the pattern: write a probability model, form the likelihood, and choose the parameter value that maximizes it.
+
+\section{Gaussian-Error Regression and OLS as MLE}
+
+Now return to the fixed-design linear model.  Under the strongest regression assumption,
+\begin{equation}
+  \boldsymbol{\epsilon}\mid\mathbf{X}
+  \sim N(\mathbf{0},\sigma^2\mathbf{I}_n),
+\end{equation}
+so
+\begin{equation}
+  \mathbf{Y}\mid\mathbf{X}
+  \sim N(\mathbf{X}\boldsymbol{\beta},\sigma^2\mathbf{I}_n).
+  \label{eq:ch14-gaussian-linear-model}
+\end{equation}
+The unknown parameters are \(\boldsymbol{\beta}\) and \(\sigma^2\).
+
+For observed response vector \(\mathbf{y}\), the log-likelihood has the form
+\begin{equation}
+  \ell(\boldsymbol{\beta},\sigma^2)
+  = -\frac{n}{2}\log(\sigma^2)
+    -\frac{1}{2\sigma^2}(\mathbf{y}-\mathbf{X}\boldsymbol{\beta})^T
+    (\mathbf{y}-\mathbf{X}\boldsymbol{\beta})
+    + C,
+  \label{eq:ch14-gaussian-loglik}
+\end{equation}
+where \(C\) does not depend on \(\boldsymbol{\beta}\) or \(\sigma^2\).
+
+For fixed \(\sigma^2\), maximizing \eqref{eq:ch14-gaussian-loglik} over \(\boldsymbol{\beta}\) is equivalent to minimizing
+\begin{equation}
+  RSS(\mathbf{b})=(\mathbf{y}-\mathbf{X}\mathbf{b})^T(\mathbf{y}-\mathbf{X}\mathbf{b}).
+\end{equation}
+Therefore, under Gaussian errors, the maximum likelihood estimator for \(\boldsymbol{\beta}\) is the ordinary least-squares estimator.  If \(\mathbf{X}\) has full column rank, then
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\beta}}_{MLE}
+  =\widehat{\boldsymbol{\beta}}
+  = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}.
+  }
+\end{equation}
+
+This is the key bridge: least squares is an algebraic projection method, but under Gaussian errors it is also a likelihood method.
+
+\section[Estimating sigma squared: MLE Versus Residual Variance]{Estimating \(\sigma^2\): MLE Versus Residual Variance}
+
+The MLE for \(\sigma^2\) is
+\begin{equation}
+  \widehat{\sigma}^2_{MLE}
+  =\frac{1}{n}(\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}})^T
+  (\mathbf{y}-\mathbf{X}\widehat{\boldsymbol{\beta}})
+  =\frac{RSS}{n}.
+  \label{eq:ch14-sigma2-mle}
+\end{equation}
+This is the empirical mean squared residual.
+
+However, after fitting \(q=p+1\) coefficients, the residuals have only \(n-q\) degrees of freedom.  The usual unbiased residual variance estimator is
+\begin{equation}
+  s^2
+  =\frac{RSS}{n-q}
+  =\frac{RSS}{n-p-1}.
+  \label{eq:ch14-sigma2-unbiased}
+\end{equation}
+This is the quantity used in the standard errors, \(t\)-tests, and intervals from the previous chapters.
+
+The distinction matters:
+\begin{center}
+\begin{tabular}{p{0.28\textwidth}p{0.30\textwidth}p{0.32\textwidth}}
+\toprule
+\textbf{Quantity} & \textbf{Formula} & \textbf{Main role} \\
+\midrule
+MLE for \(\sigma^2\) & \(RSS/n\) & likelihood maximization \\
+Unbiased residual variance & \(RSS/(n-q)\) & standard errors and classical inference \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The same issue appears in the sample-variance formula: using \(1/n\) gives the MLE under a normal model, while using \(1/(n-1)\) gives the usual unbiased sample variance.
+
+\section{Why the Assumptions Matter}
+
+Maximum likelihood always starts with a probability model.  If the model changes, the likelihood changes, and the interpretation of the estimator changes.
+
+For ordinary least squares, the formula
+\begin{equation}
+  (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}
+\end{equation}
+
+enjoys several roles:
+\begin{itemize}
+  \item it minimizes squared residuals;
+  \item it is the orthogonal-projection estimator from the design matrix viewpoint;
+  \item it is the MLE for \(\boldsymbol{\beta}\) under Gaussian independent errors.
+\end{itemize}
+If the Gaussian-error assumption fails, the estimator may still be the least-squares estimator, but the exact Gaussian likelihood and exact small-sample \(t\)- and \(F\)-based conclusions no longer follow automatically.
+
+This is why diagnostics still matter.  A software package can print standard errors, confidence intervals, and p-values even when the model assumptions are questionable.  The analyst is responsible for deciding whether those summaries are defensible.
+
+\section{Generalized Linear Models: The Three-Part Idea}
+
+Linear regression assumes a quantitative response whose conditional mean is linear in the predictors and whose errors are Gaussian.  Many data-analysis problems do not fit that pattern.
+
+A \emph{generalized linear model}, or GLM, keeps the idea of a linear predictor but changes the response distribution and the way the mean connects to the predictors.  The basic pieces are:
+\begin{enumerate}
+  \item a response distribution, such as Bernoulli for binary data or Poisson for counts;
+  \item a linear predictor \(\eta=\mathbf{x}^T\boldsymbol{\beta}\);
+  \item a link function connecting the conditional mean \(\mu(\mathbf{x})=\mathbb{E}[Y\mid \mathbf{x}]\) to \(\eta\).
+\end{enumerate}
+In symbols, the link function satisfies
+\begin{equation}
+  g(\mu(\mathbf{x}))=\mathbf{x}^T\boldsymbol{\beta}.
+\end{equation}
+
+The details of GLM theory are beyond this course.  The important idea is that likelihood lets us fit models where the response is not naturally Gaussian and where a straight-line mean model would violate basic constraints.
+
+\section{Logistic Regression for Binary Responses}
+
+Suppose \(Y\) is binary, with \(Y=1\) for success and \(Y=0\) for failure.  A linear model for the probability,
+\begin{equation}
+  P(Y=1\mid \mathbf{x})=\mathbf{x}^T\boldsymbol{\beta},
+\end{equation}
+would be dangerous because \(\mathbf{x}^T\boldsymbol{\beta}\) can be negative or greater than one.
+
+Logistic regression avoids this problem by using the logistic function:
+\begin{equation}
+  P(Y=1\mid \mathbf{x})
+  =\frac{\exp(\mathbf{x}^T\boldsymbol{\beta})}
+  {1+\exp(\mathbf{x}^T\boldsymbol{\beta})}.
+  \label{eq:ch14-logistic-prob}
+\end{equation}
+This quantity is always between zero and one.
+
+Equivalently,
+\begin{equation}
+  \log\left(\frac{P(Y=1\mid \mathbf{x})}{1-P(Y=1\mid \mathbf{x})}\right)
+  =\mathbf{x}^T\boldsymbol{\beta}.
+\end{equation}
+The left side is the log-odds.  Thus logistic-regression coefficients are linear effects on log-odds, not direct additive effects on probability.
+
+\paragraph{Classification rule.}
+Logistic regression estimates a probability.  To turn that probability into a class label, the analyst chooses a threshold, such as classifying as \(Y=1\) when \(\widehat{P}(Y=1\mid\mathbf{x})>0.5\).  That threshold is a decision rule, not a law of the model.
+
+\paragraph{Scope warning.}
+This section introduces logistic regression as a likelihood-based model.  Broader classification metrics and other classification algorithms are separate topics and are not developed here.
+
+\section{Poisson Regression for Count Responses}
+
+Suppose \(Y\) is a count: number of arrivals, number of defects, number of events, or number of items observed in a fixed window.  A Poisson model is often a first candidate:
+\begin{equation}
+  Y\mid\mathbf{x}\sim \operatorname{Pois}(\mu(\mathbf{x})).
+\end{equation}
+The mean \(\mu(\mathbf{x})\) must be positive.  A direct linear mean \(\mu(\mathbf{x})=\mathbf{x}^T\boldsymbol{\beta}\) can be negative, so it is usually not a safe final model.
+
+Poisson regression uses a log link:
+\begin{equation}
+  \log \mu(\mathbf{x})=\mathbf{x}^T\boldsymbol{\beta},
+  \qquad\text{or equivalently}\qquad
+  \mu(\mathbf{x})=\exp(\mathbf{x}^T\boldsymbol{\beta}).
+  \label{eq:ch14-poisson-log-link}
+\end{equation}
+This guarantees a positive fitted mean.
+
+A coefficient in a Poisson log-link model has a multiplicative interpretation.  Increasing predictor \(x_j\) by one unit changes the fitted mean by a factor of \(\exp(\beta_j)\), holding the other predictors fixed.
+
+\section{Hypothesis Testing Revisited}
+
+Earlier chapters introduced two common tests in Gaussian linear regression:
+\begin{center}
+\begin{tabular}{p{0.22\textwidth}p{0.34\textwidth}p{0.30\textwidth}}
+\toprule
+\textbf{Test} & \textbf{Typical question} & \textbf{Main setting} \\
+\midrule
+\(t\)-test & Is one coefficient different from zero? & one coefficient at a time \\
+\(F\)-test & Does a larger linear model improve over a smaller nested linear model? & Gaussian linear models \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+In this framework, ANOVA can be viewed as a special case of comparing nested Gaussian linear models, often when the predictors are categorical group indicators.
+
+This chapter does not re-derive those tests.  The key point is that they rely on the Gaussian regression setup, the residual variance estimate, and the distributional results developed earlier.
+
+Likelihood gives a more general model-comparison idea: compare how well a smaller model and a larger model explain the observed data through their maximized log-likelihoods.
+
+\section{Likelihood-Ratio Tests}
+
+Suppose we have two nested likelihood-based models:
+\begin{itemize}
+  \item a smaller model, with fewer free parameters;
+  \item a larger model, which contains the smaller model as a special case.
+\end{itemize}
+Let \(\ell_{small}\) and \(\ell_{full}\) be the maximized log-likelihoods for the two models.  Since the full model has at least as much flexibility,
+\begin{equation}
+  \ell_{full}\ge \ell_{small}.
+\end{equation}
+The likelihood-ratio test statistic is
+\begin{equation}
+  \boxed{
+  \Lambda = 2\left(\ell_{full}-\ell_{small}\right).
+  }
+  \label{eq:ch14-lrt}
+\end{equation}
+Under regularity conditions and under the null hypothesis that the smaller model is sufficient, the large-sample reference distribution is
+\begin{equation}
+  \Lambda \approx \chi^2_{d},
+\end{equation}
+where \(d\) is the difference in the number of free parameters between the full and smaller models.
+
+\paragraph{Interpretation.}
+A large likelihood-ratio statistic means that the full model improved the maximized log-likelihood substantially.  That is evidence against the smaller model, provided the models are nested and the likelihood assumptions are appropriate.
+
+\paragraph{Connection to the \(F\)-test.}
+For Gaussian linear models, likelihood-ratio tests and \(F\)-tests are related because both compare nested models using residual error information.  They are not the same object, and the likelihood-ratio test is more general: it applies to many maximum-likelihood models, including GLMs.
+
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Treating likelihood as the probability the model is true}
+
+Likelihood compares parameter values inside a model family after observing the data.  It is not the probability that the model itself is true.
+
+\subsection*{Mistake 2: Using a linear mean where the response has constraints}
+
+Probabilities must lie between zero and one.  Poisson means must be positive.  Link functions help enforce these constraints.
+
+\subsection*{Mistake 3: Forgetting the assumptions behind classical tests}
+
+The usual \(t\)- and \(F\)-tests depend on the Gaussian-error regression framework.  Diagnostics and modeling judgment still matter.
+
+\subsection*{Mistake 4: Comparing non-nested models with a likelihood-ratio test}
+
+The likelihood-ratio test described here is for nested models.  If two models are not nested, use a different comparison tool, such as validation error or an information criterion.
+
+\subsection*{Mistake 5: Turning logistic regression into a black-box classifier too quickly}
+
+Logistic regression estimates probabilities.  Classification requires a threshold and a decision context.  The threshold should be chosen to match the operational problem.
+
+\section{Chapter Summary}
+
+Maximum likelihood fits a probabilistic model by choosing the parameter values that maximize the likelihood of the observed data.  For independent data,
+\begin{equation}
+  L(\boldsymbol{\theta})=\prod_{i=1}^n f(y_i\mid\boldsymbol{\theta}),
+  \qquad
+  \ell(\boldsymbol{\theta})=\sum_{i=1}^n\log f(y_i\mid\boldsymbol{\theta}).
+\end{equation}
+
+Under Gaussian errors,
+\begin{equation}
+  \mathbf{Y}\mid\mathbf{X}\sim N(\mathbf{X}\boldsymbol{\beta},\sigma^2\mathbf{I}_n),
+\end{equation}
+so the MLE for \(\boldsymbol{\beta}\) is the ordinary least-squares estimator.  The MLE for \(\sigma^2\) is \(RSS/n\), while the usual unbiased residual variance estimator is \(RSS/(n-p-1)\).
+
+GLMs extend the regression idea by combining a response distribution, a linear predictor, and a link function.  Logistic regression models binary responses with probabilities between zero and one.  Poisson regression models count responses with positive means.
+
+Likelihood-ratio tests compare nested likelihood-based models using the improvement in maximized log-likelihood.  They are powerful and general, but they require nested models, appropriate assumptions, and careful interpretation.
+
+\section{Practice and Workflow}
+
+\subsection*{Focused Study Checklist}
+
+Use this checklist after studying likelihood and GLMs.
+
+\begin{enumerate}
+  \item Can you explain the difference between a likelihood and a probability statement about a model?
+  \item Can you write the likelihood for independent observations as a product?
+  \item Can you explain why maximizing log-likelihood gives the same estimator as maximizing likelihood?
+  \item Can you show why Gaussian-error least squares is also maximum likelihood for \(\boldsymbol{\beta}\)?
+  \item Can you distinguish \(RSS/n\) from \(RSS/(n-p-1)\)?
+  \item Can you explain why logistic regression keeps fitted probabilities between zero and one?
+  \item Can you explain why Poisson regression usually uses a log link?
+  \item Can you state when a likelihood-ratio test is appropriate?
+  \item Can you explain why diagnostics still matter before trusting likelihood-based inference?
+\end{enumerate}
+
+\paragraph{Coding companion reference.}
+Package-specific commands for fitting logistic regression, Poisson regression, GLMs, and likelihood-ratio tests belong in the separate Coding and Software Cookbook companion.  This chapter keeps the statistical meaning and model structure.

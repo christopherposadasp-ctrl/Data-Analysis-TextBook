@@ -1,0 +1,138 @@
+% Compact Math Foundations source-map appendix for the full Data Analysis reference textbook.
+% Intended placement: Appendix B, after Appendix A. Math Foundations itself is not edited.
+\chapter{Math Foundations Source Map}
+\label{app:math-foundations-source-map}
+
+The chapter-level \emph{Math Foundations Connection} paragraphs remain in the chapters where they help explain why a mathematical idea matters. This appendix is a consolidated lookup map. It is meant for review, cross-checking, and finding the supporting Math Foundations material quickly; it is not required sequential reading.
+
+The entries below are organized by mathematical theme rather than by every Data Analysis chapter. Repeated chapter-level source-map rows have been merged into broader references. When a topic appears in many places, the listed chapters are the main places where the idea is used.
+
+\section{How to Use This Appendix}
+Use this appendix when you meet a mathematical object in the Data Analysis text and want to review the supporting Math Foundations idea. Each entry gives four pieces of information:
+\begin{itemize}[leftmargin=1.5em,itemsep=0.25em]
+  \item \textbf{Used in Data Analysis for:} the statistical or modeling task.
+  \item \textbf{Math Foundations support:} the mathematical idea being used.
+  \item \textbf{Primary Data Analysis chapters:} the main chapters where the idea appears.
+  \item \textbf{Math Foundations reference:} the chapter or chapters to review.
+\end{itemize}
+
+\section{Logic, Sets, Conditioning, and Assumption Language}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Null and alternative hypotheses, modeling assumptions, event language, categorical variable domains, filtering rows, conditioning on predictor values, and interpreting statements such as ``if the assumptions hold, then the test statistic has this reference distribution.''
+  \item[Math Foundations support]
+  Logical statements, implications, negation, quantified statements, set membership, subsets, set operations, and partitions of cases or groups.
+  \item[Primary Data Analysis chapters]
+  Chapters 1, 3, 5, 6, 10, 12, 13, 14; Appendix A.
+  \item[Math Foundations reference]
+  Chapter 1: Logic and Deductive Reasoning; Chapter 4: Sets, Set Operations, and Quantifiers.
+\end{description}
+
+\section{Data Vectors, Matrix Notation, and Design Matrices}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Treating variables as vectors, collecting observations into response vectors, writing fitted values as matrix-vector products, building design matrices for simple regression, multiple regression, categorical predictors, transformations, interactions, and engineered columns.
+  \item[Math Foundations support]
+  Vectors in \(\mathbb{R}^n\), vector entries and subvectors, special vectors such as \(\mathbf{1}\), matrix dimensions, transposes, matrix-vector multiplication, and row/column views of matrix multiplication.
+  \item[Primary Data Analysis chapters]
+  Chapters 1--5, 7--11, 13--17.
+  \item[Math Foundations reference]
+  Chapter 2: Vectors in \(\mathbb{R}^n\); Chapter 3: Vector Operations and Linear Combinations; Chapter 7: Matrices and Matrix-Vector Multiplication.
+\end{description}
+
+\section{Dot Products, Norms, Distance, and Error Measures}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Inner-product model notation \(\boldsymbol{\beta}^T\mathbf{x}\), squared error, residual length, RSS, MSE, RMSE, correlation as linear alignment, distance from fitted values, and penalty terms such as \(\|b\|_1\) and \(\|b\|_2^2\).
+  \item[Math Foundations support]
+  Dot products, weighted sums, Euclidean norm, squared norm, distance between vectors, absolute value, Euclidean size ideas, angles, and orthogonality.
+  \item[Primary Data Analysis chapters]
+  Chapters 1, 2, 4--7, 10, 12, 13, 15, 16, 17.
+  \item[Math Foundations reference]
+  Chapter 5: Dot Products, Norms, Distance, Angles, and Orthogonality; Chapter 3: Vector Operations and Linear Combinations.
+\end{description}
+
+\section{Least Squares, Orthogonality, Projection, and Residual Geometry}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Least-squares fitting, normal equations, hat matrix interpretation, fitted values as projections, residual-maker matrix, residual orthogonality, sum-of-squares decompositions, and the geometry behind residual diagnostics.
+  \item[Math Foundations support]
+  Orthogonal projection, column-space ideas, dot-product orthogonality, least-squares minimization, normal equations, gradients of squared-error objectives, and residuals as the part of the response vector not explained by the chosen column space.
+  \item[Primary Data Analysis chapters]
+  Chapters 5--10, 12, 13, 15, 17; Appendix A.
+  \item[Math Foundations reference]
+  Chapter 5: Dot Products, Norms, Distance, Angles, and Orthogonality; Chapter 9: Orthogonal Bases, Gram-Schmidt, and QR; Chapter 11: Subspaces: Column Space, Row Space, and Null Space; Chapter 12: Multivariable Functions, Gradients, and Least Squares.
+\end{description}
+
+\section{Rank, Identifiability, Inverse Formulas, and Collinearity}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Full column rank, unique least-squares coefficients, non-identifiability, dummy-variable trap, multicollinearity, unstable coefficient interpretation, and when the normal-equation inverse formula is valid.
+  \item[Math Foundations support]
+  Linear independence, span, bases, dimension, rank, inverses, pseudoinverses, column space, row space, null space, and full column rank criteria.
+  \item[Primary Data Analysis chapters]
+  Chapters 7--12, 14, 16; Appendix A.
+  \item[Math Foundations reference]
+  Chapter 6: Linear Independence, Span, Bases, and Dimension; Chapter 10: Matrix Inverses, Rank, and Pseudoinverses; Chapter 11: Subspaces: Column Space, Row Space, and Null Space.
+\end{description}
+
+\section{Variance, Standard Errors, Intervals, and Quadratic Forms}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Estimator variance, standard errors, residual variance, confidence intervals, prediction intervals, leverage-adjusted residuals, covariance matrices, quadratic penalty terms, and the difference between \(RSS/n\) and \(RSS/(n-p-1)\).
+  \item[Math Foundations support]
+  Matrix products, symmetric matrices, positive-semidefinite quadratic forms, squared lengths, Hessian/curvature intuition, and the matrix structure behind variance expressions such as \(\sigma^2(X^TX)^{-1}\).
+  \item[Primary Data Analysis chapters]
+  Chapters 6, 8, 10, 12--16.
+  \item[Math Foundations reference]
+  Chapter 7: Matrices and Matrix-Vector Multiplication; Chapter 10: Matrix Inverses, Rank, and Pseudoinverses; Chapter 12: Multivariable Functions, Gradients, and Least Squares; Chapter 13: Hessians, Quadratic Forms, and Second-Order Conditions.
+\end{description}
+
+\section{Optimization and Penalized Objectives}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Deriving least-squares estimators, understanding maximum likelihood as an optimization problem, comparing likelihood-based models, minimizing prediction error, using AIC/BIC-type criteria, and fitting ridge, LASSO, and elastic-net objectives.
+  \item[Math Foundations support]
+  Functions of several variables, gradients, stationary points, least-squares objectives, normal equations, Hessian and curvature intuition, and objective functions with added penalty terms.
+  \item[Primary Data Analysis chapters]
+  Chapters 5, 7, 10, 12, 14--17.
+  \item[Math Foundations reference]
+  Chapter 12: Multivariable Functions, Gradients, and Least Squares; Chapter 13: Hessians, Quadratic Forms, and Second-Order Conditions; Chapter 5: Dot Products, Norms, Distance, Angles, and Orthogonality.
+\end{description}
+
+\section{Eigenvalues, Bases, PCA, and Dimension Reduction}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Principal components, principal component regression, dimension reduction, low-variance predictor directions, collinearity diagnostics by nearly degenerate directions, and replacing original predictors with linear combinations.
+  \item[Math Foundations support]
+  Linear combinations, bases, dimension, coordinate representations, orthogonal directions, rank and subspace ideas. The Data Analysis text uses eigenvalue language for PCA, but Math Foundations primarily supports the surrounding basis, rank, and subspace intuition rather than a full eigentheory course.
+  \item[Primary Data Analysis chapters]
+  Chapter 16, with background from Chapters 7--12.
+  \item[Math Foundations reference]
+  Chapter 3: Vector Operations and Linear Combinations; Chapter 6: Linear Independence, Span, Bases, and Dimension; Chapter 9: Orthogonal Bases, Gram-Schmidt, and QR; Chapter 10: Matrix Inverses, Rank, and Pseudoinverses; Chapter 11: Subspaces: Column Space, Row Space, and Null Space.
+\end{description}
+
+\section{Neural-Network Matrix and Function Composition}
+\begin{description}[leftmargin=1.3em,style=nextline,itemsep=0.55em]
+  \item[Used in Data Analysis for]
+  Viewing neural networks as repeated weighted sums followed by nonlinear activation functions, understanding layer matrices, comparing neural-network predictions to linear-model baselines, and fitting squared-error losses.
+  \item[Math Foundations support]
+  Matrix-vector multiplication, composition of linear transformations, functions of several variables, componentwise nonlinear transformations, MSE as a squared-error objective, and gradient/optimization intuition.
+  \item[Primary Data Analysis chapters]
+  Chapters 1 and 17, with support from Chapters 2, 15, and 16.
+  \item[Math Foundations reference]
+  Chapter 7: Matrices and Matrix-Vector Multiplication; Chapter 12: Multivariable Functions, Gradients, and Least Squares; Chapter 13: Hessians, Quadratic Forms, and Second-Order Conditions.
+\end{description}
+
+\section{Quick Lookup Summary}
+\begin{itemize}[leftmargin=1.5em,itemsep=0.25em]
+  \item For \textbf{vectors, rows, columns, and data tables}, review Math Foundations Chapters 2, 3, and 7.
+  \item For \textbf{error length, RSS, RMSE, angles, and orthogonality}, review Chapter 5.
+  \item For \textbf{design-matrix rank, identifiability, and collinearity}, review Chapters 6, 10, and 11.
+  \item For \textbf{least squares, gradients, and optimization}, review Chapter 12.
+  \item For \textbf{quadratic penalties, variance formulas, and curvature}, review Chapter 13.
+  \item For \textbf{PCA/PCR intuition}, review bases, orthogonal directions, rank, and subspaces in Chapters 6, 9, 10, and 11.
+\end{itemize}
+
+\section{Appendix Summary}
+The Data Analysis textbook uses Math Foundations in a recurring way: data become vectors and matrices; fitted values are linear combinations; least squares is a projection problem; residuals are measured with norms; inference uses variance and quadratic-form structure; collinearity is a rank and subspace problem; regularization adds penalty terms to an objective; PCA replaces predictors with new basis directions; and neural networks repeat matrix operations with nonlinear functions. The chapter-level connection paragraphs explain these ideas where they first matter. This appendix provides a shorter lookup map for review.

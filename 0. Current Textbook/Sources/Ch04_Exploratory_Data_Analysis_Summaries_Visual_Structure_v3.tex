@@ -48,7 +48,7 @@ A single-number summary statistic characterizes one aspect of a variable's distr
 
 \begin{table}[h]
 \centering
-\begin{tabular}{lll}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.36\textwidth}>{\raggedright\arraybackslash}p{0.34\textwidth}@{}}
 \hline
 Summary family & Guiding question & Examples \\
 \hline
@@ -85,7 +85,7 @@ denotes the ordered data, then the median is the middle ordered value for odd $n
 The \textbf{mode} is the most common value.  It is especially useful for categorical variables.  For continuous numerical variables, exact ties may be rare, so analysts often discuss peaks of a histogram or density estimate rather than an exact modal value.
 
 \begin{center}
-\begin{tabular}{@{}p{0.30\textwidth}p{0.22\textwidth}p{0.32\textwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.33\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
 \hline
 Situation & Useful center summary & Reason \\
 \hline
@@ -349,30 +349,6 @@ Use this compact checklist when exploring a cleaned data set:
   \item Document the evidence, the follow-up question, and the limitation of each claim.
 \end{itemize}
 
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 4 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-A numeric variable as a data vector & $\mathbb{R}^n$ vector notation, entries, and vectors as collections of quantities & Ch02 Secs. 2.1, 2.2, 2.6 \\
-\hline
-Mean as a vector operation & Dot product examples, including $\mathbf{1}^T\mathbf{a}=\sum_i a_i$ and $(1/n)\mathbf{1}^T\mathbf{a}$ as a sample mean & Ch02 Sec. 2.4; Ch05 Secs. 5.1, 5.3 \\
-\hline
-Variance and standard deviation as squared length & Dot products, $\mathbf{a}^T\mathbf{a}=\sum_i a_i^2$, and Euclidean norm $\|\mathbf{x}\|=\sqrt{\mathbf{x}^T\mathbf{x}}$ & Ch05 Secs. 5.1, 5.3, 5.5 \\
-\hline
-Centered-vector view of spread & Vector subtraction, scalar multiplication, norm properties, and distance & Ch03 Secs. 3.1, 3.2, 3.4; Ch05 Secs. 5.5, 5.7 \\
-\hline
-Correlation as geometric alignment & Angle formula, dot products, norms, and the orthogonality case $\mathbf{a}^T\mathbf{b}=0$ & Ch05 Secs. 5.1, 5.3, 5.5, 5.8 \\
-\hline
-Scatterplot matrices and heatmaps & Matrix dimensions, submatrix notation, transpose, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.2, 7.4, 7.6.1, 7.6.2 \\
-\hline
-\end{tabular}
-\end{center}
-
 \section{Chapter Summary}
 
 The main ideas from this chapter are:
@@ -521,10 +497,6 @@ A defensible EDA pass should answer:
   \item What should be checked before modeling?
 \end{enumerate}
 Do not treat a plot as proof.  Treat it as evidence that guides the next question.
-
-\section{Math Foundations Source Map}
-
-The Core Reader keeps the short Math Foundations connections for vector summaries, centered vectors, norms, and correlation as a normalized dot product.  The full Math Foundations textbook-location map for this chapter appears in the full reference textbook.
 
 \section{Chapter Summary}
 

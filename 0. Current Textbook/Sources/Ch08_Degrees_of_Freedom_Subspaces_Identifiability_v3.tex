@@ -182,7 +182,7 @@ The mean-only fit can also be written as a projection:
 \end{equation}
 This is the one-dimensional version of the hat-matrix idea.  The full reference text develops the symmetry, idempotence, rank, and trace details.
 }
-\section{Regression Decomposes \texorpdfstring{\(\mathbb{R}^n\)}{R^n} Into Two Orthogonal Pieces}
+\section{Regression Decomposes \texorpdfstring{\(\mathbb{R}^n\)}{R n} Into Two Orthogonal Pieces}
 
 For multiple linear regression with an intercept and \(p\) predictors, write
 \begin{equation}
@@ -645,34 +645,6 @@ The four fundamental subspaces of \(\mathbf{X}\) organize the regression geometr
 
 Identifiability requires \(\operatorname{Null}(\mathbf{X})=\{\mathbf{0}\}\).  If the design matrix has linearly dependent columns, then infinitely many coefficient vectors can produce the same fitted values.  The Celsius/Fahrenheit example shows this directly: including an intercept, Celsius, and Fahrenheit creates exact linear dependence because Fahrenheit is an affine transformation of Celsius.
 
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 8 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Data vectors and mean vectors & Vector notation in \(\mathbb{R}^n\), coordinates, and the ones vector \(\mathbf{1}\) & Ch02 Secs. 2.1, 2.2, 2.4, 2.6; Ch06 Sec. 6.5 \\
-\hline
-Mean and residual decomposition & Dot products, \(\mathbf{1}^T\mathbf{a}=\sum a_i\), and sample-mean notation & Ch02 Secs. 2.4, 2.6; Ch05 Secs. 5.1, 5.3 \\
-\hline
-Orthogonal complements & Euclidean norms, distances, angles, and the condition \(\mathbf{a}^T\mathbf{b}=0\) for orthogonality & Ch04 Secs. 4.1, 4.2, 4.4; Ch05 Secs. 5.5, 5.7, 5.8 \\
-\hline
-Column space and fitted values & Matrix-vector multiplication as row inner products and as a linear combination of columns & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3; Ch07 Secs. 7.1, 7.6.1, 7.6.2; Ch11 Sec. 11.2 \\
-\hline
-Rank, basis, and full column rank intuition & Linear independence, bases, and unique linear-combination representations & Ch06 Secs. 6.3, 6.5; Ch10 Sec. 10.5 \\
-\hline
-Matrix dimensions and transpose notation & Matrix sizes, tall/wide matrices, identity matrices, transposes, and symmetry & Ch07 Secs. 7.1, 7.3, 7.4 \\
-\hline
-Left-inverse and identifiability bridge & Left inverse, linearly independent columns, the trivial-solution criterion, and the equivalence between full column rank and invertibility of \(\mathbf{A}^T\mathbf{A}\) & Ch06 Sec. 6.3; Ch10 Secs. 10.1, 10.3, 10.5, 10.6; Ch11 Sec. 11.4 \\
-\hline
-Computational check & Python/NumPy matrix operations, matrix shapes, and transposes & Ch07 Secs. 7.1, 7.4, 7.7 \\
-\hline
-\end{tabular}
-\end{center}
-
 \section{Practice and Workflow}
 \subsection*{Focused Study Checklist}
 
@@ -701,5 +673,5 @@ The fitted values live in \(\operatorname{Col}(\mathbf{X})\), and the residuals 
 Identifiability requires \(\operatorname{Null}(\mathbf{X})=\{\mathbf{0}\}\).  If the design matrix has dependent columns, multiple coefficient vectors can produce the same fitted values.  Exact dependence creates non-identifiability; near dependence creates unstable coefficient estimates.
 
 \paragraph{Can you do this?}
-You should be able to count residual degrees of freedom, distinguish fitted-space dimension from regression-test numerator degrees of freedom, identify the four subspaces in regression language, and recognize common non-identifiability patterns such as duplicated variables, unit conversions, and the dummy-variable trap.  The full reference text contains the complete Math Foundations source map and reusable study template.
+You should be able to count residual degrees of freedom, distinguish fitted-space dimension from regression-test numerator degrees of freedom, identify the four subspaces in regression language, and recognize common non-identifiability patterns such as duplicated variables, unit conversions, and the dummy-variable trap.  The full reference text contains the reusable study template; the consolidated Math Foundations source map appears in Appendix~\ref{app:math-foundations-source-map}.
 }

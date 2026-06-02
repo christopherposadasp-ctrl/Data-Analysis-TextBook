@@ -1,0 +1,244 @@
+% Chapter 17 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, hyperref, and verbatim.
+\chapter[Neural Networks as Flexible Regression Models]{Neural Networks as Flexible Regression Models}
+\label{chap:neural-networks-flexible-regression-models}
+
+\section{The Big Picture}
+
+Linear models have been the backbone of this course because they are understandable, mathematically tractable, and often surprisingly effective.  They also have limits.  A linear model can include transformed columns, interactions, categorical indicators, regularization, and principal components, but it still asks the analyst to decide which structure to put into the design matrix.
+
+Neural networks are a different way to build flexible prediction models.  They combine many weighted sums with nonlinear transformations.  In that sense, they are not unrelated to linear regression.  They extend the same basic ingredients:
+\begin{quote}
+  take inputs, form weighted combinations, transform them, and fit the resulting prediction function to data.
+\end{quote}
+
+The tradeoff is important.  Neural networks can model nonlinear relationships that are hard to see or specify by hand.  They can be useful prediction benchmarks.  But they are usually less interpretable than linear models, harder to audit, and less connected to the classical inference tools used earlier in the textbook.
+
+This chapter treats neural networks only as regression tools for quantitative responses.  Classification neural networks, convolutional networks, recurrent networks, and deep-learning architecture design are outside the scope of this chapter.  The classification ideas from Chapter~14 have neural-network analogues, but this chapter stays with quantitative responses so that the connection to squared-error regression, validation, and baseline comparison remains clear.
+
+\paragraph{Connection to earlier chapters.}
+Chapter~2 introduced prediction error, flexibility, and overfitting.  Chapters~5--14 built linear regression, inference, likelihood, and generalized linear-model intuition.  Chapters~15 and~16 studied model selection, regularization, and dimension reduction.  Neural networks keep the prediction and validation mindset but give up much of the simple coefficient interpretation from linear regression.
+
+\paragraph{Math Foundations Connection.}
+Neural networks use matrix-vector multiplication, repeated linear transformations, functions, gradients, and loss minimization.  These ideas are supported by the Math Foundations textbook, especially Chapters~7, 12, and~13.
+
+\section{From Linear Models to Layered Models}
+
+A linear regression model predicts with a weighted sum.  For a predictor vector \(\mathbf{x}\), a fitted linear model has the form
+\begin{equation}
+  \widehat{y}=\widehat{\beta}_0+\widehat{\beta}_1x_1+\cdots+\widehat{\beta}_px_p.
+\end{equation}
+Equivalently, after including an intercept in the design row, we can write the prediction as an inner product.
+
+A neural network still uses weighted sums, but it does so repeatedly.  A first set of weighted sums produces intermediate values.  Those values are transformed by a nonlinear function.  A later set of weighted sums combines those transformed values into a prediction.
+
+A simple schematic is
+\begin{equation}
+\begin{aligned}
+  \mathbf{x}
+  &\longrightarrow \text{weighted sums}
+  \longrightarrow \text{nonlinear transformation}\\
+  &\longrightarrow \text{more weighted sums}
+  \longrightarrow \widehat{y}.
+\end{aligned}
+\end{equation}
+
+The nonlinear transformation is the key difference.  Without it, stacking linear transformations would not create a genuinely new model class.  The product of several linear transformations is still one linear transformation.  Nonlinear activation functions prevent the layers from collapsing into one linear model.
+
+\section{Activation Functions}
+
+An \emph{activation function} is a nonlinear function applied to intermediate weighted sums in a neural network.  Many sources write the activation function as \(\sigma(\cdot)\).  To avoid confusion with the error standard deviation \(\sigma\), this chapter writes the activation as \(g(\cdot)\).
+
+A common example is the rectified linear unit, or ReLU:
+\begin{equation}
+  g(z)=\max(z,0).
+\end{equation}
+ReLU leaves positive inputs alone and turns negative inputs into zero.  It is simple, computationally convenient, and nonlinear.
+
+Activation functions are usually applied element by element.  If \(\mathbf{u}\) is a vector of intermediate values, then \(g(\mathbf{u})\) means apply \(g\) to each entry of \(\mathbf{u}\).
+
+The activation function gives the network flexibility.  Each layer forms weighted combinations; the activation bends those combinations; later layers combine the bent pieces.  This repeated process can approximate nonlinear patterns that would be difficult to represent with a small number of hand-built interaction or polynomial terms.
+
+\section{Network Terminology}
+
+Only a small amount of vocabulary is needed for this chapter.
+
+\begin{center}
+\begin{tabular}{p{0.25\textwidth}p{0.58\textwidth}}
+\toprule
+\textbf{Term} & \textbf{Meaning in this chapter} \\
+\midrule
+Input layer & The predictor values supplied to the model. \\
+Hidden layer & An intermediate layer between inputs and the output. \\
+Output layer & The final layer that returns the prediction \(\widehat{y}\). \\
+Weights & The numerical parameters learned during training. \\
+Activation function & A nonlinear function applied between weighted sums. \\
+Architecture & The number of layers, number of units, and pattern of connections. \\
+Shallow network & A network with one hidden layer. \\
+Deep network & A network with more than one hidden layer. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The word \emph{layer} is sometimes used for the collection of weighted sums and sometimes for the transformed outputs of those sums.  For this course, the exact convention is less important than the main idea: neural networks build prediction functions by composing linear transformations and nonlinear activations.
+
+\section{A Neural-Network Regression Model}
+
+Let \(f_A(\mathbf{x})\) denote the prediction produced by a neural network with weights collected in \(A\).  The subscript \(A\) is a reminder that the prediction function depends on many fitted weights, not on a single coefficient vector.
+
+For a quantitative response, a neural-network regression model has the form
+\begin{equation}
+  \widehat{y}=f_A(\mathbf{x}).
+\end{equation}
+A one-hidden-layer version can be written schematically as
+\begin{equation}
+  f_A(\mathbf{x})
+  =a_0+\sum_{m=1}^{M}a_m\,g\left(c_m+\mathbf{w}_m^T\mathbf{x}\right),
+  \label{eq:ch17-one-hidden-layer}
+\end{equation}
+where \(M\) is the number of hidden units, \(\mathbf{w}_m\) is a vector of input weights for hidden unit \(m\), \(c_m\) is a hidden-unit intercept, \(g\) is the activation function, and \(a_m\) are output weights.
+
+Equation~\eqref{eq:ch17-one-hidden-layer} is not the only possible neural-network form.  It is useful because it shows the pattern clearly:
+\begin{enumerate}
+  \item form weighted sums \(c_m+\mathbf{w}_m^T\mathbf{x}\);
+  \item apply a nonlinear activation \(g\);
+  \item combine the activated values into a prediction.
+\end{enumerate}
+
+With more hidden layers, the same idea is repeated.  Later layers take transformed outputs from earlier layers as their inputs.
+
+\section{Fitting Neural Networks by Minimizing Loss}
+
+For regression, neural networks are often fit by minimizing mean squared error:
+\begin{equation}
+  \min_A \frac{1}{n}\sum_{i=1}^{n}\left(y_i-f_A(\mathbf{x}_i)\right)^2.
+  \label{eq:ch17-nnet-mse}
+\end{equation}
+This should look familiar.  The loss is the same kind of squared-error loss used throughout the regression chapters.  What changes is the prediction function.  Instead of \(\mathbf{x}_i^T\boldsymbol{\beta}\), the model uses the more flexible function \(f_A(\mathbf{x}_i)\).
+
+The optimization problem is harder than ordinary least squares.  For linear regression, the least-squares objective is a quadratic function of the coefficients, and we can derive normal equations.  For neural networks, the parameters appear inside repeated nonlinear transformations.  The objective can have many local features and often requires iterative numerical optimization.
+
+That computational complexity is one reason neural networks need careful workflow discipline.  A model can be flexible and still be poorly trained, over-tuned, or evaluated incorrectly.
+
+\section{What Still Carries Over}
+
+Neural networks do not erase the earlier course.  Many habits from linear modeling remain essential.
+
+\begin{description}
+  \item[Train/test thinking.] A neural network should be judged on data not used to fit its weights.  Training error alone is not enough.
+  \item[Validation and cross-validation.] Flexible models need tuning.  Validation helps decide whether extra flexibility improves future performance or only memorizes training data.
+  \item[Prediction metrics.] RMSE, MAE, and similar metrics are still useful for quantitative responses.
+  \item[Scaling.] Predictors should usually be scaled before fitting a neural network.  Scale differences can make training slower or unstable.
+  \item[Bias-variance thinking.] More flexibility can reduce bias but increase variance and overfitting risk.
+  \item[Regularization intuition.] Penalization, early stopping, and architecture choices all control flexibility, much like the regularization ideas from Chapter~16.
+  \item[Baselines.] A neural network should be compared against simpler models.  A black-box model must earn its complexity.
+\end{description}
+
+The main workflow is the same: define the question, split or validate properly, fit defensible candidate models, compare performance, and document the tradeoffs.
+
+\section{What Does Not Carry Over Cleanly}
+
+Several familiar linear-model tools do not carry over in the same way.
+
+\begin{description}
+  \item[Coefficient interpretation.] A linear regression coefficient has a direct adjusted-effect interpretation under the model.  Neural-network weights do not usually have that kind of simple interpretation.
+  \item[Classical coefficient tests.] Ordinary coefficient \(t\)-tests and regression \(F\)-tests do not apply directly to a neural network's weights.
+  \item[Linear-model confidence intervals.] The coefficient, mean-response, and prediction interval formulas from Chapter~13 depend on linear-model structure and Gaussian fixed-design theory.  They are not automatically available for neural networks.
+  \item[VIF and linear collinearity diagnostics.] VIFs diagnose instability in linear coefficient estimates.  They are not neural-network inference tools, though correlated predictors can still affect training and interpretation.
+  \item[Residual assumption ladder.] Residual plots can still be useful descriptively, but they no longer validate the same linear-model assumption ladder from Chapters~5 and~12.
+\end{description}
+
+This does not make neural networks invalid.  It means the analyst must be clear about the goal.  If the goal is prediction, validation performance may be the central evidence.  If the goal is explanation or inference, a simpler model may be more defensible.
+
+\section{Neural Networks as Benchmarks}
+
+A useful way to treat neural networks in this course is as prediction benchmarks.  The workflow is simple:
+\begin{enumerate}
+  \item Build a defensible linear, regularized, or transformed model.
+  \item Fit a simple neural-network regression model.
+  \item Compare validation performance using the same response scale and prediction metric.
+  \item Decide whether the performance gain is worth the loss of interpretability.
+\end{enumerate}
+
+If the neural network performs only slightly better than an interpretable model, the interpretable model may be preferable for briefing, diagnosis, and decision support.  If the neural network performs much better, that is evidence that the simpler model may be missing nonlinear structure.  The next step is not automatically to choose the black-box model.  The next step is to ask what structure the black-box model may have found and whether that structure can be made defensible.
+
+This benchmark mindset is especially useful in operations analysis.  Sponsors may be attracted to flexible machine-learning models, but a model that is harder to explain must deliver enough performance improvement to justify the cost in interpretability.
+
+\section{Practical Cautions}
+
+Neural networks are powerful but easy to misuse.
+
+\subsection*{Data size}
+
+Flexible models usually need more data than simple models.  With small data sets, a neural network can overfit badly and perform worse than a carefully built linear model.
+
+\subsection*{Tuning choices}
+
+Architecture, activation functions, regularization settings, learning rates, and stopping rules affect performance.  These choices should not be tuned on the final test set.
+
+\subsection*{Scaling and preprocessing}
+
+Scaling and other learned preprocessing steps should be estimated from the training data, then applied consistently to validation or test data.  Letting validation or test data influence preprocessing creates leakage.
+
+\subsection*{Reproducibility}
+
+Neural-network training can involve random initialization and stochastic optimization.  Record the train/test split, preprocessing, tuning choices, random seeds, and evaluation metric.
+
+\subsection*{Computational cost}
+
+Neural networks can take more time and computation to tune than simpler regression models.  That cost should be justified by enough validation improvement to matter for the task.
+
+\subsection*{Interpretability}
+
+A neural network may predict well without explaining why.  That can be acceptable for some prediction tasks and unacceptable for some inference or policy tasks.
+
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Treating neural networks as automatically better}
+
+A neural network is more flexible than a linear model, but flexibility is not the same as better performance on future data.  Compare validation error.
+
+\subsection*{Mistake 2: Comparing models only on training error}
+
+Training error usually rewards flexibility.  Use validation or test performance.
+
+\subsection*{Mistake 3: Skipping the simple baseline}
+
+A neural network is easier to justify when it beats a strong simple baseline.  Fit the baseline first.
+
+\subsection*{Mistake 4: Claiming coefficient-style inference}
+
+Neural-network weights are not regression coefficients with simple adjusted-effect interpretations.  Do not report them as if they were ordinary linear-model coefficients.
+
+\subsection*{Mistake 5: Over-tuning on the test set}
+
+If the test set is used repeatedly to choose architecture or tuning settings, it becomes part of the training process.  Keep a final test set or use a disciplined validation procedure.
+
+\section{Chapter Summary}
+
+Neural networks extend linear models by composing weighted sums with nonlinear activation functions.  Without the nonlinear activations, stacked linear transformations would collapse into one linear transformation.
+
+For regression, neural networks can be fit by minimizing mean squared error.  The loss is familiar, but the prediction function is much more flexible and the optimization problem is more complex.
+
+Train/test thinking, validation, prediction metrics, scaling, regularization intuition, and baseline comparisons still matter.  Simple coefficient interpretation, ordinary coefficient tests, and the linear-model interval formulas do not carry over directly.
+
+A neural network is best treated as a flexible prediction tool and benchmark.  It may be valuable when it substantially improves prediction, but it is not a substitute for defensible modeling judgment.
+
+\section{Practice and Workflow}
+
+\subsection*{Focused Study Checklist}
+
+Use this checklist after studying neural-network regression.
+
+\begin{enumerate}
+  \item Can you explain how a neural network extends a linear model?
+  \item Can you explain why nonlinear activation functions are necessary?
+  \item Can you write the MSE fitting objective for neural-network regression?
+  \item Can you distinguish weights in a network from coefficients in a linear regression?
+  \item Can you name tools from the course that still matter for neural networks?
+  \item Can you name classical linear-model inference tools that do not carry over directly?
+  \item Can you explain why a neural network should be compared against a simpler baseline?
+  \item Can you explain when a black-box prediction gain might or might not be worth the loss of interpretability?
+\end{enumerate}
+
+\paragraph{Coding companion reference.}
+Package-specific commands for fitting neural-network regressors, scaling predictors, setting random seeds, and comparing validation performance belong in the separate Coding and Software Cookbook companion.  This chapter keeps the statistical meaning, modeling logic, and interpretation cautions.

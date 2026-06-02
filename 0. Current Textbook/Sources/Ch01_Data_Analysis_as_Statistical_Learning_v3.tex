@@ -195,7 +195,7 @@ Here $W$ is a weight matrix, $\mathbf{b}$ is a bias vector, and $\sigma$ is appl
 \CoreCompress{
 \section{Statistical Concepts Used Throughout the Course}
 
-Before developing prediction error and model diagnostics, we need a small set of statistical concepts.  This section reviews expectation, variance, covariance, correlation, and bias.  These ideas will reappear throughout the course.
+Before developing prediction error and model diagnostics, we need a small set of statistical concepts.  This section reviews expectation, variance, covariance, correlation, conditioning, sampling behavior, and bias.  These ideas will reappear throughout the course.
 
 \subsection{Expectation}
 
@@ -204,7 +204,11 @@ The expectation of a random variable is its probability-weighted average.  For a
   \mathbb{E}[X] = \sum_{i=1}^m p_i x_i.
   \label{eq:expectation-discrete}
 \end{equation}
-The probabilities weight the possible outcomes.  Outcomes that are more likely contribute more to the average.
+The probabilities weight the possible outcomes.  Outcomes that are more likely contribute more to the average.  For a continuous random variable with density $p(x)$, the corresponding definition replaces the sum with an integral:
+\begin{equation}
+  \mathbb{E}[X]=\int x p(x)\,dx.
+  \label{eq:expectation-continuous-density}
+\end{equation}
 
 \paragraph{Math Foundations Connection.}
 If we collect the possible outcomes into a vector $\mathbf{x}=(x_1,\ldots,x_m)^T$ and the probabilities into a vector $\mathbf{p}=(p_1,\ldots,p_m)^T$, then
@@ -271,7 +275,28 @@ Variance measures how one random variable varies around its mean.  Covariance me
   = \mathbb{E}\left[(X-\mu_X)(Y-\mu_Y)\right].
   \label{eq:covariance-definition}
 \end{equation}
+A useful computational identity is
+\begin{equation}
+  \operatorname{Cov}(X,Y)
+  =
+  \mathbb{E}[XY]-\mathbb{E}[X]\mathbb{E}[Y].
+  \label{eq:covariance-shortcut}
+\end{equation}
+This follows by expanding the centered product and applying linearity of expectation.  Covariance is symmetric, and covariance with itself is variance:
+\begin{equation}
+  \operatorname{Cov}(X,Y)=\operatorname{Cov}(Y,X),
+  \qquad
+  \operatorname{Cov}(X,X)=\operatorname{Var}(X).
+  \label{eq:covariance-symmetry-self}
+\end{equation}
 If $X$ tends to be above its mean when $Y$ is above its mean, the covariance tends to be positive.  If $X$ tends to be above its mean when $Y$ is below its mean, the covariance tends to be negative.  If their deviations do not move together in a systematic linear way, the covariance may be near zero.
+
+Covariance is sensitive to scaling but not shifting.  For constants $a$, $b$, $c$, and $d$,
+\begin{equation}
+  \operatorname{Cov}(aX+b,cY+d)=ac\,\operatorname{Cov}(X,Y).
+  \label{eq:covariance-affine}
+\end{equation}
+In particular, \(\operatorname{Cov}(aX+b,Y)=a\operatorname{Cov}(X,Y)\).  The shifts \(b\) and \(d\) disappear because covariance is based on deviations from means; multiplying a variable by a constant multiplies its deviations by that constant.
 
 Covariance appears in the variance of a sum:
 \begin{equation}
@@ -290,6 +315,21 @@ A direct derivation comes from writing centered variables.  Let $\mu_X=\mathbb{E
   &= \operatorname{Var}(X)+\operatorname{Var}(Y)+2\operatorname{Cov}(X,Y).
 \end{align*}
 
+For many random quantities, the same idea gives
+\begin{equation}
+\begin{aligned}
+  \operatorname{Var}\!\left(\sum_{i=1}^n X_i\right)
+  &=
+  \sum_{i=1}^n\sum_{j=1}^n \operatorname{Cov}(X_i,X_j) \\
+  &=
+  \sum_{i=1}^n \operatorname{Var}(X_i)
+  +
+  2\sum_{1\leq i<j\leq n}\operatorname{Cov}(X_i,X_j).
+\end{aligned}
+  \label{eq:variance-general-sum}
+\end{equation}
+This is why covariance matters when random quantities are combined or averaged: cross-terms affect the total spread unless they vanish.
+
 If $X$ and $Y$ are independent, then $\operatorname{Cov}(X,Y)=0$.  The converse is not generally true: zero covariance does not necessarily imply independence.  Covariance detects linear co-movement, while dependence can be nonlinear.
 
 Correlation is a scaled version of covariance:
@@ -303,6 +343,80 @@ Correlation is unitless and lies between $-1$ and $1$ when both variances are po
 
 \paragraph{Math Foundations Connection.}
 For observed data, sample correlation can be interpreted geometrically.  If we center two data vectors by subtracting their sample means, then their sample correlation is the cosine of the angle between the centered vectors.  This is why correlation measures linear alignment: two centered data vectors pointing in nearly the same direction have correlation near $1$; two pointing in opposite directions have correlation near $-1$; and two nearly orthogonal centered vectors have correlation near $0$.  See the Math Foundations textbook, Chapters 2, 3, and 5.
+
+\subsection{Conditioning and Total Laws}
+
+Conditioning means restricting attention to a known event, group, or predictor value before computing a probability, mean, variance, or covariance.  If \(B\) is an event with positive probability, then
+\begin{equation}
+  \Pr(A\mid B)=\frac{\Pr(A\cap B)}{\Pr(B)}.
+  \label{eq:conditional-probability}
+\end{equation}
+If \(G\) records which group an observation belongs to, then conditioning on \(G=g\) means computing the relevant quantity within group \(g\).  When the groups form a partition of the sample space,
+\begin{equation}
+  \Pr(A)=\sum_g \Pr(A\mid G=g)\Pr(G=g).
+  \label{eq:total-probability}
+\end{equation}
+This is the law of total probability: compute the probability within each group, then average those group probabilities using the group frequencies.  The same ingredients also give Bayes' rule:
+\begin{equation}
+  \Pr(G=g\mid A)
+  =
+  \frac{\Pr(A\mid G=g)\Pr(G=g)}
+       {\sum_h \Pr(A\mid G=h)\Pr(G=h)}.
+  \label{eq:bayes-rule-partition}
+\end{equation}
+Bayes' rule updates the probability of group membership after observing that event \(A\) occurred.
+
+The conditional expectation \(\mathbb{E}[Y\mid G]\) is the mean of \(Y\) after conditioning on the group.  It is itself a random variable because its value depends on the group.  The law of iterated expectation says
+\begin{equation}
+  \mathbb{E}[Y]=\mathbb{E}\!\left[\mathbb{E}[Y\mid G]\right].
+  \label{eq:law-iterated-expectation}
+\end{equation}
+In words: average within groups, then average the group means.
+
+The law of total variance decomposes total variation into within-group and between-group pieces:
+\begin{equation}
+  \operatorname{Var}(Y)
+  =
+  \mathbb{E}\!\left[\operatorname{Var}(Y\mid G)\right]
+  +
+  \operatorname{Var}\!\left(\mathbb{E}[Y\mid G]\right).
+  \label{eq:law-total-variance}
+\end{equation}
+The first term is the average conditional variance: how much \(Y\) varies within groups.  The second term is the variance of the conditional means: how much the group means differ from one another.
+
+The same idea extends to covariance:
+\begin{equation}
+  \operatorname{Cov}(X,Y)
+  =
+  \mathbb{E}\!\left[\operatorname{Cov}(X,Y\mid G)\right]
+  +
+  \operatorname{Cov}\!\left(\mathbb{E}[X\mid G],\mathbb{E}[Y\mid G]\right).
+  \label{eq:law-total-covariance}
+\end{equation}
+The first term is the average within-group covariance.  The second term is the covariance of the group means.  This is why a marginal relationship can differ from a within-group relationship: the overall association may be driven partly by differences among groups.  Regression uses this same conditioning logic when it asks how the response behaves after accounting for predictors.
+
+\subsection{Statistics, Estimators, and Sampling Behavior}
+
+A \emph{statistic} is any function computed from the observed data.  The sample mean, sample variance, sample correlation, maximum value, and fitted regression coefficients are all statistics.  An \emph{estimator} is a statistic used to estimate an unknown population quantity.  The distinction is about purpose: a statistic is a data summary, while an estimator is a data summary aimed at an unknown target.
+
+Because an estimator depends on the sample, it is random before the data are observed.  If we repeatedly collected new samples from the same population and recomputed the estimator, we would get a distribution of possible estimator values.  That distribution is the estimator's \emph{sampling distribution}.  The \emph{standard error} of an estimator is the standard deviation of its sampling distribution.  Standard errors measure sampling instability: how much the estimate would tend to change from one sample to another.
+
+An estimator \(\widehat{\theta}_n\) is \emph{consistent} for a target parameter \(\theta\) if it converges to \(\theta\) as the sample size \(n\) grows.  The Law of Large Numbers explains why the sample mean is a natural estimator of a population mean.  If \(X_1,\ldots,X_n\) are independent observations with common mean \(\mu\), then
+\begin{equation}
+  \bar{X}_n=\frac{1}{n}\sum_{i=1}^n X_i
+  \longrightarrow \mu
+  \qquad \text{as } n\to\infty.
+  \label{eq:law-large-numbers}
+\end{equation}
+The sample mean stabilizes around the population mean as more observations are collected.
+
+The Central Limit Theorem describes the approximate shape of the sample mean's sampling distribution.  Under common regularity conditions, if the observations have mean \(\mu\) and variance \(\sigma^2\), then for large \(n\),
+\begin{equation}
+  \frac{\bar{X}_n-\mu}{\sigma/\sqrt{n}}
+  \approx N(0,1).
+  \label{eq:central-limit-theorem}
+\end{equation}
+Equivalently, \(\bar{X}_n\) is approximately normal with mean \(\mu\) and standard error \(\sigma/\sqrt{n}\).  This is one reason normal approximations, standard errors, confidence intervals, and hypothesis tests appear throughout classical statistical modeling.  The theorem does not say every data set is normal; it says that many averages and estimators built from many small contributions have approximately normal sampling behavior.
 
 \subsection{Bias}
 
@@ -318,7 +432,7 @@ Bias can be induced by measurement choices, data collection procedures, model as
 }{
 \section{Statistical Concepts Used Throughout the Course}
 
-This course repeatedly uses a small set of statistical ideas: expectation, variance, covariance, correlation, and bias.  The full reference text gives more derivation detail; the Core Reader keeps the definitions and interpretations needed for the chapters that follow.
+This course repeatedly uses a small set of statistical ideas: expectation, variance, covariance, correlation, conditioning, sampling behavior, and bias.  The full reference text gives more derivation detail; the Core Reader keeps the definitions and interpretations needed for the chapters that follow.
 
 \subsection{Expectation}
 
@@ -361,6 +475,50 @@ Correlation rescales covariance to a unitless number:
 \end{equation}
 For observed data, correlation can be interpreted as linear alignment between centered data vectors.  This connects directly to dot products, norms, and angles; see the Math Foundations textbook, Chapters 2, 3, and 5.
 
+\subsection{Conditioning and Total Laws}
+
+Conditioning means computing probabilities or averages after restricting attention to a known event, group, or predictor value.  If \(G\) records group membership, then the law of total probability says
+\[
+  \Pr(A)=\sum_g \Pr(A\mid G=g)\Pr(G=g).
+\]
+Bayes' rule uses the same pieces to update group probabilities after observing an event:
+\[
+  \Pr(G=g\mid A)
+  =
+  \frac{\Pr(A\mid G=g)\Pr(G=g)}
+       {\sum_h \Pr(A\mid G=h)\Pr(G=h)}.
+\]
+
+Three total laws will reappear later:
+\begin{align}
+  \mathbb{E}[Y]&=\mathbb{E}\!\left[\mathbb{E}[Y\mid G]\right], \\
+  \operatorname{Var}(Y)
+  &=
+  \mathbb{E}\!\left[\operatorname{Var}(Y\mid G)\right]
+  +
+  \operatorname{Var}\!\left(\mathbb{E}[Y\mid G]\right), \\
+  \operatorname{Cov}(X,Y)
+  &=
+  \mathbb{E}\!\left[\operatorname{Cov}(X,Y\mid G)\right]
+  +
+  \operatorname{Cov}\!\left(\mathbb{E}[X\mid G],\mathbb{E}[Y\mid G]\right).
+\end{align}
+These identities say that overall behavior combines within-group behavior with differences among group means.  Regression uses the same conditioning logic when it studies the response after accounting for predictors.
+
+\subsection{Statistics, Estimators, and Sampling Behavior}
+
+A \emph{statistic} is any function computed from the observed data.  An \emph{estimator} is a statistic used to estimate an unknown population quantity.  Because an estimator depends on the sample, it is random before the data are observed.  Its \emph{sampling distribution} is the distribution we would see by repeatedly collecting new samples and recomputing the estimator.  Its \emph{standard error} is the standard deviation of that sampling distribution.
+
+An estimator \(\widehat{\theta}_n\) is \emph{consistent} for \(\theta\) if it converges to \(\theta\) as \(n\) grows.  The Law of Large Numbers says that, for independent observations with common mean \(\mu\),
+\[
+  \bar{X}_n=\frac{1}{n}\sum_{i=1}^n X_i\longrightarrow \mu.
+\]
+The Central Limit Theorem says that many averages have approximately normal sampling behavior:
+\[
+  \frac{\bar{X}_n-\mu}{\sigma/\sqrt{n}}\approx N(0,1)
+\]
+for large \(n\), under common regularity conditions.  This is why standard errors, confidence intervals, and hypothesis tests often use normal or nearly normal approximations.
+
 \subsection{Bias}
 
 If $\theta$ is an unknown parameter and $\widehat{\theta}$ is an estimator, then
@@ -401,35 +559,6 @@ Defensibility concerns what we can explain to a customer, commander, decision ma
 
 Reproducibility is about what we did.  Defensibility is about what we can justify.  Both are essential.  A result can be reproducible but not defensible if it repeatedly applies the wrong method.  A result can sound defensible but not be reproducible if the workflow cannot be checked.  Good data analysis requires both.
 
-\CoreCompress{
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 1 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Feature vectors for observations & $\mathbb{R}^n$ vector notation, vector entries, subvectors, and vectors as collections of quantities belonging to the same object & Ch02 Secs. 2.1, 2.2, 2.6 \\
-\hline
-Linear models as weighted inputs & Scalar multiplication and linear combinations of vectors & Ch03 Secs. 3.4, 3.5 \\
-\hline
-Inner-product form $\boldsymbol{\beta}^T\mathbf{x}$ & Dot product definition, dot product properties, and examples of weighted sums & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3 \\
-\hline
-Neural-network layers as repeated linear operations plus nonlinearities & Matrix-vector multiplication as row inner products and as linear combinations of columns & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3; Ch07 Secs. 7.1, 7.6.1, 7.6.2 \\
-\hline
-Correlation as linear alignment & Dot products, Euclidean norm, distance, angle, and orthogonality & Ch05 Secs. 5.1, 5.3, 5.5, 5.7, 5.8 \\
-\hline
-Reasoning from assumptions to conclusions & Logic, truth tables, implications, biconditionals, and De Morgan's laws & Ch01 Secs. 1.1, 1.7 \\
-\hline
-\end{tabular}
-\end{center}
-}{
-\section{Math Foundations Source Map}
-
-The Core Reader keeps the short Math Foundations connections where they clarify the chapter.  The full Math Foundations textbook-location map for this chapter appears in the full reference textbook.
-}
 \section{Chapter Summary}
 
 This chapter introduced data analysis as statistical learning.  A data set consists of observations and variables.  In supervised learning, we distinguish input variables from an output or response variable.  We model their relationship using
@@ -440,4 +569,4 @@ where $f$ is the systematic relationship and $\epsilon$ is the unexplained error
 
 The two major modeling goals are inference and prediction.  Inference asks what the model says about the relationship between inputs and output.  Prediction asks how accurately the model can estimate outputs for new inputs.  Regression problems involve quantitative outputs, while classification problems involve categorical outputs.  Models may be linear or nonlinear, and modern methods such as neural networks build complex functions by combining linear operations with nonlinear activations.
 
-Finally, the chapter reviewed expectation, variance, covariance, correlation, and bias.  These concepts provide the mathematical language needed to discuss model error, uncertainty, assumptions, and the limits of prediction.  The next chapter uses this foundation to study prediction error, model flexibility, overfitting, and generalization.
+Finally, the chapter reviewed expectation, variance, covariance, correlation, conditioning identities, sampling behavior, and bias.  These concepts provide the mathematical language needed to discuss model error, uncertainty, assumptions, and the limits of prediction.  The next chapter uses this foundation to study prediction error, model flexibility, overfitting, and generalization.

@@ -1,0 +1,323 @@
+% Chapter 15 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, hyperref, and verbatim.
+\chapter[Model Selection and Variable Selection]{Model Selection and Variable Selection}
+\label{chap:model-selection-variable-selection}
+
+\section{The Big Picture}
+
+A regression model is not good just because it fits the training data well.  Least squares chooses coefficients to make the training residuals small, and in nested least-squares models, adding predictors can only decrease or preserve the training residual sum of squares.  If we choose models only by training error, we will usually choose models that are too complicated.
+
+This chapter asks a practical question:
+\begin{quote}
+  How should we choose among candidate models when the goal is to perform well on future data, not just on the data used to fit the model?
+\end{quote}
+
+The answer depends on the analysis goal.  If the goal is prediction, we want a model that generalizes well.  If the goal is interpretation or inference, we also want a model whose coefficients are stable, meaningful, and defensible.  Model selection is the process of balancing fit, complexity, interpretability, and validation evidence.
+
+\paragraph{Connection to earlier chapters.}
+Chapter~2 introduced prediction error, training error, test error, overfitting, and flexibility.  Chapters~5--12 built linear-regression models and diagnostic workflows.  Chapter~13 separated uncertainty intervals from prediction accuracy.  Chapter~14 used likelihood to fit probabilistic models and to compare nested models with likelihood-ratio tests.  This chapter asks a broader selection question: when several plausible models are available, how should we choose among them?  Some tools in this chapter, such as AIC and BIC, build directly on likelihood.  Others, such as adjusted \(R^2\), Mallows-type \(C_p\), validation, and cross-validation, focus more directly on prediction error, model complexity, or future performance.
+
+\paragraph{Math Foundations Connection.}
+Model selection uses residual lengths, squared-error objectives, design matrices, degrees of freedom, and the geometry of least squares.  These ideas are supported by the Math Foundations textbook, especially Chapters~5, 6, 7, 10, 11, and~12.
+
+\section{Why Training Error Is Too Optimistic}
+
+For a candidate model \(m\), write
+\begin{equation}
+  RSS_m = \|\mathbf{y}-\widehat{\mathbf{y}}_m\|^2,
+  \qquad
+  \operatorname{MSE}_{train,m}=\frac{RSS_m}{n}.
+\end{equation}
+This training MSE measures how well the model fits the data used to estimate it.  It is useful, but it is usually too optimistic as an estimate of future prediction error.
+
+There are two reasons.
+\begin{enumerate}
+  \item The model was fit to make the training residuals small.
+  \item A more flexible model can chase patterns that are partly real signal and partly random noise.
+\end{enumerate}
+
+When one least-squares candidate model contains all predictors in another, the larger model cannot have larger training RSS.  That does not mean the larger model is better for future data.  A selection rule must either estimate future performance directly or penalize the model for using extra flexibility.
+
+\section{Selection Criteria as Fit Plus Penalty}
+
+Many model-selection criteria have the same basic structure:
+\begin{equation}
+  \boxed{
+  \text{selection score}
+  =\text{training fit term}+\text{complexity penalty}.
+  }
+\end{equation}
+The fit term rewards models that explain the observed data.  The penalty term discourages unnecessary complexity.  Different criteria measure fit and complexity in different ways.
+
+For linear models, let \(q_m\) be the number of fitted coefficients in model \(m\), including the intercept.  A model with more predictors has larger \(q_m\).  The selection problem is not simply to make \(q_m\) small or to make RSS small.  The goal is to find a model that is accurate enough, simple enough, and defensible for the task.
+
+\section{Mallows-Type \texorpdfstring{\(C_p\)}{Cp} on the MSE Scale}
+
+Mallows \(C_p\) is motivated by the gap between training MSE and expected test MSE.  Under the fixed-design Gaussian linear-model setup, with mean-zero errors and constant variance, the expected optimism in training MSE is approximately
+\begin{equation}
+  \frac{2}{n}\sigma^2 q_m.
+\end{equation}
+Since \(\sigma^2\) is unknown, we estimate it with a residual variance estimate \(s^2\), often taken from the largest model under consideration.  On the MSE scale, the resulting score is
+\begin{equation}
+  \boxed{
+  C_{p,m}^{(MSE)}
+  =\frac{RSS_m}{n}+\frac{2}{n}s^2 q_m.
+  }
+  \label{eq:ch15-cp-mse-scale}
+\end{equation}
+Smaller values are better.
+
+The first term rewards fit.  The second term penalizes the number of fitted coefficients.  Adding a predictor is helpful only if the reduction in training error is large enough to justify the extra flexibility.
+
+\paragraph{Why the largest model appears.}
+The residual variance estimate \(s^2\) should represent the noise level, not the error from a deliberately underfit small model.  Using a reasonably large model helps estimate \(\sigma^2\) without forcing the small candidate models to explain variation they were not allowed to model.
+
+\paragraph{Cautions.}
+Mallows-type criteria rely on regression assumptions, especially mean-zero errors and constant variance.  They also depend on the chosen candidate set and the quality of \(s^2\).  They are useful tools, not automatic truth detectors.
+
+\paragraph{Convention warning.}
+Different references scale and shift Mallows \(C_p\) in different ways.  In this chapter, \eqref{eq:ch15-cp-mse-scale} is written on the training-MSE scale to match the course intuition.  The important point is usually the ordering of candidate models, not the absolute numerical value.
+
+\section{AIC}
+
+The Akaike Information Criterion, or AIC, is a likelihood-based selection criterion.  If \(\ell(\widehat{\boldsymbol{\theta}})\) is the maximized log-likelihood and \(d\) is the number of estimated likelihood parameters being counted in the criterion, then a common form is
+\begin{equation}
+  \boxed{
+  \operatorname{AIC}=-2\ell(\widehat{\boldsymbol{\theta}})+2d.
+  }
+  \label{eq:ch15-aic}
+\end{equation}
+Smaller AIC is better.
+
+The term \(-2\ell(\widehat{\boldsymbol{\theta}})\) rewards models that give high likelihood to the observed data.  The term \(2d\) penalizes the number of estimated likelihood parameters; this \(d\) is a general parameter count, while \(q_m\) remains the linear-model coefficient count used for regression degrees of freedom.  AIC is more general than a least-squares-only criterion because it applies to any model with a likelihood.
+
+\paragraph{How to compare AIC values.}
+Compare AIC values only among models fit to the same response data under compatible likelihoods.  Software may differ by constants or scaling conventions, so do not compare AIC values across unrelated analyses or incompatible model families.
+
+\section{BIC}
+
+The Bayesian Information Criterion, or BIC, uses the same likelihood term as AIC but applies a stronger penalty for complexity:
+\begin{equation}
+  \boxed{
+  \operatorname{BIC}=-2\ell(\widehat{\boldsymbol{\theta}})+d\log(n).
+  }
+  \label{eq:ch15-bic}
+\end{equation}
+Smaller BIC is better.
+
+When \(n\) is reasonably large, \(\log(n)>2\), so BIC penalizes extra parameters more heavily than AIC.  As a result, BIC often selects smaller models.  This can be useful when the analyst wants a parsimonious model, but it can also remove predictors that help prediction.
+
+AIC and BIC are not moral rankings of models.  They are ways to compare candidate models under a defined fitting framework.  They should be interpreted alongside diagnostics, validation performance, and the purpose of the analysis.
+
+\section[Adjusted R squared]{Adjusted \texorpdfstring{\(R^2\)}{R-squared}}
+
+Ordinary \(R^2\) measures the fraction of total variation explained by the fitted model:
+\begin{equation}
+  R^2=1-\frac{RSS}{TSS}.
+\end{equation}
+For models fit to the same response, ordinary \(R^2\) cannot decrease when predictors are added.  This makes it a poor standalone tool for choosing model size.
+
+Adjusted \(R^2\) adds a degrees-of-freedom correction:
+\begin{equation}
+  \boxed{
+  R^2_{adj}
+  =1-\frac{RSS/(n-q_m)}{TSS/(n-1)}.
+  }
+  \label{eq:ch15-adjusted-r2}
+\end{equation}
+Here \(q_m\) is the number of fitted coefficients in the candidate model, including the intercept.  Larger adjusted \(R^2\) is better.
+
+Adjusted \(R^2\) is easy to read from regression output, but it is only one criterion.  It should not replace validation, diagnostics, or domain judgment.
+
+\section{Cross-Validation for Model Selection}
+
+The criteria above adjust training fit using mathematical penalties.  Cross-validation takes a different approach: estimate future performance by repeatedly fitting the model on part of the data and evaluating it on held-out data.
+
+\paragraph{Validation-set approach.}
+Split the data into a training set and a validation set.  Fit the model on the training set.  Compute prediction error on the validation set.  This is simple, but the result depends on the split.
+
+\paragraph{Leave-one-out cross-validation.}
+Leave-one-out cross-validation, or LOOCV, fits the model \(n\) times.  Each time, one observation is held out and the model is trained on the remaining \(n-1\) observations.  The held-out errors are averaged.  LOOCV uses the data efficiently because every observation is used for validation exactly once, but a direct implementation may require \(n\) model fits.
+
+\paragraph{LOOCV and analytic shortcuts.}
+Mallows-type \(C_p\) and AIC can be viewed as analytic fit-plus-penalty shortcuts aimed at estimating future performance, or the expected optimism of training fit, under modeling assumptions.  These shortcuts can be useful when repeated refitting is expensive, but they are not literally identical to LOOCV in all settings.  Read them alongside diagnostics, validation evidence, and domain judgment.
+
+\paragraph{\(k\)-fold cross-validation.}
+In \(k\)-fold cross-validation, the data are split into \(k\) folds.  Each fold is used once as the validation fold while the other folds are used for training.  The validation errors are averaged.  Common choices such as \(k=5\) or \(k=10\) often give a practical balance between computation and stability.
+
+\paragraph{Workflow caution.}
+Cross-validation should repeat the modeling workflow, not just the final fitting step.  If preprocessing is learned from the data, such as scaling, imputation, or feature selection, it should be learned inside the training portion of each fold to avoid leakage.
+
+\section{Best Subset Selection}
+
+If there are \(p\) possible predictors, there are \(2^p\) possible subsets of predictors.  Best subset selection tries many or all of these subsets and chooses the best one according to a selection criterion.
+
+The advantage is conceptual clarity: it asks directly which subset of predictors gives the best score.  The disadvantage is computation.  The number of subsets grows quickly.  With 10 predictors, there are \(2^{10}=1024\) subsets.  With 30 predictors, there are more than one billion.
+
+Best subset selection is most useful when the number of candidate predictors is small and the analyst can define a meaningful candidate set in advance.
+
+\section{Forward, Backward, and Stepwise Selection}
+
+When best subset selection is too expensive, stepwise methods search through a smaller set of candidate models.
+
+\paragraph{Forward selection.}
+Start with a small model, often the intercept-only model.  At each step, add the predictor that gives the best improvement according to the selection criterion.  Stop when no addition improves the criterion enough.
+
+\paragraph{Backward selection.}
+Start with a large model.  At each step, remove the predictor whose removal gives the best improvement, or the least damage, according to the selection criterion.  Stop when no deletion improves the criterion enough.
+
+\paragraph{Hybrid stepwise selection.}
+A hybrid method allows both additions and deletions as the search proceeds.  This can correct some earlier choices, but it is still a path-based search.
+
+Stepwise methods are algorithms for searching model space.  They are not guarantees that the selected model is the true model, the best possible model, or the most interpretable model.
+
+\section{The Post-Selection Inference Warning}
+
+The most dangerous mistake in model selection is to search through many models and then report the selected model as if it had been chosen before looking at the data.
+
+If a procedure tries many predictor sets, compares many criteria, or repeatedly adds and removes predictors based on p-values, then the final model has been shaped by the data.  The usual coefficient p-values in the selected model do not automatically account for that search.  They can be too optimistic.
+
+\begin{quote}
+  Post-selection p-values are not ordinary p-values unless the selection process is accounted for.
+\end{quote}
+
+This does not mean stepwise methods are forbidden.  It means the analyst must be honest about the selection process.  If the goal is prediction, validate the selected model on held-out data or through cross-validation.  If the goal is interpretation or inference, report the selection procedure and be cautious about strong claims based only on selected-model p-values.
+
+\section{Multiple Testing and Data-Driven Inference}
+
+The post-selection warning is one example of a broader issue: many inferential tools are calibrated for a planned analysis, not for unlimited searching.  A single p-value has a precise meaning only after the model, hypothesis, test statistic, and assumptions have been specified.  If the analyst repeatedly changes the model, tries many transformations, tests many subgroups, or searches until something looks significant, the reported p-values no longer describe a single planned test.
+
+This does not make exploratory analysis wrong.  Exploration is often how good analyses begin.  The problem is pretending afterward that an exploratory result was confirmatory.  A defensible analysis separates what was planned in advance from what was discovered by searching.
+
+\subsection*{One planned test versus many chances to find something}
+
+For one planned test at level \(\alpha\), the Type I error rate is controlled at \(\alpha\), assuming the model and test assumptions hold.  For example, a test run at \(\alpha=0.05\) is designed so that, under the null hypothesis, it rejects about 5\% of the time in repeated use.
+
+That calibration changes when the analyst has many chances to find something.  Examples include testing many individual coefficients, deleting predictors one at a time based on p-values, trying several transformations of the same variable, searching across many candidate models, checking many subgroups, trying several response definitions, or using a variable-selection method, such as the LASSO introduced in the next chapter, and then refitting ordinary least squares as if the selected variables had been chosen in advance.  Each additional search creates another opportunity for a chance pattern in the data to look meaningful.
+
+The key question is not simply, ``What is the p-value in the final model?''  The key question is, ``How many ways did we give the data a chance to produce this result?''
+
+\subsection*{Family-wise error rate}
+
+A \emph{family} is the collection of tests or comparisons that should be considered together for a particular claim.  The \emph{family-wise error rate}, or FWER, is
+\begin{equation}
+  \operatorname{FWER}
+  =P(\text{at least one false positive in the family}).
+\end{equation}
+This is different from the Type I error rate of one individual test.
+
+If all \(m\) null hypotheses in a family are true, the tests are independent under the null, and each test is run at level \(\alpha\), then the probability of at least one false positive is
+\begin{equation}
+  1-(1-\alpha)^m.
+\end{equation}
+This formula is useful intuition under those assumptions; it is not a universal exact formula for every multiple-testing situation.  Still, it shows the scale of the problem.  If \(m=20\) independent true null hypotheses are each tested at \(\alpha=0.05\), then
+\begin{equation}
+  1-(1-0.05)^{20} \approx 0.64.
+\end{equation}
+Even when every null hypothesis is true, there is about a 64\% chance of at least one false positive somewhere in the family.
+
+\subsection*{Bonferroni correction}
+
+The simplest correction is the Bonferroni correction.  If the analyst wants to control the family-wise error rate at level \(\alpha\) across \(m\) planned comparisons, then test each comparison at level
+\begin{equation}
+  \frac{\alpha}{m}.
+\end{equation}
+Equivalently, one may multiply each p-value by \(m\) and compare the adjusted p-values with \(\alpha\), with adjusted p-values truncated at 1 when necessary.
+
+Bonferroni is simple, transparent, and conservative.  Its strongest simple justification does not require the tests to be independent; it follows from the fact that the probability of at least one error is no larger than the sum of the individual error probabilities.  The tradeoff is power.  When \(m\) is large, \(\alpha/m\) can be very small, making it harder to detect real effects.  Bonferroni is most useful when the family of planned comparisons is clearly defined; it does not automatically validate a long, undocumented modeling search.
+
+\subsection*{False discovery rate}
+
+Family-wise error rate asks a strict question: did we make any false positive conclusion in the family?  The \emph{false discovery rate}, or FDR, asks a different question: among the discoveries we report, what fraction are false on average?  In words, FWER focuses on whether at least one false positive occurred, while FDR focuses on the expected share of reported discoveries that are false.
+
+FDR control can be more useful when the analysis involves many potential signals and the goal is to identify a manageable set for follow-up.  Common FDR procedures order the p-values and use a gradually changing cutoff rather than the single \(\alpha/m\) cutoff used by Bonferroni.  The details are beyond this chapter, but the interpretation matters: FDR is still a multiplicity-aware procedure, not permission to search without documentation.
+
+\subsection*{Resampling intuition}
+
+Permutation and resampling approaches provide another way to ask what counts as surprising.  The basic idea is to approximate the behavior of a statistic under a null setup by repeatedly reshuffling or resampling the data in a way that preserves the structure assumed under the null hypothesis.  The observed statistic is then compared with the distribution generated under those null reshufflings or resamples.
+
+The important word is \emph{appropriate}.  A resampling scheme must match the structure of the question.  Time ordering, clustered observations, paired measurements, repeated observations, and train/test separation can all affect what reshuffling is legitimate.  If the original analysis searched across many predictors or models, a resampling check should ideally mimic the same search rather than calibrating only one fixed test.
+
+\subsection*{Reporting data-driven inference}
+
+A clear report should distinguish confirmatory analysis from exploratory analysis.  Confirmatory claims are tied to hypotheses, models, and comparisons that were specified before looking for the result.  Exploratory claims may be useful and important, but they should be labeled as discoveries that need follow-up, validation, or replication.
+
+When reporting an analysis that involved many tests or searches, state what family of tests, comparisons, models, transformations, thresholds, or subgroups was considered; whether the analysis was planned, exploratory, or a mixture of both; whether variable selection, model selection, tuning, or repeated testing occurred before the reported inference; whether any multiplicity correction, validation strategy, or resampling check was used; and which conclusions are confirmatory versus exploratory.
+
+Prediction validation is valuable, but it answers a different question.  A held-out test set or cross-validation can estimate future predictive performance.  It does not automatically repair coefficient-level p-values or confidence intervals after data-driven variable selection.  Similarly, Bonferroni, FDR, and resampling can improve calibration for defined families of tests, but they do not make every modeling search valid.  The defensible habit is to analyze the data as a coherent whole, document the search process, and match the strength of the conclusion to the way the result was found.
+
+\section{A Defensible Model-Selection Workflow}
+
+Use the following workflow to keep model selection defensible.
+
+\begin{enumerate}
+  \item \textbf{State the goal.}  Is the model primarily for prediction, interpretation, or both?
+  \item \textbf{Define the candidate predictor set.}  Use the analytic question, data quality checks, and subject-matter knowledge.
+  \item \textbf{Fit a baseline model.}  Start with a simple, defensible model before expanding.
+  \item \textbf{Choose comparison tools.}  Decide whether to use adjusted \(R^2\), \(C_p\), AIC, BIC, cross-validation, multiplicity-aware inference, or a combination.
+  \item \textbf{Search carefully.}  Use best subset or stepwise methods only as tools, not as substitutes for judgment; avoid changing the model until the p-values look good.
+  \item \textbf{Check diagnostics.}  A selected model can still have nonlinearity, heteroskedasticity, influential observations, or collinearity problems.
+  \item \textbf{Validate prediction performance.}  When prediction matters, estimate performance on data not used to choose the model.
+  \item \textbf{Document the process.}  Record what models, transformations, tests, and subgroups were considered; what criterion was used; what was selected; and which claims remain exploratory.
+\end{enumerate}
+
+The final model should be easy to explain: why those predictors, why that complexity, why that criterion, and why the conclusion is defensible.  If the analysis involved many tests or searches, the report should also state whether any multiplicity correction, resampling check, or validation strategy was used.
+
+The next chapter develops another family of tools for controlling complexity and instability, including regularization and dimension reduction.  Those methods complement model selection; they do not remove the need to define the goal, validate prediction performance, and document the modeling process.
+
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Choosing the model with the lowest training RMSE}
+
+Training RMSE rewards flexibility.  It usually decreases as predictors are added.  Use a penalty or validation strategy when comparing models of different sizes.
+
+\subsection*{Mistake 2: Using ordinary \texorpdfstring{\(R^2\)}{R-squared} alone}
+
+Ordinary \(R^2\) does not penalize extra predictors.  It can make larger models look better even when they do not generalize better.
+
+\subsection*{Mistake 3: Treating AIC or BIC as universal truth}
+
+AIC and BIC compare candidate models under assumptions and conventions.  They do not replace diagnostics, validation, or subject-matter reasoning.
+
+\subsection*{Mistake 4: Reporting selected-model p-values without a selection caveat}
+
+If the model was selected after searching, the p-values in the final model can be optimistic.  Say how the model was selected.
+
+\subsection*{Mistake 5: Changing the model until the p-values look good}
+
+This is not defensible inference.  It is data-driven searching disguised as hypothesis testing.
+
+\subsection*{Mistake 6: Ignoring diagnostics after selection}
+
+Selection criteria do not check every modeling assumption.  Residual diagnostics, leverage, influence, and practical interpretation still matter.
+
+\section{Chapter Summary}
+
+Model selection is about choosing a model that supports the analysis goal.  Training error alone is not enough because it is usually too optimistic.
+
+Criteria such as Mallows-type \(C_p\), AIC, BIC, and adjusted \(R^2\) combine fit with a complexity penalty.  Cross-validation estimates prediction performance more directly by evaluating models on held-out data.  LOOCV uses the data efficiently but may require many refits, while analytic criteria such as \(C_p\) and AIC offer assumption-based shortcuts for correcting training-fit optimism.  Best subset and stepwise methods search through candidate predictor sets, but they do not remove the need for judgment.
+
+The most important caution is post-selection inference, which is one form of multiple testing and data-driven inference.  If the data were used to select the model, choose transformations, screen subgroups, tune a procedure, or search across many tests, ordinary p-values from the final analysis should be interpreted carefully.  A defensible analysis documents the search process, distinguishes confirmatory claims from exploratory ones, checks diagnostics, validates when prediction matters, and explains why the selected model is appropriate for the task.
+
+\section{Practice and Workflow}
+
+\subsection*{Focused Study Checklist}
+
+Use this checklist after studying model selection.
+
+\begin{enumerate}
+  \item Can you explain why training error is usually too optimistic?
+  \item Can you distinguish ordinary \(R^2\) from adjusted \(R^2\)?
+  \item Can you explain the fit-plus-penalty structure behind \(C_p\), AIC, and BIC?
+  \item Can you state whether lower or higher is better for each criterion?
+  \item Can you explain why cross-validation estimates future performance more directly?
+  \item Can you explain why LOOCV is data-efficient but can be computationally expensive, and how \(C_p\) and AIC serve as assumption-based shortcuts?
+  \item Can you distinguish best subset selection from forward and backward selection?
+  \item Can you explain why selected-model p-values need caution?
+  \item Can you define family-wise error rate and explain why many tests increase the chance of at least one false positive?
+  \item Can you distinguish Bonferroni-style family-wise error control from false discovery rate control?
+  \item Can you describe how you would document a model-selection workflow?
+  \item Can you decide when prediction validation matters more than coefficient inference?
+\end{enumerate}
+
+\paragraph{Coding companion reference.}
+Package-specific commands for AIC and BIC extraction, cross-validation, subset selection, stepwise selection, and model comparison tables belong in the separate Coding and Software Cookbook companion.  This chapter keeps the statistical meaning and workflow logic.

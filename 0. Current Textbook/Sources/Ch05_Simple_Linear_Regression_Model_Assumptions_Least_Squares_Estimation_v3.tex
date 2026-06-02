@@ -201,7 +201,7 @@ Then
   Q(b_0,b_1)=\frac{1}{n}\sum_{i=1}^n r_i(b_0,b_1)^2.
 \end{equation}
 
-\subsection{Partial Derivative with Respect to $b_0$}
+\subsection{Partial Derivative with Respect to \texorpdfstring{$b_0$}{b0}}
 
 Using the chain rule,
 \begin{align}
@@ -217,7 +217,7 @@ Setting this derivative equal to zero gives
   \label{eq:ch5-normal-equation-one}
 \end{equation}
 
-\subsection{Partial Derivative with Respect to $b_1$}
+\subsection{Partial Derivative with Respect to \texorpdfstring{$b_1$}{b1}}
 
 Similarly,
 \begin{align}
@@ -257,7 +257,7 @@ Then the normal equations become
   \label{eq:ch5-normal-avg-two}
 \end{align}
 
-\subsection{Solving for $\widehat{\beta}_1$}
+\subsection{Solving for \texorpdfstring{$\widehat{\beta}_1$}{beta-hat 1}}
 
 From~\eqref{eq:ch5-normal-avg-one},
 \begin{equation}
@@ -466,7 +466,7 @@ says that the residual vector is orthogonal to both columns of $\mathbf{X}$: the
 \paragraph{Bridge to Later Chapters.}
 In the next regression geometry chapters, we will generalize this same idea: least squares projects $\mathbf{y}$ onto the subspace spanned by the columns of the design matrix.
 
-\section{Interpreting $\widehat{\beta}_0$ and $\widehat{\beta}_1$}
+\section{Interpreting \texorpdfstring{$\widehat{\beta}_0$}{beta-hat 0} and \texorpdfstring{$\widehat{\beta}_1$}{beta-hat 1}}
 
 The fitted simple linear regression model is
 \begin{equation}
@@ -736,38 +736,6 @@ The least squares estimators minimize the empirical mean squared error, equivale
 The slope is the sample covariance of $x$ and $y$ scaled by the sample variance of $x$.  The intercept anchors the line through the sample means.  The residuals sum to zero and are orthogonal to the predictor column.
 
 The main interpretive discipline is this: least squares gives the best line under a squared-error criterion, but the usefulness of that line depends on modeling assumptions, residual behavior, variable meaning, and whether the analyst is making an associational or causal claim.
-
-
-
-\CoreCompress{
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 5 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Data columns as vectors & $\mathbb{R}^n$ vector notation, vector entries, and the ones vector $\mathbf{1}$ & Ch02 Secs. 2.1, 2.2, 2.4, 2.6 \\
-\hline
-Centered vectors and sums & Vector subtraction, scalar multiplication, and linear combinations & Ch03 Secs. 3.1, 3.2, 3.4, 3.5 \\
-\hline
-Sample means as sums & Dot product examples, including $\mathbf{1}^T\mathbf{a}=\sum_i a_i$ and $(1/n)\mathbf{1}^T\mathbf{a}$ as a sample mean & Ch02 Sec. 2.4; Ch05 Secs. 5.1, 5.3 \\
-\hline
-Least squares objective as a norm & $\mathbf{a}^T\mathbf{a}=\sum_i a_i^2$ and the Euclidean norm $\|\mathbf{x}\|=\sqrt{\mathbf{x}^T\mathbf{x}}$ & Ch05 Secs. 5.1, 5.3, 5.5; Ch12 Sec. 12.9 \\
-\hline
-Residual orthogonality & Dot products, angles, and the special case $\mathbf{a}^T\mathbf{b}=0$ meaning orthogonality & Ch02 Sec. 2.6; Ch05 Secs. 5.1, 5.3, 5.8; Ch12 Sec. 12.12 \\
-\hline
-Design matrix notation & Matrix size, transpose notation, and matrix-vector multiplication as row inner products / linear combinations of columns & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3; Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
-\hline
-\end{tabular}
-\end{center}
-}{
-\section{Math Foundations Source Map}
-
-This chapter's Math Foundations support is still active in the Core Reader, but the full Math Foundations textbook-location map is kept in the full reference build.  The most important connections here are vectors in \(\mathbb{R}^n\), dot products and norms, orthogonality, and matrix-vector multiplication.
-}
 
 \CoreCompress{
 \section{Practice and Workflow}

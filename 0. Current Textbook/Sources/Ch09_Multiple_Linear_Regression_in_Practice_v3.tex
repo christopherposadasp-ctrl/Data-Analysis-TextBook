@@ -251,7 +251,7 @@ A scatterplot matrix helps answer two first-pass questions:
   \item Which predictors appear most strongly associated with each other?
 \end{enumerate}
 
-The first question is about predictive signal.  The second question is about collinearity.  A predictor can look useful by itself but become less useful once another correlated predictor is included in the model.
+The first question is about predictive signal.  The second question is about collinearity, an early warning sign for the multicollinearity diagnostics developed later.  A predictor can look useful by itself but become less useful once another correlated predictor is included in the model.
 
 \paragraph{Important caution.}
 Pairwise plots are not the final analysis.  They are reconnaissance.  Multiple regression coefficients are interpreted after holding the other included predictors fixed.  Pairwise plots do not automatically show that adjusted relationship.
@@ -567,32 +567,6 @@ The Advertising example illustrates the main practical questions in MLR.  The ov
 
 Most importantly, MLR coefficients are adjusted effects.  A predictor can look useful in a simple regression but lose usefulness in a multiple regression after another correlated predictor is included.
 
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 9 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Response and predictor vectors & Vector notation in \(\mathbb{R}^n\), coordinates, and vector entries & Ch02 Secs. 2.1, 2.2, 2.6; Ch06 Sec. 6.5 \\
-\hline
-Column-space interpretation & Linear combinations of vectors, span/column-space ideas, and standard-basis intuition & Ch03 Sec. 3.5; Ch06 Secs. 6.1, 6.5; Ch11 Sec. 11.2; Ch12 Sec. 12.12 \\
-\hline
-Normal equations and orthogonality & Dot products, sums through \(\mathbf{1}^T\mathbf{a}\), Euclidean norm, orthogonality, and the least-squares normal-equation bridge & Ch02 Sec. 2.4; Ch05 Secs. 5.1, 5.3, 5.5, 5.8; Ch12 Secs. 12.9, 12.11, 12.12 \\
-\hline
-Design matrix dimensions & Matrix notation, tall matrices, transposes, identity matrices, and symmetry & Ch07 Secs. 7.1, 7.3, 7.4 \\
-\hline
-Fitted values as \(\mathbf{X}\widehat{\boldsymbol{\beta}}\) & Matrix-vector multiplication as row inner products and as a linear combination of columns & Ch03 Sec. 3.5; Ch05 Secs. 5.1, 5.3; Ch07 Secs. 7.1, 7.6.1, 7.6.2 \\
-\hline
-Full column rank requirement & Linear independence, bases, unique linear-combination intuition, and full-rank conditions & Ch06 Secs. 6.3, 6.5; Ch10 Sec. 10.5 \\
-\hline
-Software implementation & Python/NumPy arrays, shapes, transposes, and matrix multiplication with \texttt{@} & Ch07 Secs. 7.1, 7.4, 7.7 \\
-\hline
-\end{tabular}
-\end{center}
-
 \section{Practice and Workflow}
 \subsection*{Focused Study Checklist}
 
@@ -622,5 +596,5 @@ The fitted values live in the column space of \(\mathbf{X}\).  With one predicto
 The practical MLR questions are the same ones emphasized in the Advertising example: whether at least one predictor is useful, which predictors help after controlling for the others, how well the model fits, and what predictions the model makes for new predictor values.  The overall \(F\)-test addresses the first question; individual coefficient tests address one predictor at a time; \(R^2\), adjusted \(R^2\), RSE, and prediction intervals help describe fit and prediction quality.
 
 \paragraph{Can you do this?}
-You should be able to write the MLR design matrix, interpret a coefficient while holding other predictors fixed, distinguish the overall \(F\)-test from individual \(t\)-tests, explain why simple and multiple regression can disagree, and brief the main findings from an Advertising-style model.  The full reference text contains the complete Math Foundations source map and reusable study template.
+You should be able to write the MLR design matrix, interpret a coefficient while holding other predictors fixed, distinguish the overall \(F\)-test from individual \(t\)-tests, explain why simple and multiple regression can disagree, and brief the main findings from an Advertising-style model.  The full reference text contains the reusable study template; the consolidated Math Foundations source map appears in Appendix~\ref{app:math-foundations-source-map}.
 }

@@ -25,6 +25,8 @@
 
 \makeatletter
 \renewcommand*\l@section{\@dottedtocline{1}{1.0em}{2.8em}}
+\renewcommand*\l@subsection{\@dottedtocline{2}{2.8em}{4.8em}}
+\renewcommand*\l@subsubsection{\@dottedtocline{3}{6.0em}{5.8em}}
 \makeatother
 
 \pdfstringdefDisableCommands{%
@@ -43,16 +45,19 @@
 \begin{document}
 
 \frontmatter
+\hypersetup{pageanchor=false}
 \begin{titlepage}
   \centering
   \vspace*{2.5in}
   {\Huge\bfseries Data Analysis\par}
   \vspace{1em}
-  {\Large Main Reference Textbook v3\par}
+  {\Large Main Reference Textbook v4\par}
   \vfill
-  {\large Chapters 1--12 with Math Foundations source maps\par}
+  {\large Chapters 1--17 and Appendices A--B with Math Foundations source map\par}
   \thispagestyle{empty}
 \end{titlepage}
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
 \tableofcontents
 \clearpage
 
@@ -71,5 +76,14 @@
 \input{Sources/Ch10_Truth_Error_Estimator_Behavior_Residual_Geometry_v3}
 \input{Sources/Ch11_Linear_Models_Beyond_Straight_Lines_Transformations_Linear_in_Parameters_v3}
 \input{Sources/Ch12_Residual_Analysis_Model_Repair_v3}
+\input{Sources/Ch13_Uncertainty_Confidence_Prediction_Intervals_v3}
+\input{Sources/Ch14_Likelihood_GLMs_Hypothesis_Testing_v3}
+\input{Sources/Ch15_Model_Selection_Variable_Selection_v3}
+\input{Sources/Ch16_Regularization_Dimension_Reduction_Ridge_LASSO_PCA_PCR_v3}
+\input{Sources/Ch17_Neural_Networks_Flexible_Regression_Models_v3}
+
+\appendix
+\input{Sources/Appendix_Regression_Assumption_Ladder_v3}
+\input{Sources/Appendix_Math_Foundations_Source_Map_v3}
 
 \end{document}

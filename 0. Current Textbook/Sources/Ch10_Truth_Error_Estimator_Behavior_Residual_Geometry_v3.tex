@@ -370,6 +370,21 @@ Thus the estimated standard error is
 This is the quantity reported in regression output tables.  It is the denominator of the usual \(t\)-statistic.
 
 \CoreCompress{
+\section{Multicollinearity and Coefficient Instability}
+
+Chapter~\ref{chap:degrees-of-freedom-subspaces-identifiability} described exact non-identifiability: if one design column is an exact linear combination of the others, then \(\mathbf{X}^T\mathbf{X}\) is singular and the coefficient vector is not uniquely determined.  Multicollinearity is the nearby practical problem.  The columns may not be exactly dependent, so the least-squares estimate is unique, but they can be close enough to dependent that individual coefficients become fragile.
+
+The reason is already visible in the variance formula:
+\begin{equation}
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid\mathbf{X})
+  =\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}.
+\end{equation}
+When columns of \(\mathbf{X}\) are nearly linearly dependent, \(\mathbf{X}^T\mathbf{X}\) is close to singular.  Its inverse may then have large entries.  In particular, large diagonal entries of \((\mathbf{X}^T\mathbf{X})^{-1}\) inflate the variances and standard errors of the corresponding coefficient estimates.
+
+The practical consequence is a separation between fitted values and individual coefficient interpretation.  The model may estimate a combined direction of two related predictors well enough for useful fitted values or prediction, while struggling to assign stable separate credit to each predictor.  Thus multicollinearity is mainly an interpretation and inference warning, not automatically a prediction failure.
+}{}
+
+\CoreCompress{
 \section{Distribution of \texorpdfstring{\(\widehat{\boldsymbol{\beta}}\)}{beta-hat}}
 
 If we also assume Gaussian errors,
@@ -960,36 +975,6 @@ The core equations of this chapter are:
 The coefficient estimator is the truth plus a transformed error.  Under mean-zero errors, it is unbiased.  Under constant-variance uncorrelated errors, its variance is governed by \(\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}\).  Under Gaussian errors, it has a multivariate normal distribution.
 
 The residual vector is the true error vector after projection onto the residual subspace.  This explains why residuals can be used to diagnose model assumptions.  Residuals should be centered around zero, have roughly stable spread, and show no systematic patterns if the model assumptions are reasonable.  Chapter~\ref{chap:residual-analysis-model-repair} turns these facts into a practical diagnostic and repair workflow.
-
-\CoreCompress{
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 10 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Observation-space vectors & Vector notation in \(\mathbb{R}^n\), coordinates, and subvectors & Ch02 Secs. 2.1, 2.2, 2.6; Ch06 Sec. 6.5 \\
-\hline
-Regression matrix expressions & Matrix sizes, transposes, identity matrices, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.3, 7.4, 7.6.1, 7.6.2 \\
-\hline
-Residual orthogonality & Dot products, Euclidean norms, and the condition \(\mathbf{a}^T\mathbf{b}=0\) for orthogonality & Ch02 Sec. 2.6; Ch05 Secs. 5.1, 5.3, 5.5, 5.8; Ch12 Sec. 12.12 \\
-\hline
-Least-squares normal-equation bridge & Stationary points, least-squares minimization, the normal equations, and the positive-semidefinite \(\mathbf{A}^T\mathbf{A}\) argument & Ch05 Sec. 5.5; Ch10 Sec. 10.6; Ch12 Secs. 12.8, 12.9, 12.11, 12.12; Ch13 Sec. 13.4 \\
-\hline
-Full-rank requirement for unique coefficients & Left inverses, linearly independent columns, rank, and full column rank & Ch06 Sec. 6.3; Ch10 Secs. 10.1, 10.3, 10.5; Ch11 Sec. 11.4 \\
-\hline
-Computational matrix operations & Python/NumPy arrays, shapes, transposes, and matrix multiplication & Ch07 Secs. 7.1, 7.4, 7.7 \\
-\hline
-\end{tabular}
-\end{center}
-}{
-\section{Math Foundations Source Map}
-
-The Core Reader keeps the theory links to Math Foundations but omits the full Math Foundations textbook-location map.  The main supporting ideas here are vectors, orthogonality, matrix multiplication, full column rank, and least-squares normal-equation structure.
-}
 
 \CoreCompress{
 \section{Practice and Workflow}

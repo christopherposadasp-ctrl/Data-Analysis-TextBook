@@ -1,5 +1,5 @@
 % Chapter 6 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, and array.
-\chapter{Simple Linear Regression: Fit Quality, $R^2$, and Hypothesis Testing}
+\chapter{Simple Linear Regression: Fit Quality, \texorpdfstring{$R^2$}{R-squared}, and Hypothesis Testing}
 \label{chap:slr-fit-quality-r2-hypothesis-testing}
 
 \section{The Big Picture}
@@ -110,7 +110,7 @@ When the regression model includes an intercept, least squares gives the decompo
 \paragraph{Math Foundations Connection.}
 The decomposition in~\eqref{eq:ch6-sum-of-squares-decomposition} is a geometry statement.  It relies on the residual vector being orthogonal to the fitted-value direction after centering.  Dot products, norms, and orthogonality are covered in the Math Foundations textbook, Chapters 2, 3, and 5.
 
-\section{$R^2$: Proportion of Variation Explained}
+\section{\texorpdfstring{$R^2$}{R-squared}: Proportion of Variation Explained}
 
 The coefficient of determination is
 \begin{equation}
@@ -134,7 +134,7 @@ For simple linear regression with an intercept,
 \end{equation}
 This interval property depends on comparing an intercept-containing regression model to the mean-only baseline.  Some nonstandard models, such as no-intercept regressions, can produce different behavior.
 
-\section{Interpreting $R^2$}
+\section{Interpreting \texorpdfstring{$R^2$}{R-squared}}
 
 Suppose two models are used to predict pediatric weight.
 \begin{itemize}
@@ -146,7 +146,7 @@ Then Model B explains twice as much of the observed weight variation as Model A,
 The phrase \emph{explains variation} should be read carefully.  It does not automatically imply causation.  It means that the fitted line reduces squared prediction error relative to the mean-only model.
 
 \CoreCompress{
-\section{$R^2$ and Correlation in Simple Linear Regression}
+\section{\texorpdfstring{$R^2$}{R-squared} and Correlation in Simple Linear Regression}
 
 For simple linear regression with an intercept, $R^2$ is equal to the squared sample correlation between $x$ and $y$:
 \begin{equation}
@@ -196,7 +196,7 @@ Thus,
 
 This equality is useful in SLR.  It does not directly generalize to multiple linear regression as a single ordinary correlation between one predictor and the response.
 }{
-\section{$R^2$ and Correlation in Simple Linear Regression}
+\section{\texorpdfstring{$R^2$}{R-squared} and Correlation in Simple Linear Regression}
 
 For simple linear regression with an intercept,
 \begin{equation}
@@ -204,7 +204,7 @@ For simple linear regression with an intercept,
 \end{equation}
 This is a special one-predictor identity: the proportion of response variation explained by the fitted line equals the squared sample correlation between the predictor and the response.  In multiple regression, there is no single ordinary predictor-response correlation that plays the same role.
 }
-\section{Limitations of $R^2$}
+\section{Limitations of \texorpdfstring{$R^2$}{R-squared}}
 
 $R^2$ is useful, but it does not tell us everything.
 
@@ -218,7 +218,7 @@ With two data points and a line with two parameters, we can fit the data perfect
 \end{equation}
 This does not mean the model will predict future data well.  It means only that a line can pass through two points.
 
-\subsection{$R^2$ Does Not Measure Statistical Evidence}
+\subsection{\texorpdfstring{$R^2$}{R-squared} Does Not Measure Statistical Evidence}
 
 $R^2$ measures in-sample fit.  It does not directly answer:
 \begin{itemize}
@@ -230,7 +230,7 @@ $R^2$ measures in-sample fit.  It does not directly answer:
 
 These questions require hypothesis tests, confidence intervals, and residual diagnostics.
 
-\subsection{$R^2$ Does Not Check Model Assumptions}
+\subsection{\texorpdfstring{$R^2$}{R-squared} Does Not Check Model Assumptions}
 
 A high $R^2$ does not prove that the linear model assumptions are valid.  Residual plots may still reveal curvature, nonconstant variance, outliers, or dependence among observations.
 
@@ -258,7 +258,7 @@ The null hypothesis says that $X$ does not improve the conditional mean of $Y$ t
 \paragraph{Math Foundations Connection.}
 Hypotheses are mathematical statements, and hypothesis testing depends on understanding logical alternatives and negation.  Basic logical statements, negation, and truth-table reasoning are covered in the Math Foundations textbook, Chapter 1.
 
-\section{The $F$-Statistic}
+\section{The \texorpdfstring{$F$}{F}-Statistic}
 
 The $F$-statistic compares the mean-only model to the fitted regression model.
 
@@ -301,7 +301,7 @@ The numerator is the improvement over the mean-only model.  The denominator is t
 \paragraph{Math Foundations Connection.}
 The phrase \emph{leftover degrees of freedom} is a dimension idea.  The residual variation lives in directions left over after fitting the intercept and slope.  Linear independence, bases, and the fact that a linearly independent set of $n$-vectors can have at most $n$ elements are introduced in the Math Foundations textbook, Chapters 2, 5, and 6.
 
-\section{The $F$-Statistic in Terms of $R^2$}
+\section{The \texorpdfstring{$F$}{F}-Statistic in Terms of \texorpdfstring{$R^2$}{R-squared}}
 
 Because
 \begin{equation}
@@ -318,7 +318,7 @@ we can rewrite the SLR $F$-statistic as
 
 This formula explains why sample size matters.  If two simple linear regressions have the same $R^2$, the one with more observations will have a larger $F$-statistic.  More data can make the same proportion of explained variation more statistically detectable.
 
-\section{The $F$-Distribution and the p-Value}
+\section{The \texorpdfstring{$F$}{F}-Distribution and the p-Value}
 
 Under Assumption 3 from Chapter 5---the Gaussian error model---and the null hypothesis $H_0:\beta_1=0$,
 \begin{equation}
@@ -352,7 +352,7 @@ The $F$-test relies on the same three-step regression assumption ladder introduc
 
 If these assumptions are badly violated, the p-value may not have the advertised interpretation.  This is why residual analysis is not optional.
 
-\section{The Slope $t$-Test}
+\section{The Slope \texorpdfstring{$t$}{t}-Test}
 
 Most software output also reports a $t$-test for the slope.  The slope test is
 \begin{equation}
@@ -384,7 +384,7 @@ Under the null hypothesis and Assumption 3 (Gaussian errors),
 \end{equation}
 
 \CoreCompress{
-\section{Why the SLR $F$-Test and Slope $t$-Test Agree}
+\section{Why the SLR \texorpdfstring{$F$}{F}-Test and Slope \texorpdfstring{$t$}{t}-Test Agree}
 
 In simple linear regression with an intercept,
 \begin{equation}
@@ -413,7 +413,7 @@ Thus,
 
 Therefore, in SLR, the overall $F$-test for the model and the two-sided $t$-test for the slope produce the same conclusion.  In multiple linear regression, the overall $F$-test and individual coefficient $t$-tests answer different questions.
 }{
-\section{Why the SLR $F$-Test and Slope $t$-Test Agree}
+\section{Why the SLR \texorpdfstring{$F$}{F}-Test and Slope \texorpdfstring{$t$}{t}-Test Agree}
 
 In simple linear regression with an intercept,
 \begin{equation}
@@ -524,7 +524,7 @@ For the predictor row, common fields include:
   \item \textbf{coef:} $\widehat{\beta}_1$;
   \item \textbf{std err:} $\operatorname{SE}(\widehat{\beta}_1)$;
   \item \textbf{t:} the slope $t$-statistic;
-  \item \textbf{P>|t|:} the two-sided p-value for $H_0:\beta_1=0$;
+  \item \textbf{two-sided p-value:} the p-value for $H_0:\beta_1=0$;
   \item \textbf{confidence interval:} an interval estimate for the slope.
 \end{itemize}
 
@@ -620,30 +620,6 @@ The central distinction is this:
   $R^2$ measures how much the model fits the observed data; the $F$-test and $t$-test measure whether the observed improvement is statistically distinguishable from a zero-slope model under the same regression assumption ladder.
 \end{quote}
 
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 6 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Mean-only fitted vector & $\mathbb{R}^n$ vector notation and the ones vector $\mathbf{1}$ & Ch02 Secs. 2.1, 2.4 \\
-\hline
-TSS and RSS as squared lengths & Dot products, $\mathbf{a}^T\mathbf{a}=\sum_i a_i^2$, and Euclidean norm $\|\mathbf{x}\|=\sqrt{\mathbf{x}^T\mathbf{x}}$ & Ch05 Secs. 5.1, 5.3, 5.5 \\
-\hline
-Sum-of-squares decomposition & Dot products, norms, and orthogonality of fitted and residual components & Ch02 Sec. 2.6; Ch05 Secs. 5.1, 5.3, 5.5, 5.8; Ch12 Sec. 12.12 \\
-\hline
-Residual degrees of freedom & Linear independence, basis size, and leftover dimension intuition & Ch02 Sec. 2.6; Ch06 Secs. 6.3, 6.4, 6.5 \\
-\hline
-Hypothesis statements & Logic statements, negation, and truth-table reasoning as the foundation for null-versus-alternative statements & Ch01 Sec. 1.1 \\
-\hline
-Software/design-matrix bridge & Matrix notation, transpose notation, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
-\hline
-\end{tabular}
-\end{center}
-
 \section{Practice and Workflow}
 \subsection*{Focused Study Checklist}
 
@@ -673,5 +649,5 @@ The $F$-test compares the fitted line to the mean-only model.  Under \(H_0:\beta
 In SLR with an intercept, the slope $t$-test and model $F$-test agree because \(F=t^2\).
 
 \paragraph{Can you do this?}
-You should be able to compute TSS, RSS, \(R^2\), and the SLR $F$-statistic; explain the difference between fit and statistical evidence; and read the slope row and model $F$-test from software output.  The full reference text contains the complete Math Foundations source map and reusable study template.
+You should be able to compute TSS, RSS, \(R^2\), and the SLR $F$-statistic; explain the difference between fit and statistical evidence; and read the slope row and model $F$-test from software output.  The full reference text contains the reusable study template; the consolidated Math Foundations source map appears in Appendix~\ref{app:math-foundations-source-map}.
 }

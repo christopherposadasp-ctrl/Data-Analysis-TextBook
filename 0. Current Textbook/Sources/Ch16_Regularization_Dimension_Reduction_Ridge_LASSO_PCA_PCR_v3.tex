@@ -1,0 +1,420 @@
+% Chapter 16 draft for textbook inclusion. Assumes a textbook preamble with amsmath, amssymb, array, booktabs, graphicx, hyperref, and verbatim.
+\chapter[Regularization and Dimension Reduction]{Regularization and Dimension Reduction: Ridge, LASSO, PCA, and PCR}
+\label{chap:regularization-dimension-reduction-ridge-lasso-pca-pcr}
+
+\section{The Big Picture}
+
+Ordinary least squares is a powerful starting point, but it is not always stable.  When predictors are numerous, highly correlated, or nearly redundant, the least-squares coefficients can become fragile.  Small changes in the data can produce large changes in individual coefficient estimates, even when the fitted values remain reasonable.
+
+Chapter~15 studied model selection: choose among candidate models, often by choosing a subset of predictors and then fitting an ordinary linear model to that chosen set.  This chapter studies a different family of ideas:
+\begin{quote}
+  Instead of only choosing columns, change the fitting problem or replace the predictor columns with more stable directions.
+\end{quote}
+
+The main tools are \emph{regularization} and \emph{dimension reduction}.  Regularization keeps the original predictors but penalizes coefficient size.  Dimension reduction replaces the original predictors with a smaller number of constructed variables.
+
+The goal is not to find a magic replacement for ordinary least squares.  The goal is to understand the tradeoff: more stability and better prediction may come at the cost of bias, less direct interpretation, or more complicated inference.
+
+\paragraph{Connection to earlier chapters.}
+Chapters~7 and~8 explained rank, column space, and identifiability.  Chapter~12 diagnosed leverage, influence, and model repair.  Chapter~15 chose among candidate models.  This chapter connects those ideas to ridge regression, the LASSO, elastic net, principal component analysis, and principal component regression.
+
+\paragraph{Math Foundations Connection.}
+Regularization and dimension reduction use norms, linear combinations, bases, rank, subspaces, least-squares objectives, and quadratic forms.  These ideas are supported by the Math Foundations textbook, especially Chapters~3, 5, 6, 7, 10, 11, 12, and~13.
+
+\section{OLS Fragility and Multicollinearity Recap}
+
+Suppose a design matrix \(\mathbf{X}\) contains an intercept and \(p\) predictor columns.  If one column is an exact linear combination of other columns, then \(\mathbf{X}\) does not have full column rank.  The inverse form
+\begin{equation}
+  (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}
+\end{equation}
+does not exist, and the coefficient vector is not uniquely identified.
+
+Near dependence is different.  If one predictor column is almost a linear combination of the others, then the inverse may exist, but it can be numerically unstable.  The coefficient vector is unique, but fragile.  The variance formula from Chapter~10 helps explain why:
+\begin{equation}
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}\mid \mathbf{X})
+  =\sigma^2(\mathbf{X}^T\mathbf{X})^{-1}.
+\end{equation}
+When \(\mathbf{X}^T\mathbf{X}\) is close to singular, entries of the inverse can become large.  Large entries mean unstable coefficients and inflated standard errors.
+
+This does not always destroy prediction.  Highly correlated predictors may jointly contain useful information, so fitted values can remain accurate even when individual coefficients are hard to interpret.  Multicollinearity is therefore mainly an interpretation and inference warning.  It becomes a prediction problem when it hurts validation performance or makes the fitted model unstable on future data.
+
+\section{Shrinkage as a Bias-Variance Tradeoff}
+
+Least squares chooses coefficients by minimizing training error:
+\begin{equation}
+  \min_{\mathbf{b}}\frac{1}{n}(\mathbf{y}-\mathbf{X}\mathbf{b})^T(\mathbf{y}-\mathbf{X}\mathbf{b}).
+\end{equation}
+Regularized methods add a penalty:
+\begin{equation}
+  \boxed{
+  \text{regularized objective}
+  =\text{training error}+\text{penalty for coefficient size}.
+  }
+\end{equation}
+The penalty discourages large coefficients.  This usually introduces bias, because the regularized estimates are intentionally pulled away from the unpenalized least-squares estimates.  In exchange, the estimates can have lower variance and better prediction stability.
+
+The tuning parameter, usually written \(\lambda\), controls the strength of the penalty.  When \(\lambda=0\), the penalized objective becomes the ordinary least-squares objective, assuming the unpenalized least-squares solution is well defined.  As \(\lambda\) increases, the penalty becomes stronger.
+
+\section{Ridge Regression}
+
+Ridge regression adds a squared two-norm penalty to the least-squares objective.  With intercept \(b_0\) and predictor coefficients \(b_1,\ldots,b_p\), a common form is
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\beta}}_{\mathrm{ridge}}
+  =\arg\min_{\mathbf{b}}
+  \left\{
+  \frac{1}{n}(\mathbf{y}-\mathbf{X}\mathbf{b})^T(\mathbf{y}-\mathbf{X}\mathbf{b})
+  +\lambda\sum_{j=1}^{p} b_j^2
+  \right\}.
+  }
+  \label{eq:ch16-ridge-objective}
+\end{equation}
+The sum starts at \(j=1\), not \(j=0\), because the intercept is usually not penalized.
+
+Ridge regression shrinks coefficients toward zero.  It usually does not set coefficients exactly equal to zero.  Instead, it stabilizes them.  This is useful when predictors are correlated, because ridge is less sensitive to directions in predictor space that are nearly redundant.
+
+\begin{quote}
+\textbf{Math note: the ridge closed form.}
+For standardized predictor columns, with the intercept handled separately and left unpenalized, a common closed-form ridge estimator is
+\begin{equation}
+  \widehat{\boldsymbol{\beta}}_{\mathrm{ridge},-0}
+  =
+  (\mathbf{X}_s^T\mathbf{X}_s+n\lambda \mathbf{I}_p)^{-1}
+  \mathbf{X}_s^T\mathbf{y}_c,
+  \label{eq:ch16-ridge-closed-form}
+\end{equation}
+where \(\mathbf{X}_s\) contains the standardized non-intercept predictor columns and \(\mathbf{y}_c\) is the centered response.  The factor \(n\lambda\) appears because this chapter writes the objective in \eqref{eq:ch16-ridge-objective} with a factor of \(1/n\) in front of the training error.  References that omit that \(1/n\) convention often absorb this factor into the tuning parameter.  The main idea is unchanged.
+
+Ordinary least squares relies on \((\mathbf{X}_s^T\mathbf{X}_s)^{-1}\), which can be unstable when \(\mathbf{X}_s^T\mathbf{X}_s\) is nearly singular.  Ridge adds \(n\lambda\mathbf{I}_p\) under this scaling, stabilizing the inverse by moving small eigenvalues away from zero.  This introduces bias, but it can reduce variance and improve coefficient stability or prediction performance.
+\end{quote}
+
+\begin{quote}
+\textbf{Math note: truth plus error for ridge.}
+The closed form also lets us see the bias--variance tradeoff algebraically.  In this note, treat \(\lambda\) as fixed and use the same standardized, non-intercept setup as above.  At the model level, write the centered random response as
+\[
+  \mathbf{Y}_c=\mathbf{X}_s\boldsymbol{\beta}_{-0}+\boldsymbol{\epsilon},
+  \qquad
+  E[\boldsymbol{\epsilon}\mid\mathbf{X}_s]=\mathbf{0},
+  \qquad
+  \operatorname{Var}(\boldsymbol{\epsilon}\mid\mathbf{X}_s)=\sigma^2\mathbf{I}_n.
+\]
+For the observed data, the estimator uses the centered response vector \(\mathbf{y}_c\).  Because the columns of \(\mathbf{X}_s\) are centered and the intercept is handled separately, the ridge cross-product uses
+\[
+  \mathbf{X}_s^T\mathbf{y}_c
+  =
+  \mathbf{X}_s^T(\mathbf{X}_s\boldsymbol{\beta}_{-0}+\boldsymbol{\epsilon}).
+\]
+Let
+\[
+  \mathbf{B}_{\lambda}
+  =
+  (\mathbf{X}_s^T\mathbf{X}_s+n\lambda\mathbf{I}_p)^{-1}.
+\]
+Then the ridge estimator for the non-intercept coefficients can be written
+\begin{align*}
+  \widehat{\boldsymbol{\beta}}_{\lambda,-0}
+  &=\mathbf{B}_{\lambda}\mathbf{X}_s^T\mathbf{y}_c \\
+  &=\mathbf{B}_{\lambda}\mathbf{X}_s^T
+    (\mathbf{X}_s\boldsymbol{\beta}_{-0}+\boldsymbol{\epsilon}) \\
+  &=\mathbf{B}_{\lambda}\mathbf{X}_s^T\mathbf{X}_s\boldsymbol{\beta}_{-0}
+    +\mathbf{B}_{\lambda}\mathbf{X}_s^T\boldsymbol{\epsilon}.
+\end{align*}
+Define
+\[
+  \mathbf{M}_{\lambda}
+  =\mathbf{B}_{\lambda}\mathbf{X}_s^T\mathbf{X}_s.
+\]
+For ordinary least squares, the corresponding product cancels to the identity matrix when \(\mathbf{X}_s^T\mathbf{X}_s\) is invertible.  For ridge,
+\[
+  (\mathbf{X}_s^T\mathbf{X}_s+n\lambda\mathbf{I}_p)^{-1}\mathbf{X}_s^T\mathbf{X}_s
+  \neq \mathbf{I}_p
+\]
+unless \(\lambda=0\).  This is the no-cancellation step: ridge changes the target of the estimator.
+
+Taking conditional expectation gives
+\[
+  E[\widehat{\boldsymbol{\beta}}_{\lambda,-0}\mid\mathbf{X}_s]
+  =\mathbf{M}_{\lambda}\boldsymbol{\beta}_{-0},
+\]
+so the conditional bias is
+\[
+  \operatorname{Bias}(\widehat{\boldsymbol{\beta}}_{\lambda,-0}\mid\mathbf{X}_s)
+  =(\mathbf{M}_{\lambda}-\mathbf{I}_p)\boldsymbol{\beta}_{-0}
+  =-n\lambda(\mathbf{X}_s^T\mathbf{X}_s+n\lambda\mathbf{I}_p)^{-1}\boldsymbol{\beta}_{-0}.
+\]
+Thus ridge is generally biased when \(\lambda>0\).  The vector estimator is unbiased only in special cases, such as \(\boldsymbol{\beta}_{-0}=\mathbf{0}\); in the eigenvector basis, a direction with true coefficient component zero has no shrinkage bias in that direction.
+
+The conditional variance comes from the error term:
+\[
+  \operatorname{Var}(\widehat{\boldsymbol{\beta}}_{\lambda,-0}\mid\mathbf{X}_s)
+  =\sigma^2
+  (\mathbf{X}_s^T\mathbf{X}_s+n\lambda\mathbf{I}_p)^{-1}
+  \mathbf{X}_s^T\mathbf{X}_s
+  (\mathbf{X}_s^T\mathbf{X}_s+n\lambda\mathbf{I}_p)^{-1}.
+\]
+This is the algebraic version of the tradeoff.  Ridge introduces bias, but it changes the variance behavior in fragile directions.
+
+To connect this to the multicollinearity discussion, suppose
+\[
+  \mathbf{X}_s^T\mathbf{X}_s=\mathbf{V}\mathbf{D}\mathbf{V}^T,
+\]
+where \(\mathbf{D}\) has eigenvalues \(d_1,\ldots,d_p\).  Along eigen-direction \(j\), the signal part is multiplied by
+\[
+  \frac{d_j}{d_j+n\lambda},
+\]
+and the variance contribution is
+\[
+  \sigma^2\frac{d_j}{(d_j+n\lambda)^2}
+\]
+instead of the OLS value \(\sigma^2/d_j\).  When \(d_j\) is very small, OLS can be extremely unstable in that direction.  Ridge replaces that unstable inverse behavior with controlled shrinkage.  It does not create information in a low-variance direction; it deliberately damps that direction and accepts bias in exchange for reduced variance and greater stability.
+
+This calculation treats \(\lambda\) as fixed.  When \(\lambda\) is chosen by validation or cross-validation, the derivation is still useful for intuition, but ordinary coefficient-level p-values and confidence intervals still do not automatically follow.
+\end{quote}
+
+\paragraph{Why standardization matters.}
+The ridge penalty uses coefficient size.  If one predictor is measured in feet and another in miles, their coefficients have different units and scales.  Penalizing their raw coefficients equally may be misleading.  For this reason, predictors are usually standardized before ridge regression when units differ.  The intercept is then handled separately.
+
+\paragraph{What ridge does and does not do.}
+Ridge can improve prediction and stability, especially when ordinary least squares is fragile.  It does not automatically make coefficients easy to interpret, and it does not perform variable selection in the usual sense because it typically keeps all predictors in the model.
+
+\section{The One-Norm and the LASSO}
+
+The LASSO uses the one-norm penalty.  For a vector of predictor coefficients \((b_1,\ldots,b_p)\), the one-norm is
+\begin{equation}
+  \|\mathbf{b}_{-0}\|_1 = \sum_{j=1}^{p}|b_j|,
+\end{equation}
+where \(\mathbf{b}_{-0}\) means the coefficient vector without the intercept.
+
+The LASSO objective is
+\begin{equation}
+  \boxed{
+  \widehat{\boldsymbol{\beta}}_{\mathrm{LASSO}}
+  =\arg\min_{\mathbf{b}}
+  \left\{
+  \frac{1}{n}(\mathbf{y}-\mathbf{X}\mathbf{b})^T(\mathbf{y}-\mathbf{X}\mathbf{b})
+  +\lambda\sum_{j=1}^{p}|b_j|
+  \right\}.
+  }
+  \label{eq:ch16-lasso-objective}
+\end{equation}
+Again, the intercept is usually not penalized.
+
+Like ridge regression, the LASSO shrinks coefficients.  Unlike ridge regression, the LASSO can set some coefficients exactly equal to zero.  This makes it useful for variable selection when many candidate predictors are available but only some are expected to matter.
+
+The important tradeoff is this: LASSO-selected coefficients are biased by the penalty.  A coefficient equal to zero is a modeling result from a penalized fit, not a proof that the corresponding variable has no scientific or operational relevance.
+
+\section{Why the LASSO Can Be Sparse}
+
+The LASSO's sparsity comes from the shape of the one-norm penalty.  In two dimensions, the constraint
+\begin{equation}
+  |b_1|+|b_2|\leq \gamma
+\end{equation}
+forms a diamond.  The corners of this diamond lie on the coordinate axes.  When the least-squares contours touch the boundary of the feasible region, they often touch at a corner.  At a corner, one coefficient is zero.
+
+Ridge regression has a rounded constraint shape instead.  Rounded boundaries tend to shrink coefficients without forcing them exactly to zero.  This geometric difference explains why ridge primarily stabilizes while the LASSO can both stabilize and select.
+
+This geometric picture is only intuition.  The textbook point is that the penalty shape affects the kind of model the method prefers.
+
+\section{Elastic Net}
+
+Elastic net combines ridge and LASSO penalties.  A common schematic form is
+\begin{equation}
+  \frac{1}{n}(\mathbf{y}-\mathbf{X}\mathbf{b})^T(\mathbf{y}-\mathbf{X}\mathbf{b})
+  +\lambda\left[
+    \alpha\sum_{j=1}^{p}|b_j|
+    +(1-\alpha)\sum_{j=1}^{p}b_j^2
+  \right],
+  \label{eq:ch16-elastic-net-objective}
+\end{equation}
+where \(0\leq\alpha\leq 1\).  When \(\alpha=1\), the penalty is LASSO-like.  When \(\alpha=0\), the penalty is ridge-like.
+
+Elastic net is useful when predictors are correlated and the analyst wants some sparsity without relying on the LASSO alone.  It has more tuning choices than ridge or LASSO, so validation becomes even more important.  Different conventions may scale the penalty slightly differently, but the conceptual role is the same: blend shrinkage and sparsity.
+
+\section{PCA as a Change of Basis}
+
+Regularization keeps the original predictor columns and changes the fitting objective.  Principal component analysis, or PCA, takes a different approach: replace the original predictor columns with new directions.
+
+Let \(\mathbf{W}\) be the predictor matrix after removing the intercept and centering or standardizing the columns as appropriate.  PCA finds directions \(\mathbf{v}_1,\mathbf{v}_2,\ldots,\mathbf{v}_p\) in predictor space.  The first direction captures the largest possible predictor variance.  The second captures the largest remaining variance among directions orthogonal to the first.  The process continues until all directions are accounted for.
+
+The principal component scores are
+\begin{equation}
+  \mathbf{z}_k = \mathbf{W}\mathbf{v}_k,
+  \qquad k=1,\ldots,p.
+\end{equation}
+Each score vector \(\mathbf{z}_k\) is a linear combination of the original predictors.  The vectors \(\mathbf{v}_k\) are the principal component directions.  The associated eigenvalues describe how much predictor variance is captured along those directions.
+
+\begin{quote}
+\textbf{Math note: eigendecomposition behind PCA.}
+For a centered or standardized predictor matrix \(\mathbf{W}\), a covariance or Gram-type matrix such as
+\begin{equation}
+  \mathbf{S}=\frac{1}{n-1}\mathbf{W}^T\mathbf{W}
+  \label{eq:ch16-pca-covariance-gram}
+\end{equation}
+is symmetric positive semidefinite.  Therefore it has orthonormal eigenvectors \(\mathbf{v}_1,\ldots,\mathbf{v}_p\) and nonnegative eigenvalues \(\lambda_1,\ldots,\lambda_p\) satisfying
+\begin{equation}
+  \mathbf{S}\mathbf{v}_k=\lambda_k\mathbf{v}_k.
+  \label{eq:ch16-pca-eigen-equation}
+\end{equation}
+Here \(\mathbf{v}_k\) is a direction in predictor space, and \(\lambda_k\) is the predictor variance along that direction.  In this PCA context, \(\lambda_k\) denotes an eigenvalue, not the ridge or LASSO penalty parameter \(\lambda\).  Large eigenvalues point toward high-variance directions.  Small eigenvalues indicate low-variance or nearly redundant directions.  Zero eigenvalues indicate exact linear dependence among predictor columns.  We use this result as an interpretive tool; the spectral theorem itself is not proved here.
+\end{quote}
+
+\paragraph{Geometric intuition.}
+Imagine the cloud of predictor values as an ellipse or hyperellipsoid.  PCA rotates the coordinate system to line up with the main axes of that cloud.  Long axes correspond to large variance.  Short axes correspond to small variance.
+
+\paragraph{Scaling warning.}
+PCA is sensitive to units.  If one predictor is measured on a much larger scale than another, it can dominate the principal components.  When predictor units differ, PCA is usually performed on standardized predictors.
+
+\section{PCA, Degeneracy, and Multicollinearity}
+
+PCA also explains multicollinearity.  A zero-variance direction means there is an exact linear combination of predictors with no variation.  That is exact degeneracy.  A very small variance direction means there is a nearly redundant linear combination of predictors.  That is near-collinearity.
+
+In matrix language, these directions are connected to small eigenvalues of the predictor covariance matrix or of a related Gram matrix.  A small eigenvalue does not automatically tell the analyst what to delete, but it warns that some combination of predictors is weakly determined.
+
+This is why PCA can be a useful diagnostic companion to VIFs and pairwise correlations.  Pairwise correlations look at pairs of predictors.  VIFs look at how each predictor is explained by the rest.  PCA looks for low-variance directions across the whole predictor set.
+
+\paragraph{Caution: dropping collinear predictors and omitted-variable bias.}
+One tempting response to multicollinearity is to drop one of the correlated predictors.  This can reduce coefficient instability, but it can also change the meaning of the remaining coefficients.
+
+Consider the two-predictor setup
+\begin{equation}
+  y=\beta_0+\beta_1 x_1+\beta_2 x_2+\epsilon.
+  \label{eq:ch16-ovb-full}
+\end{equation}
+If we instead fit a reduced model that omits \(x_2\),
+\begin{equation}
+  y=\alpha_0+\alpha_1 x_1+u,
+  \label{eq:ch16-ovb-reduced}
+\end{equation}
+then the slope on \(x_1\) in the reduced model generally combines two pieces: the direct \(x_1\) association from the fuller linear model and the omitted \(x_2\) association carried through the relationship between \(x_1\) and \(x_2\).  In the usual two-variable linear projection calculation,
+\begin{equation}
+  \alpha_1=\beta_1+\beta_2\delta_1,
+  \label{eq:ch16-ovb-two-predictor}
+\end{equation}
+where \(\delta_1\) is the slope from regressing \(x_2\) on \(x_1\).  In words,
+\begin{quote}
+  reduced-model slope = direct \(x_1\) association + omitted \(x_2\) association \(\times\) association between \(x_1\) and \(x_2\).
+\end{quote}
+This formula describes how coefficients behave in a linear model; it does not by itself prove that either predictor has a causal effect.  The practical caution is that dropping a collinear predictor may trade lower variance for additional bias or a different coefficient interpretation.  For prediction, compare validation performance.  For interpretation, ask whether the dropped variable is a duplicate measurement, a mechanical transformation, a proxy, or a theoretically important variable.
+
+\section{Principal Component Regression}
+
+Principal component regression, or PCR, uses principal components as predictors in a regression model.  The workflow is:
+\begin{enumerate}
+  \item Center or standardize the predictor matrix, as appropriate.
+  \item Compute principal components from the predictors.
+  \item Keep the first \(K\) principal components.
+  \item Regress the response on those \(K\) component scores.
+  \item Choose \(K\) using validation or cross-validation.
+\end{enumerate}
+
+PCR can help when predictors are strongly correlated.  Instead of trying to estimate separate coefficients for several nearly redundant predictors, PCR fits the response using a smaller number of orthogonal component directions.
+
+There is a cost.  Principal components are combinations of predictors, so they are usually less directly interpretable than the original variables.  Also, PCA uses only the predictors, not the response.  A low-variance direction can sometimes matter for predicting the response, so dropping components purely because their eigenvalues are small is not always safe.
+
+\section{Choosing Tuning Parameters and Components}
+
+Ridge, LASSO, elastic net, and PCR all require tuning choices:
+\begin{center}
+\begin{tabular}{p{0.30\textwidth}p{0.46\textwidth}}
+\toprule
+\textbf{Method} & \textbf{Main tuning choice} \\
+\midrule
+Ridge & penalty strength \(\lambda\) \\
+LASSO & penalty strength \(\lambda\) \\
+Elastic net & penalty strength \(\lambda\) and mixing parameter \(\alpha\) \\
+PCR & number of principal components \(K\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The usual way to choose these values is validation or cross-validation.  Chapter~15 already explained why training error alone is too optimistic.  The same warning applies here.  Increasing flexibility or decreasing the penalty may improve training fit without improving future performance.
+
+\paragraph{Heuristics for component choice.}
+For PCA and PCR, a scree plot displays eigenvalues in decreasing order; the ``elbow'' heuristic looks for the point where the eigenvalues begin to flatten.  Another rule of thumb, the Kaiser criterion, keeps components with eigenvalues greater than 1 when the predictors have been standardized.  These are screening heuristics, not proofs and not automatic selection rules.  For prediction-oriented PCR, validation or cross-validation remains the primary guide for choosing \(K\).  For interpretation, the analyst should also examine whether the retained components are meaningful for the problem.
+
+The correct tuning choice depends on the goal.  If prediction is the goal, validation error is central.  If interpretation is the goal, sparsity, stability, and clarity matter too.
+
+\section{Comparing the Methods}
+
+\begin{description}
+  \item[OLS.] Fits unpenalized least squares.  It is simple and interpretable when the design is stable, but can be fragile under collinearity or high dimension.
+  \item[Ridge.] Penalizes squared coefficient size.  It stabilizes correlated predictors, keeps all predictors, and introduces bias.
+  \item[LASSO.] Penalizes absolute coefficient size.  It can select variables by setting coefficients to zero, but its coefficients are biased and ordinary OLS inference does not directly apply.
+  \item[Elastic net.] Blends ridge and LASSO penalties.  It can give sparse models with more stability among correlated predictors, at the cost of another tuning choice.
+  \item[PCR.] Regresses on leading principal components.  It reduces dimension and collinearity, but components are less directly interpretable than original predictors.
+\end{description}
+
+No method is best for every analysis.  A defensible choice depends on the purpose, data quality, validation performance, and the need for interpretation.
+
+\section{Inference After Regularization}
+
+Ridge and LASSO estimates are biased by design.  That is not a flaw; it is the point.  The penalty trades some bias for reduced variance or sparsity.  But this also means ordinary OLS standard errors, confidence intervals, and coefficient \(t\)-tests do not carry over automatically.
+
+The LASSO is especially tempting because it performs variable selection.  A common workflow is:
+\begin{enumerate}
+  \item use LASSO to choose a smaller set of predictors;
+  \item refit an ordinary linear model on the selected predictors;
+  \item report the refit model.
+\end{enumerate}
+This can be useful, but it does not erase the selection step.  The selected variables were chosen using the data, so the post-selection inference warnings from Chapter~15 still apply.
+
+For prediction-focused work, validation performance may be more important than classical coefficient inference.  For interpretation-focused work, regularization can help stabilize a model, but the analyst must explain how the method changes coefficient meaning and uncertainty.
+
+\section{Common Mistakes}
+
+\subsection*{Mistake 1: Penalizing unstandardized predictors without thinking about units}
+
+Ridge, LASSO, elastic net, and PCA are sensitive to predictor scale.  If predictors have different units, standardize or justify why not.
+
+\subsection*{Mistake 2: Treating LASSO zeros as proof of irrelevance}
+
+A zero LASSO coefficient means the penalized fitting procedure removed that predictor under a chosen tuning parameter.  It is not scientific proof that the variable has no relationship to the response.
+
+\subsection*{Mistake 3: Reporting ordinary p-values after data-driven selection}
+
+If a model was selected using LASSO, stepwise selection, or many candidate comparisons, ordinary selected-model p-values need caution.
+
+\subsection*{Mistake 4: Treating principal components as automatically interpretable}
+
+A principal component is a linear combination of predictors.  It may be useful for prediction but hard to brief as a simple operational variable.
+
+\subsection*{Mistake 5: Using all principal components and expecting dimension reduction}
+
+If all components are kept, PCR has not reduced dimension.  The point of PCR is to keep a smaller set of components when that improves stability or prediction.
+
+\subsection*{Mistake 6: Choosing tuning parameters by training error alone}
+
+Training error usually improves when the penalty weakens or more components are kept.  Use validation or cross-validation.
+
+\section{Chapter Summary}
+
+Ordinary least squares can be unstable when predictors are numerous, redundant, or highly correlated.  Regularization and dimension reduction are two ways to address that problem.
+
+Ridge regression adds a squared two-norm penalty.  It shrinks coefficients and can stabilize correlated predictors, but it usually keeps all predictors.  The ridge truth-plus-error representation makes the tradeoff explicit: for fixed \(\lambda>0\), ridge is biased, but its variance is damped in unstable predictor directions.  The LASSO adds a one-norm penalty.  It shrinks coefficients and can set some exactly to zero, making it useful for variable selection.  Elastic net blends ridge and LASSO penalties.
+
+PCA replaces the original predictor coordinates with orthogonal directions of predictor variation.  PCR regresses the response on a selected number of principal components.  This can reduce dimension and improve stability, but it makes interpretation less direct.
+
+All of these methods require judgment.  Tuning parameters and number of components should be chosen with validation in mind.  Regularized estimates are biased by design, and ordinary OLS inference does not automatically apply after shrinkage or data-driven selection.  The next chapter takes the same prediction-and-validation mindset one step farther by treating neural networks as flexible regression models that build prediction functions from repeated weighted sums and nonlinear transformations.
+
+\section{Practice and Workflow}
+
+\subsection*{Focused Study Checklist}
+
+Use this checklist after studying regularization and dimension reduction.
+
+\begin{enumerate}
+  \item Can you explain why exact linear dependence causes non-identifiability?
+  \item Can you explain why near dependence makes least-squares coefficients fragile?
+  \item Can you distinguish model selection from regularization?
+  \item Can you write the ridge objective and explain the role of \(\lambda\)?
+  \item Can you derive or explain the ridge truth-plus-error representation and identify where bias enters?
+  \item Can you write the LASSO objective and explain why it can set coefficients to zero?
+  \item Can you explain why the intercept is usually not penalized?
+  \item Can you explain why standardization matters before ridge, LASSO, elastic net, or PCA?
+  \item Can you describe PCA as a change of basis for the predictor matrix?
+  \item Can you explain what PCR does and why its components may be less interpretable?
+  \item Can you state why ordinary OLS inference does not automatically apply after regularization or data-driven selection?
+\end{enumerate}
+
+\paragraph{Coding companion reference.}
+Package-specific commands for ridge, LASSO, elastic net, PCA, PCR, standardization, cross-validated tuning, and validation comparisons belong in the separate Coding and Software Cookbook companion.  This chapter keeps the statistical meaning, formulas, and interpretation logic.

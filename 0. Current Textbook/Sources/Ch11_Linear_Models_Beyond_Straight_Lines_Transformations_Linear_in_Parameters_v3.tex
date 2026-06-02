@@ -653,6 +653,9 @@ The transformed design matrix must still have full column rank for the usual inv
 \end{enumerate}
 
 The regression problem is not saved by calling a column ``transformed.''  If the resulting columns are linearly dependent, the model is still not identified.
+
+\paragraph{Multicollinearity cross-reference.}
+Even when the transformed design is full rank, engineered columns such as indicators, powers, interactions, and transformed variables can be nearly collinear.  When coefficient interpretation or inference matters, check both rank/identifiability and the multicollinearity diagnostics in Chapter~\ref{chap:residual-analysis-model-repair}.
 }{
 \section{Numerical Stability and Identifiability}
 
@@ -869,38 +872,6 @@ The residuals are still orthogonal to the model columns:
 
 Transformations let us fit more realistic structure while keeping the interpretability and inference tools of linear regression.  Polynomial terms, sine/cosine terms, log terms, indicator columns, and interactions are all ways to build richer design matrices.  For a \(k\)-level categorical predictor with an intercept, use \(k-1\) indicators and interpret coefficients relative to the reference category.  The cost is that interpretation, rank, and overfitting must be handled carefully.
 
-\section{Math Foundations Source Map}
-
-This source map records the Math Foundations support used in this chapter and where those ideas appear in the completed Math Foundations textbook.
-
-\begin{center}
-\begin{tabular}{|p{0.24\textwidth}|p{0.36\textwidth}|p{0.28\textwidth}|}
-\hline
-\textbf{Chapter 11 use} & \textbf{Math Foundations connection} & \textbf{MF textbook location} \\
-\hline
-Transformed columns as candidate directions & Vector notation in \(\mathbb{R}^n\), scalar-vector multiplication, and linear combinations & Ch02 Sec. 2.1; Ch03 Secs. 3.4, 3.5 \\
-\hline
-Basis and spanning viewpoint & Bases, linear independence, and unique linear-combination representations & Ch06 Secs. 6.1, 6.3, 6.5 \\
-\hline
-Design-matrix mechanics & Matrix notation, submatrices, transposes, and matrix-vector multiplication & Ch07 Secs. 7.1, 7.4, 7.6.1, 7.6.2 \\
-\hline
-Categorical indicators and reference levels & Set membership, subsets, and variables as data vectors & Ch02 Sec. 2.6; Ch04 Secs. 4.1, 4.4 \\
-\hline
-Dummy-variable trap & Linear independence, rank, full column rank, and nonzero null spaces & Ch06 Sec. 6.3; Ch10 Secs. 10.3, 10.5; Ch11 Sec. 11.4 \\
-\hline
-Solving transformed systems & QR decomposition, triangular systems, and solving linear systems & Ch08 Sec. 8.1; Ch09 Sec. 9.9 \\
-\hline
-Vandermonde / polynomial design & Vandermonde matrices for polynomial systems and interpolation & Ch08 Sec. 8.7 \\
-\hline
-Orthogonal polynomial intuition & Gram-Schmidt orthogonalization and orthonormal directions & Ch05 Secs. 5.5, 5.8; Ch08 Sec. 8.7; Ch09 Secs. 9.1, 9.3, 9.11 \\
-\hline
-Full column rank requirement & Left inverses, rank, and full-column-rank conditions & Ch10 Secs. 10.1, 10.3, 10.5 \\
-\hline
-Computational matrix operations & Python/NumPy arrays, shapes, transposes, and matrix multiplication & Ch07 Secs. 7.1, 7.4, 7.7 \\
-\hline
-\end{tabular}
-\end{center}
-
 \section{Practice and Workflow}
 \subsection*{Focused Study Checklist}
 
@@ -928,5 +899,5 @@ Polynomial terms, interactions, log terms, square-root terms, trigonometric term
 The cost of transformations is interpretation and overfitting risk.  A more flexible design can fit more patterns, but it can also chase noise, create unstable coefficients, or violate domain constraints.
 
 \paragraph{Can you do this?}
-You should be able to decide whether a model is linear in parameters, construct a transformed design matrix, interpret coefficients after transformations cautiously, and compare transformed models using residual behavior and validation performance.  The full reference text contains the common-mistakes list, operational briefing checklist, complete Math Foundations source map, and reusable study template.
+You should be able to decide whether a model is linear in parameters, construct a transformed design matrix, interpret coefficients after transformations cautiously, and compare transformed models using residual behavior and validation performance.  The full reference text contains the common-mistakes list, operational briefing checklist, and reusable study template; the consolidated Math Foundations source map appears in Appendix~\ref{app:math-foundations-source-map}.
 }
